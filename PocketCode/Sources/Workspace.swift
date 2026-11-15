@@ -108,7 +108,7 @@ struct UncheckedBox<T>: @unchecked Sendable { let value: T; init(_ v: T) { value
 @MainActor
 final class Workspace: ObservableObject {
     let title: String
-    let fs: FileSystemProvider
+    private(set) var fs: FileSystemProvider
     let connection: SSHConnection?
 
     @Published var rootPath: String = ""
@@ -118,6 +118,11 @@ final class Workspace: ObservableObject {
     @Published var terminals: [TerminalSession] = []
     @Published var activeTerminalID: TerminalSession.ID?
     @Published var errorMessage: String?
+    /// Set when the explorer root can't be loaded at all; shown inline instead of an alert.
+    @Published var rootError: String?
+    @Published var isRetrying = false
+    /// True when logged in over SSH but the host offers no SFTP (terminal still works).
+    var sftpUnavailable: Bool { fs is UnavailableFileSystem }
 
     // Explorer tree state
     @Published var expanded: Set<String> = []
@@ -141,11 +146,22 @@ final class Workspace: ObservableObject {
     func bootstrap() async {
         do {
             rootPath = try await fs.initialPath()
+            rootError = nil
             expanded = [rootPath]
             await refresh(rootPath)
         } catch {
-            errorMessage = error.localizedDescription
+            rootError = error.localizedDescription
         }
+    }
+
+    /// Retry loading the explorer; on an SFTP-less host this first retries the SFTP subsystem.
+    func retryRoot() async {
+        isRetrying = true
+        defer { isRetrying = false }
+        if sftpUnavailable, let connection, let sftp = await connection.reopenSFTP() {
+            fs = SFTPFileSystem(sftp: sftp, startPath: connection.host.startPath)
+        }
+        await bootstrap()
     }
 
     func shutdown() {

@@ -25,7 +25,9 @@ struct ExplorerView: View {
             header
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    if workspace.rootPath.isEmpty || workspace.loading.contains(workspace.rootPath) && workspace.children[workspace.rootPath] == nil {
+                    if let message = workspace.rootError {
+                        unavailableState(message)
+                    } else if workspace.rootPath.isEmpty || workspace.loading.contains(workspace.rootPath) && workspace.children[workspace.rootPath] == nil {
                         ProgressView().padding(.top, 40)
                     }
                     ForEach(workspace.visibleRows) { row in
@@ -56,6 +58,41 @@ struct ExplorerView: View {
         }
     }
 
+    private func unavailableState(_ message: String) -> some View {
+        VStack(spacing: 14) {
+            Image(systemName: workspace.sftpUnavailable ? "folder.badge.questionmark" : "exclamationmark.triangle")
+                .font(.system(size: 40, weight: .light))
+                .foregroundStyle(VS.textDim)
+            Text(workspace.sftpUnavailable ? "File browsing unavailable" : "Couldn't open folder")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(VS.text)
+            Text(message)
+                .font(.system(size: 12))
+                .foregroundStyle(VS.textDim)
+                .multilineTextAlignment(.center)
+            HStack(spacing: 10) {
+                Button {
+                    Task { await workspace.retryRoot() }
+                } label: {
+                    if workspace.isRetrying { ProgressView().controlSize(.small) } else { Label("Retry", systemImage: "arrow.clockwise") }
+                }
+                .buttonStyle(.bordered)
+                .disabled(workspace.isRetrying)
+                if workspace.isRemote {
+                    Button {
+                        if workspace.terminals.isEmpty { workspace.newTerminal() } else { workspace.panel = .terminal }
+                    } label: { Label("Open Terminal", systemImage: "terminal") }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .font(.system(size: 13))
+            .padding(.top, 4)
+        }
+        .padding(.horizontal, 28)
+        .padding(.top, 48)
+        .frame(maxWidth: .infinity)
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 0) {
         HStack(spacing: 14) {
@@ -68,6 +105,8 @@ struct ExplorerView: View {
         }
         .font(.system(size: 14))
         .foregroundStyle(VS.text)
+        .disabled(workspace.rootError != nil)
+        .opacity(workspace.rootError != nil ? 0.35 : 1)
         .padding(.horizontal, 14)
         .frame(height: 36)
             // Root folder title; long-press for New File / New Folder at the root.

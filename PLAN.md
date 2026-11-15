@@ -11,14 +11,16 @@
 - 金鑰／密碼存 Keychain（模擬器需 ad-hoc 簽章 `CODE_SIGN_IDENTITY="-"`，否則 Keychain 回 -34018）。
 - 主機金鑰採 TOFU（首連記住、變更即拒絕）。
 
-## Phase 0 — 收尾與基礎建設（半天）
+## Phase 0 — 收尾與基礎建設（半天）✅ 已完成 2026-11-16
 
 | # | 任務 | 驗收標準 | 檔案 |
 |---|------|---------|------|
-| 0.1 | `git init`＋初始 commit，建立 `main` 分支 | `git log` 有含全部原始碼的 commit | 專案根目錄 |
-| 0.2 | Explorer 在 SFTP 不可用時顯示說明文字而非永遠轉圈 | 連 JP Nas 後 Explorer 顯示「未提供 SFTP…」訊息與重試鈕 | [ExplorerView.swift](PocketCode/Sources/ExplorerView.swift)、`UnavailableFileSystem` |
-| 0.3 | 發佈組態移除偵錯紀錄（pwlen 等），改用 `#if DEBUG` | Release build 的 log 無密碼長度等敏感欄位 | [SSHConnection.swift](PocketCode/Sources/SSHConnection.swift) |
-| 0.4 | 連線進度文字（連線中→認證中→開啟 SFTP）取代純轉圈 | 主機列顯示目前階段文字 | [HomeView.swift](PocketCode/Sources/HomeView.swift) |
+| ✅ 0.1 | `git init`＋初始 commit，建立 `main` 分支 | `git log` 有含全部原始碼的 commit | 專案根目錄 |
+| ✅ 0.2 | Explorer 在 SFTP 不可用時顯示說明文字而非永遠轉圈 | 連 JP Nas 後 Explorer 顯示「未提供 SFTP…」訊息與重試鈕 | [ExplorerView.swift](PocketCode/Sources/ExplorerView.swift)、`UnavailableFileSystem` |
+| ✅ 0.3 | 發佈組態移除偵錯紀錄（pwlen 等），改用 `#if DEBUG` | Release build 的 log 無密碼長度等敏感欄位 | [SSHConnection.swift](PocketCode/Sources/SSHConnection.swift) |
+| ✅ 0.4 | 連線進度文字（連線中→認證中→開啟 SFTP）取代純轉圈 | 主機列顯示目前階段文字 | [HomeView.swift](PocketCode/Sources/HomeView.swift) |
+
+另外順手修了：主機表單在「私鑰」驗證但金鑰欄空白時不能存檔（以前會存進空金鑰、連線才報錯）；SFTP 不可用時 Explorer 頂部按鈕變灰。
 
 ## Phase 1 — 穩定性（1–2 天）
 
@@ -73,5 +75,6 @@
 ## 測試主機備忘
 
 - CRA（Mac, 10.0.1.201, jlmx）：全功能驗證基準。
-- JP Nas（Synology, 10.0.1.108/nas.jappai.tw, codex）：SSH 通、SFTP 未開——開啟 DSM「控制台→檔案服務→FTP→SFTP」後即可測 Explorer。
-- M1U（10.0.1.198, soulfyai）：帳密待確認（該機 `whoami` 核對短名）。
+- JP Nas（Synology, 10.0.1.108/nas.jappai.tw, codex）：SSH＋SFTP 皆已開啟並驗證（Explorer 顯示共用資料夾）。
+- M1U（10.0.1.198, soulfyai）：帳密待確認（該機 `whoami` 核對短名）；app 內其密碼當初在未簽章版存入、Keychain 實際為空，需重新輸入。
+- 測「SFTP 不可用」畫面：在本機起一個不含 `Subsystem sftp` 的 sshd（127.0.0.1 限定、金鑰登入）即可重現。

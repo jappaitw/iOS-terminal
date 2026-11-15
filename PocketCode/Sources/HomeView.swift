@@ -8,6 +8,7 @@ struct HomeView: View {
     @EnvironmentObject private var store: HostStore
     @State private var editing: SSHHost?
     @State private var connecting: SSHHost.ID?
+    @State private var stage: SSHConnection.Stage?
     @State private var error: String?
     @State private var pickingFolder = false
 
@@ -27,7 +28,8 @@ struct HomeView: View {
                     ForEach(store.hosts) { host in
                         Button { connect(host) } label: {
                             HStack {
-                                row(icon: "server.rack", title: host.displayName, subtitle: host.subtitle)
+                                row(icon: "server.rack", title: host.displayName,
+                                    subtitle: connecting == host.id ? (stage?.rawValue ?? "Connecting…") : host.subtitle)
                                 Spacer()
                                 if connecting == host.id { ProgressView() }
                             }
@@ -84,10 +86,13 @@ struct HomeView: View {
 
     private func connect(_ host: SSHHost) {
         connecting = host.id
+        stage = nil
         Task {
-            defer { connecting = nil }
+            defer { connecting = nil; stage = nil }
             do {
-                let (conn, seenKey) = try await SSHConnection.connect(host: host, secrets: store.secrets(for: host))
+                let (conn, seenKey) = try await SSHConnection.connect(host: host, secrets: store.secrets(for: host)) { s in
+                    Task { @MainActor in stage = s }
+                }
                 if host.pinnedHostKey == nil, let seenKey {
                     var pinned = host
                     pinned.pinnedHostKey = seenKey
@@ -149,6 +154,16 @@ struct HostEditorView: View {
     let onSave: (SSHHost, HostSecrets) -> Void
     @Environment(\.dismiss) private var dismiss
 
+    /// Key auth with no key can never log in, so don't let it be saved.
+    private var canSave: Bool {
+        let base = !host.hostname.trimmingCharacters(in: .whitespaces).isEmpty
+            && !host.username.trimmingCharacters(in: .whitespaces).isEmpty
+        if host.auth == .privateKey {
+            return base && secrets.privateKey.contains("PRIVATE KEY")
+        }
+        return base
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -198,7 +213,7 @@ struct HostEditorView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { onSave(host, secrets); dismiss() }
-                        .disabled(host.hostname.isEmpty || host.username.isEmpty)
+                        .disabled(!canSave)
                 }
             }
         }

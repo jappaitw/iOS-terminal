@@ -44,7 +44,13 @@ enum SSHConnectError: LocalizedError {
 final class SSHConnection {
     let host: SSHHost
     let client: SSHClient
-    let sftp: SFTPClient?
+    private(set) var sftp: SFTPClient?
+
+    /// Connection phases shown in the UI while connecting.
+    enum Stage: String {
+        case signingIn = "Connecting & signing in…"
+        case openingFiles = "Opening file browser…"
+    }
 
     private init(host: SSHHost, client: SSHClient, sftp: SFTPClient?) {
         self.host = host
@@ -53,7 +59,8 @@ final class SSHConnection {
     }
 
     /// Connects and returns the connection plus the server's host key (for pinning).
-    static func connect(host: SSHHost, secrets: HostSecrets) async throws -> (SSHConnection, String?) {
+    static func connect(host: SSHHost, secrets: HostSecrets,
+                        progress: @escaping (Stage) -> Void = { _ in }) async throws -> (SSHConnection, String?) {
         let auth: SSHAuthenticationMethod
         switch host.auth {
         case .password:
@@ -70,8 +77,11 @@ final class SSHConnection {
             }
         }
         let validator = TOFUHostKeyValidator(pinned: host.pinnedHostKey)
-        sshLog.info("connect start \(host.hostname, privacy: .public):\(host.port) auth=\(host.auth.rawValue, privacy: .public) user=\(host.username, privacy: .public) pwlen=\(host.auth == .password ? secrets.password.count : -1)")
+        #if DEBUG
+        sshLog.debug("connect start \(host.hostname, privacy: .public):\(host.port) auth=\(host.auth.rawValue, privacy: .public)")
+        #endif
         let t0 = Date()
+        progress(.signingIn)
         let client = try await SSHClient.connect(
             host: host.hostname,
             port: host.port,
@@ -80,13 +90,21 @@ final class SSHConnection {
             reconnect: .never,
             connectTimeout: .seconds(15)
         )
-        sshLog.info("auth OK in \(String(format: "%.1f", Date().timeIntervalSince(t0)), privacy: .public)s; opening SFTP")
+        sshLog.info("auth OK in \(String(format: "%.1f", Date().timeIntervalSince(t0)), privacy: .public)s")
+        progress(.openingFiles)
         // SFTP is optional: a host with only the SSH shell enabled (common on NAS boxes)
         // still gets a working terminal; the explorer just explains what's missing.
         // Hard 10s cap: some servers accept the channel but never answer the subsystem request.
         let sftp = await Self.openSFTP(client, timeoutSeconds: 10)
         sshLog.info("sftp \(sftp == nil ? "unavailable" : "OK", privacy: .public) at \(String(format: "%.1f", Date().timeIntervalSince(t0)), privacy: .public)s")
         return (SSHConnection(host: host, client: client, sftp: sftp), validator.seenKey)
+    }
+
+    /// Retries the SFTP subsystem on the existing session (e.g. after the user enabled it on the server).
+    func reopenSFTP() async -> SFTPClient? {
+        if let sftp { return sftp }
+        sftp = await Self.openSFTP(client, timeoutSeconds: 10)
+        return sftp
     }
 
     /// Opens SFTP with a hard timeout. A task group would await the hung child on exit,
