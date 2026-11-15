@@ -1,0 +1,74 @@
+name: PocketCode
+options:
+  bundleIdPrefix: com.jlmxstudio
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+packages:
+  Citadel:
+    url: https://github.com/orlandos-nl/Citadel
+    exactVersion: "0.12.0"
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    exactVersion: "1.18.0"
+  Runestone:
+    url: https://github.com/simonbs/Runestone
+    exactVersion: "0.5.2"
+  TreeSitterLanguages:
+    url: https://github.com/simonbs/TreeSitterLanguages
+    exactVersion: "0.1.10"
+targets:
+  PocketCode:
+    type: application
+    platform: iOS
+    sources:
+      - PocketCode/Sources
+      - PocketCode/Resources
+    info:
+      path: PocketCode/Info.plist
+      properties:
+        CFBundleDisplayName: PocketCode
+        UILaunchScreen: {}
+        UIUserInterfaceStyle: Dark
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        NSLocalNetworkUsageDescription: PocketCode connects to SSH hosts on your local network.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jlmxstudio.pocketcode
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ENABLE_PREVIEWS: YES
+    dependencies:
+      - package: Citadel
+      - package: SwiftTerm
+      - package: Runestone
+      - package: TreeSitterLanguages
+        products:
+          - TreeSitterBashRunestone
+          - TreeSitterCRunestone
+          - TreeSitterCPPRunestone
+          - TreeSitterCSSRunestone
+          - TreeSitterGoRunestone
+          - TreeSitterHTMLRunestone
+          - TreeSitterJavaRunestone
+          - TreeSitterJavaScriptRunestone
+          - TreeSitterJSONRunestone
+          - TreeSitterMarkdownRunestone
+          - TreeSitterPythonRunestone
+          - TreeSitterRubyRunestone
+          - TreeSitterRustRunestone
+          - TreeSitterSwiftRunestone
+          - TreeSitterTypeScriptRunestone
+          - TreeSitterTSXRunestone
+          - TreeSitterYAMLRunestone
+          - TreeSitterTOMLRunestone
+          - TreeSitterSQLRunestone
+          - TreeSitterPHPRunestone
+          - TreeSitterCSharpRunestone

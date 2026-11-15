@@ -1,0 +1,38 @@
+import SwiftUI
+
+@main
+struct PocketCodeApp: App {
+    @StateObject private var hosts = HostStore()
+
+    init() {
+        LocalFileSystem.seedWelcomeProjectIfNeeded()
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .environmentObject(hosts)
+                .preferredColorScheme(.dark)
+                .tint(VS.accent)
+        }
+    }
+}
+
+/// Switches between the host picker and an open workspace.
+struct RootView: View {
+    @State private var workspace: Workspace?
+
+    var body: some View {
+        Group {
+            if let workspace {
+                WorkspaceView(workspace: workspace, onClose: {
+                    workspace.shutdown()
+                    self.workspace = nil
+                })
+            } else {
+                HomeView(onOpen: { self.workspace = $0 })
+            }
+        }
+        .background(VS.editorBG.ignoresSafeArea())
+    }
+}

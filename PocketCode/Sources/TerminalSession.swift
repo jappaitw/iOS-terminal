@@ -1,0 +1,166 @@
+import Foundation
+import UIKit
+import SwiftTerm
+import Citadel
+import NIOCore
+import NIOSSH
+
+/// A shell running in a remote PTY, rendered by a SwiftTerm view that the session owns
+/// (so scrollback survives tab switches).
+@MainActor
+final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalViewDelegate {
+    let id = UUID()
+    @Published var title: String
+    @Published private(set) var isRunning = false
+    @Published private(set) var exitMessage: String?
+
+    let terminalView: SwiftTerm.TerminalView
+    private let client: SSHClient
+    private let initialDirectory: String?
+    private var writer: TTYStdinWriter?
+    /// Single ordered pipeline for everything typed; unstructured per-key Tasks
+    /// are NOT ordered and scrambled fast input. The box yields synchronously in
+    /// the delegate callback, so arrival order is byte order.
+    private let input = InputBox()
+
+    final class InputBox: @unchecked Sendable {
+        private let lock = NSLock()
+        private var cont: AsyncStream<[UInt8]>.Continuation?
+        func set(_ c: AsyncStream<[UInt8]>.Continuation?) { lock.lock(); cont = c; lock.unlock() }
+        func yield(_ b: [UInt8]) { lock.lock(); cont?.yield(b); lock.unlock() }
+        func finish() { lock.lock(); cont?.finish(); cont = nil; lock.unlock() }
+    }
+    private var task: Task<Void, Never>?
+    private var size = (cols: 80, rows: 24)
+
+    init(client: SSHClient, index: Int, initialDirectory: String?) {
+        self.client = client
+        self.initialDirectory = initialDirectory
+        self.title = "bash \(index)"
+        self.terminalView = SwiftTerm.TerminalView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        super.init()
+        configureView()
+        start()
+    }
+
+    private func configureView() {
+        let tv = terminalView
+        tv.terminalDelegate = self
+        tv.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        tv.nativeBackgroundColor = UIColor(hex: 0x1E1E1E)
+        tv.nativeForegroundColor = UIColor(hex: 0xCCCCCC)
+        tv.caretColor = UIColor(hex: 0xCCCCCC)
+        tv.optionAsMetaKey = true
+        tv.inputAccessoryView = nil // key row lives in TerminalPanel's layout instead
+        // VS Code's integrated terminal ANSI palette.
+        let palette: [UInt32] = [0x000000, 0xCD3131, 0x0DBC79, 0xE5E510, 0x2472C8, 0xBC3FBC, 0x11A8CD, 0xE5E5E5,
+                                 0x666666, 0xF14C4C, 0x23D18B, 0xF5F543, 0x3B8EEA, 0xD670D6, 0x29B8DB, 0xE5E5E5]
+        tv.installColors(palette.map { hex in
+            SwiftTerm.Color(red: UInt16((hex >> 16) & 0xFF) * 257,
+                            green: UInt16((hex >> 8) & 0xFF) * 257,
+                            blue: UInt16(hex & 0xFF) * 257)
+        })
+    }
+
+    func start() {
+        guard !isRunning else { return }
+        isRunning = true
+        exitMessage = nil
+        let (stream, continuation) = AsyncStream<[UInt8]>.makeStream()
+        input.set(continuation)
+        let client = client
+        let request = SSHChannelRequestEvent.PseudoTerminalRequest(
+            wantReply: true,
+            term: "xterm-256color",
+            terminalCharacterWidth: size.cols,
+            terminalRowHeight: size.rows,
+            terminalPixelWidth: 0,
+            terminalPixelHeight: 0,
+            terminalModes: .init([.ECHO: 1])
+        )
+        task = Task { [weak self] in
+            do {
+                try await client.withPTY(request) { inbound, outbound in
+                    guard let self else { return }
+                    self.writer = outbound
+                    if let dir = self.initialDirectory {
+                        continuation.yield(Array("cd \(PathUtil.shellQuote(dir)) && clear\n".utf8))
+                    }
+                    try await outbound.changeSize(cols: self.size.cols, rows: self.size.rows, pixelWidth: 0, pixelHeight: 0)
+                    // Writer pump: consumes the ordered stream off the main actor.
+                    // AsyncStream iteration ends on cancellation or finish().
+                    async let pump: Void = {
+                        for await chunk in stream {
+                            try? await outbound.write(ByteBuffer(bytes: chunk))
+                        }
+                    }()
+                    for try await chunk in inbound {
+                        switch chunk {
+                        case .stdout(let buf), .stderr(let buf):
+                            self.terminalView.feed(byteArray: ArraySlice(buf.readableBytesView))
+                        }
+                    }
+                    continuation.finish()
+                    await pump
+                }
+                self?.finish(message: nil)
+            } catch is CancellationError {
+                self?.finish(message: nil)
+            } catch {
+                self?.finish(message: error.localizedDescription)
+            }
+        }
+    }
+
+    private func finish(message: String?) {
+        input.finish()
+        writer = nil
+        isRunning = false
+        exitMessage = message ?? "Process exited"
+        terminalView.feed(text: "\r\n\u{1B}[2m[\(exitMessage!)]\u{1B}[0m\r\n")
+    }
+
+    func stop() {
+        task?.cancel()
+        task = nil
+    }
+
+    func send(text: String) { input.yield(Array(text.utf8)) }
+
+    // MARK: TerminalViewDelegate
+
+    nonisolated func send(source: SwiftTerm.TerminalView, data: ArraySlice<UInt8>) {
+        input.yield(Array(data))
+    }
+
+    nonisolated func sizeChanged(source: SwiftTerm.TerminalView, newCols: Int, newRows: Int) {
+        Task { @MainActor in
+            self.size = (newCols, newRows)
+            if let writer = self.writer {
+                try? await writer.changeSize(cols: newCols, rows: newRows, pixelWidth: 0, pixelHeight: 0)
+            }
+        }
+    }
+
+    nonisolated func setTerminalTitle(source: SwiftTerm.TerminalView, title: String) {
+        Task { @MainActor in if !title.isEmpty { self.title = title } }
+    }
+
+    nonisolated func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {}
+    nonisolated func scrolled(source: SwiftTerm.TerminalView, position: Double) {}
+    nonisolated func rangeChanged(source: SwiftTerm.TerminalView, startY: Int, endY: Int) {}
+
+    nonisolated func requestOpenLink(source: SwiftTerm.TerminalView, link: String, params: [String: String]) {
+        guard let url = URL(string: link), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { return }
+        Task { @MainActor in UIApplication.shared.open(url) }
+    }
+
+    nonisolated func clipboardCopy(source: SwiftTerm.TerminalView, content: Data) {
+        if let s = String(data: content, encoding: .utf8) { Task { @MainActor in UIPasteboard.general.string = s } }
+    }
+}
+
+
+/// Replaces SwiftTerm's built-in accessory bar, which clips its buttons at the bottom
+/// of the screen. Same construction as the editor's symbol row: a scrollable stack
+/// laid out with Auto Layout inside a keyboard-styled UIInputView.

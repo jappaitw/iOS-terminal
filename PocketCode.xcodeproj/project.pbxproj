@@ -1,0 +1,603 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0CFEDC256BF160E42CEAF87E /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = D09CFD6FAC8FF17844259C81 /* Runestone */; };
+		14DD3658D8B089176346CF24 /* TreeSitterRustRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = DE4B5B0070252BCCE4C8A3BB /* TreeSitterRustRunestone */; };
+		16E903C85BC1D8971A341A0F /* TreeSitterTSXRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = F4C639AE97311A925F9C9854 /* TreeSitterTSXRunestone */; };
+		1DAA25C54C4BFA14308CE57A /* WorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BD973CD1A208DE0767150F8 /* WorkspaceView.swift */; };
+		32F23952ECF56E6599A9A1A0 /* TreeSitterSQLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 2B1736E56B2EE74BC8E28557 /* TreeSitterSQLRunestone */; };
+		33946154E2E024B58A4C65FA /* EditorArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7902E6722A8E6CF1EA2B774D /* EditorArea.swift */; };
+		34B6B26545365286361EAC38 /* TreeSitterCPPRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 8DA510828310DCECF976A567 /* TreeSitterCPPRunestone */; };
+		46FF224EF3EF3143A750CFB1 /* TreeSitterYAMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = F48AF870890CF16744D9B302 /* TreeSitterYAMLRunestone */; };
+		52A2E7FDC86554F1A5168E93 /* SSHConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD585EAC031FAA4149CCB381 /* SSHConnection.swift */; };
+		586E03F67F5C93E4BBBF06E1 /* TreeSitterJavaScriptRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = E6D7966FD01E7F754899B2FF /* TreeSitterJavaScriptRunestone */; };
+		6D0856B262B850B6A850D170 /* TreeSitterCSSRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = FF1AA2338C07BDAD15C17013 /* TreeSitterCSSRunestone */; };
+		6D69B86866E836810ECD8C87 /* TreeSitterPHPRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 23818CDACEC1182A4FBA90CD /* TreeSitterPHPRunestone */; };
+		6DF097ACCBDB3FE5C84D1877 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBCEF83BA2A9521E2B53502 /* Citadel */; };
+		712A02705B440FADDA048542 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A98E635BCF69DC10EE2A791 /* Theme.swift */; };
+		76ACD022C207BE738D3B01F5 /* TreeSitterCRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 51B364A191483F54BB61B256 /* TreeSitterCRunestone */; };
+		7E2E8001CC6C4D231E0C4884 /* ExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850F700369505CBA2D4555FD /* ExplorerView.swift */; };
+		805D4B242CCDD6937EB16F5E /* FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A2339A84E26A6139EF8C57 /* FileSystem.swift */; };
+		8436605E7F4FCF9A5CA8A923 /* TreeSitterGoRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = C1A9CB6553D44BF331146754 /* TreeSitterGoRunestone */; };
+		8AFA9DCB0D1D0A84E2E3E610 /* TreeSitterSwiftRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = C596376B087064EC8D9C08A6 /* TreeSitterSwiftRunestone */; };
+		8EEF343C5ABD60AC908C0978 /* TreeSitterPythonRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF8BA92D148F1B78C294444 /* TreeSitterPythonRunestone */; };
+		984DE125EA7926E8B7E68F3B /* TreeSitterJavaRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 550C859E14EFF5507F5511DF /* TreeSitterJavaRunestone */; };
+		99984E0402E16DFD81FEFF7F /* TreeSitterBashRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = ED9F9E39F4EA756F83125669 /* TreeSitterBashRunestone */; };
+		A42EB8146F8C3D419B9F76D5 /* TreeSitterTypeScriptRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 179F90AA7E4D3236F1B920DE /* TreeSitterTypeScriptRunestone */; };
+		A92F0A94E7C6EB6A987FAD1E /* TreeSitterMarkdownRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = B6E0523E47049614170F23B4 /* TreeSitterMarkdownRunestone */; };
+		AAECAE5BD513B5FCA88B4C40 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = B75325CA0BB6FEDFB4137371 /* SwiftTerm */; };
+		B5BED6C8CB938CDCF4B4595E /* TerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */; };
+		C22E24A08C0E8ECC2493CDB6 /* TreeSitterHTMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5257CD1845D3669F6DD764 /* TreeSitterHTMLRunestone */; };
+		C476D8D2CAF616253BCAA975 /* TreeSitterJSONRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = BCBEEB02D7716967C8EF04BF /* TreeSitterJSONRunestone */; };
+		C69D69C913CA07006A2280DE /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E2DD43F230F029102F0C73 /* App.swift */; };
+		DA91B1B92063D7B8843851F0 /* Languages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7433C856DA62D76100A463FB /* Languages.swift */; };
+		E1A7FCE3E38A539D78F893EC /* Hosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */; };
+		E497B56819A6A320181321EC /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50A8682C83776C6CC8A37E4A /* Workspace.swift */; };
+		F34644F4DDD99F2B54B2137F /* TerminalPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */; };
+		F359CA11408A51DC617E3362 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075C487F60D1E8FDE0FE0FDD /* HomeView.swift */; };
+		F8554EA25DAC4D6D245C1AC2 /* TreeSitterTOMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 70FDDA6CAF28F434B82A62AE /* TreeSitterTOMLRunestone */; };
+		F8A1486ACBF5B4AE2FFF5453 /* TreeSitterCSharpRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 18DFBE3718EED39D08657977 /* TreeSitterCSharpRunestone */; };
+		FB33D1AF6A5D8C682962C913 /* TreeSitterRubyRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 9B19D8F6817C76637676599D /* TreeSitterRubyRunestone */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		075C487F60D1E8FDE0FE0FDD /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		0A98E635BCF69DC10EE2A791 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		0BD973CD1A208DE0767150F8 /* WorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceView.swift; sourceTree = "<group>"; };
+		50A8682C83776C6CC8A37E4A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
+		580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hosts.swift; sourceTree = "<group>"; };
+		62270738A536E9ABD36747BF /* PocketCode.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PocketCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7433C856DA62D76100A463FB /* Languages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Languages.swift; sourceTree = "<group>"; };
+		7902E6722A8E6CF1EA2B774D /* EditorArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorArea.swift; sourceTree = "<group>"; };
+		7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPanel.swift; sourceTree = "<group>"; };
+		850F700369505CBA2D4555FD /* ExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorerView.swift; sourceTree = "<group>"; };
+		93831667667874BEDDFE4566 /* .keep */ = {isa = PBXFileReference; path = .keep; sourceTree = "<group>"; };
+		B5E2DD43F230F029102F0C73 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		BD585EAC031FAA4149CCB381 /* SSHConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnection.swift; sourceTree = "<group>"; };
+		D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSession.swift; sourceTree = "<group>"; };
+		E9A2339A84E26A6139EF8C57 /* FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		234F021366075481539E84DF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6DF097ACCBDB3FE5C84D1877 /* Citadel in Frameworks */,
+				AAECAE5BD513B5FCA88B4C40 /* SwiftTerm in Frameworks */,
+				0CFEDC256BF160E42CEAF87E /* Runestone in Frameworks */,
+				99984E0402E16DFD81FEFF7F /* TreeSitterBashRunestone in Frameworks */,
+				76ACD022C207BE738D3B01F5 /* TreeSitterCRunestone in Frameworks */,
+				34B6B26545365286361EAC38 /* TreeSitterCPPRunestone in Frameworks */,
+				6D0856B262B850B6A850D170 /* TreeSitterCSSRunestone in Frameworks */,
+				8436605E7F4FCF9A5CA8A923 /* TreeSitterGoRunestone in Frameworks */,
+				C22E24A08C0E8ECC2493CDB6 /* TreeSitterHTMLRunestone in Frameworks */,
+				984DE125EA7926E8B7E68F3B /* TreeSitterJavaRunestone in Frameworks */,
+				586E03F67F5C93E4BBBF06E1 /* TreeSitterJavaScriptRunestone in Frameworks */,
+				C476D8D2CAF616253BCAA975 /* TreeSitterJSONRunestone in Frameworks */,
+				A92F0A94E7C6EB6A987FAD1E /* TreeSitterMarkdownRunestone in Frameworks */,
+				8EEF343C5ABD60AC908C0978 /* TreeSitterPythonRunestone in Frameworks */,
+				FB33D1AF6A5D8C682962C913 /* TreeSitterRubyRunestone in Frameworks */,
+				14DD3658D8B089176346CF24 /* TreeSitterRustRunestone in Frameworks */,
+				8AFA9DCB0D1D0A84E2E3E610 /* TreeSitterSwiftRunestone in Frameworks */,
+				A42EB8146F8C3D419B9F76D5 /* TreeSitterTypeScriptRunestone in Frameworks */,
+				16E903C85BC1D8971A341A0F /* TreeSitterTSXRunestone in Frameworks */,
+				46FF224EF3EF3143A750CFB1 /* TreeSitterYAMLRunestone in Frameworks */,
+				F8554EA25DAC4D6D245C1AC2 /* TreeSitterTOMLRunestone in Frameworks */,
+				32F23952ECF56E6599A9A1A0 /* TreeSitterSQLRunestone in Frameworks */,
+				6D69B86866E836810ECD8C87 /* TreeSitterPHPRunestone in Frameworks */,
+				F8A1486ACBF5B4AE2FFF5453 /* TreeSitterCSharpRunestone in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3B83AFC04BD2475CFE677DA9 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				B5E2DD43F230F029102F0C73 /* App.swift */,
+				7902E6722A8E6CF1EA2B774D /* EditorArea.swift */,
+				850F700369505CBA2D4555FD /* ExplorerView.swift */,
+				E9A2339A84E26A6139EF8C57 /* FileSystem.swift */,
+				075C487F60D1E8FDE0FE0FDD /* HomeView.swift */,
+				580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */,
+				7433C856DA62D76100A463FB /* Languages.swift */,
+				BD585EAC031FAA4149CCB381 /* SSHConnection.swift */,
+				7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */,
+				D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */,
+				0A98E635BCF69DC10EE2A791 /* Theme.swift */,
+				50A8682C83776C6CC8A37E4A /* Workspace.swift */,
+				0BD973CD1A208DE0767150F8 /* WorkspaceView.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		4F348F0FBE7DF2C82EE01502 /* PocketCode */ = {
+			isa = PBXGroup;
+			children = (
+				5A35B74658DDE8B045378BA2 /* Resources */,
+				3B83AFC04BD2475CFE677DA9 /* Sources */,
+			);
+			path = PocketCode;
+			sourceTree = "<group>";
+		};
+		5A35B74658DDE8B045378BA2 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				93831667667874BEDDFE4566 /* .keep */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		CCCB10B00AE66D80A44185F1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				62270738A536E9ABD36747BF /* PocketCode.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D891B1D1AA19478F7CB5EA6F = {
+			isa = PBXGroup;
+			children = (
+				4F348F0FBE7DF2C82EE01502 /* PocketCode */,
+				CCCB10B00AE66D80A44185F1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2319DF1487FB856CDE54E057 /* PocketCode */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF9A5F534748CB2319B1AE69 /* Build configuration list for PBXNativeTarget "PocketCode" */;
+			buildPhases = (
+				FE0F60E800C35EAB7A6B78EE /* Sources */,
+				234F021366075481539E84DF /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PocketCode;
+			packageProductDependencies = (
+				1BBCEF83BA2A9521E2B53502 /* Citadel */,
+				B75325CA0BB6FEDFB4137371 /* SwiftTerm */,
+				D09CFD6FAC8FF17844259C81 /* Runestone */,
+				ED9F9E39F4EA756F83125669 /* TreeSitterBashRunestone */,
+				51B364A191483F54BB61B256 /* TreeSitterCRunestone */,
+				8DA510828310DCECF976A567 /* TreeSitterCPPRunestone */,
+				FF1AA2338C07BDAD15C17013 /* TreeSitterCSSRunestone */,
+				C1A9CB6553D44BF331146754 /* TreeSitterGoRunestone */,
+				7A5257CD1845D3669F6DD764 /* TreeSitterHTMLRunestone */,
+				550C859E14EFF5507F5511DF /* TreeSitterJavaRunestone */,
+				E6D7966FD01E7F754899B2FF /* TreeSitterJavaScriptRunestone */,
+				BCBEEB02D7716967C8EF04BF /* TreeSitterJSONRunestone */,
+				B6E0523E47049614170F23B4 /* TreeSitterMarkdownRunestone */,
+				1DF8BA92D148F1B78C294444 /* TreeSitterPythonRunestone */,
+				9B19D8F6817C76637676599D /* TreeSitterRubyRunestone */,
+				DE4B5B0070252BCCE4C8A3BB /* TreeSitterRustRunestone */,
+				C596376B087064EC8D9C08A6 /* TreeSitterSwiftRunestone */,
+				179F90AA7E4D3236F1B920DE /* TreeSitterTypeScriptRunestone */,
+				F4C639AE97311A925F9C9854 /* TreeSitterTSXRunestone */,
+				F48AF870890CF16744D9B302 /* TreeSitterYAMLRunestone */,
+				70FDDA6CAF28F434B82A62AE /* TreeSitterTOMLRunestone */,
+				2B1736E56B2EE74BC8E28557 /* TreeSitterSQLRunestone */,
+				23818CDACEC1182A4FBA90CD /* TreeSitterPHPRunestone */,
+				18DFBE3718EED39D08657977 /* TreeSitterCSharpRunestone */,
+			);
+			productName = PocketCode;
+			productReference = 62270738A536E9ABD36747BF /* PocketCode.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		72B8AA645EA276235E629BF8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					2319DF1487FB856CDE54E057 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 4A6B7695CFD3C6F89FA2FA5D /* Build configuration list for PBXProject "PocketCode" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D891B1D1AA19478F7CB5EA6F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6433A1C661463C5A8FE8F1B4 /* XCRemoteSwiftPackageReference "Citadel" */,
+				1D05E7649C62AF23FE6846ED /* XCRemoteSwiftPackageReference "Runestone" */,
+				64CD7218559C3EBA29D71503 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+				8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CCCB10B00AE66D80A44185F1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2319DF1487FB856CDE54E057 /* PocketCode */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FE0F60E800C35EAB7A6B78EE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C69D69C913CA07006A2280DE /* App.swift in Sources */,
+				33946154E2E024B58A4C65FA /* EditorArea.swift in Sources */,
+				7E2E8001CC6C4D231E0C4884 /* ExplorerView.swift in Sources */,
+				805D4B242CCDD6937EB16F5E /* FileSystem.swift in Sources */,
+				F359CA11408A51DC617E3362 /* HomeView.swift in Sources */,
+				E1A7FCE3E38A539D78F893EC /* Hosts.swift in Sources */,
+				DA91B1B92063D7B8843851F0 /* Languages.swift in Sources */,
+				52A2E7FDC86554F1A5168E93 /* SSHConnection.swift in Sources */,
+				F34644F4DDD99F2B54B2137F /* TerminalPanel.swift in Sources */,
+				B5BED6C8CB938CDCF4B4595E /* TerminalSession.swift in Sources */,
+				712A02705B440FADDA048542 /* Theme.swift in Sources */,
+				E497B56819A6A320181321EC /* Workspace.swift in Sources */,
+				1DAA25C54C4BFA14308CE57A /* WorkspaceView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		292279FD8B44FB3358CB883E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		7C56218A66AFBD732DE34723 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = PocketCode/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D79BAE07CDAA5C0061349493 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		E1E03115E7CB67A1B32DC4B0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = PocketCode/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4A6B7695CFD3C6F89FA2FA5D /* Build configuration list for PBXProject "PocketCode" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				292279FD8B44FB3358CB883E /* Debug */,
+				D79BAE07CDAA5C0061349493 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FF9A5F534748CB2319B1AE69 /* Build configuration list for PBXNativeTarget "PocketCode" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C56218A66AFBD732DE34723 /* Debug */,
+				E1E03115E7CB67A1B32DC4B0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1D05E7649C62AF23FE6846ED /* XCRemoteSwiftPackageReference "Runestone" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/simonbs/Runestone";
+			requirement = {
+				kind = exactVersion;
+				version = 0.5.2;
+			};
+		};
+		6433A1C661463C5A8FE8F1B4 /* XCRemoteSwiftPackageReference "Citadel" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/orlandos-nl/Citadel";
+			requirement = {
+				kind = exactVersion;
+				version = 0.12.0;
+			};
+		};
+		64CD7218559C3EBA29D71503 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				kind = exactVersion;
+				version = 1.18.0;
+			};
+		};
+		8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/simonbs/TreeSitterLanguages";
+			requirement = {
+				kind = exactVersion;
+				version = 0.1.10;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		179F90AA7E4D3236F1B920DE /* TreeSitterTypeScriptRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterTypeScriptRunestone;
+		};
+		18DFBE3718EED39D08657977 /* TreeSitterCSharpRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterCSharpRunestone;
+		};
+		1BBCEF83BA2A9521E2B53502 /* Citadel */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6433A1C661463C5A8FE8F1B4 /* XCRemoteSwiftPackageReference "Citadel" */;
+			productName = Citadel;
+		};
+		1DF8BA92D148F1B78C294444 /* TreeSitterPythonRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterPythonRunestone;
+		};
+		23818CDACEC1182A4FBA90CD /* TreeSitterPHPRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterPHPRunestone;
+		};
+		2B1736E56B2EE74BC8E28557 /* TreeSitterSQLRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterSQLRunestone;
+		};
+		51B364A191483F54BB61B256 /* TreeSitterCRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterCRunestone;
+		};
+		550C859E14EFF5507F5511DF /* TreeSitterJavaRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterJavaRunestone;
+		};
+		70FDDA6CAF28F434B82A62AE /* TreeSitterTOMLRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterTOMLRunestone;
+		};
+		7A5257CD1845D3669F6DD764 /* TreeSitterHTMLRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterHTMLRunestone;
+		};
+		8DA510828310DCECF976A567 /* TreeSitterCPPRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterCPPRunestone;
+		};
+		9B19D8F6817C76637676599D /* TreeSitterRubyRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterRubyRunestone;
+		};
+		B6E0523E47049614170F23B4 /* TreeSitterMarkdownRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterMarkdownRunestone;
+		};
+		B75325CA0BB6FEDFB4137371 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 64CD7218559C3EBA29D71503 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+		BCBEEB02D7716967C8EF04BF /* TreeSitterJSONRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterJSONRunestone;
+		};
+		C1A9CB6553D44BF331146754 /* TreeSitterGoRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterGoRunestone;
+		};
+		C596376B087064EC8D9C08A6 /* TreeSitterSwiftRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterSwiftRunestone;
+		};
+		D09CFD6FAC8FF17844259C81 /* Runestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1D05E7649C62AF23FE6846ED /* XCRemoteSwiftPackageReference "Runestone" */;
+			productName = Runestone;
+		};
+		DE4B5B0070252BCCE4C8A3BB /* TreeSitterRustRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterRustRunestone;
+		};
+		E6D7966FD01E7F754899B2FF /* TreeSitterJavaScriptRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterJavaScriptRunestone;
+		};
+		ED9F9E39F4EA756F83125669 /* TreeSitterBashRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterBashRunestone;
+		};
+		F48AF870890CF16744D9B302 /* TreeSitterYAMLRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterYAMLRunestone;
+		};
+		F4C639AE97311A925F9C9854 /* TreeSitterTSXRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterTSXRunestone;
+		};
+		FF1AA2338C07BDAD15C17013 /* TreeSitterCSSRunestone */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B44B72D634B9A00B8321B24 /* XCRemoteSwiftPackageReference "TreeSitterLanguages" */;
+			productName = TreeSitterCSSRunestone;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 72B8AA645EA276235E629BF8 /* Project object */;
+}
