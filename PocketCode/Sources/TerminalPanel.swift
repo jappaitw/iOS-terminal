@@ -11,12 +11,14 @@ struct TerminalPanel: View {
                 TerminalBody(session: session, workspace: workspace).id(session.id)
             } else {
                 VStack(spacing: 12) {
-                    if workspace.isRemote {
+                    if workspace.canOpenTerminal {
                         Button { workspace.newTerminal() } label: { Label("New Terminal", systemImage: "plus") }
+                        if !workspace.isRemote {
+                            Text("Runs PocketCode's local shell on this device — not bash.\nType `help` for the commands.")
+                                .multilineTextAlignment(.center).font(.caption).foregroundStyle(VS.textDim)
+                        }
                     } else {
-                        Image(systemName: "terminal").font(.largeTitle).foregroundStyle(VS.textDim)
-                        Text("The terminal needs an SSH host.\niOS doesn't allow apps to run a local shell.")
-                            .multilineTextAlignment(.center).font(.callout).foregroundStyle(VS.textDim)
+                        ProgressView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -50,7 +52,7 @@ struct TerminalPanel: View {
             }
             .font(.system(size: 14))
             .frame(width: 34, height: 34)
-            .disabled(!workspace.isRemote)
+            .disabled(!workspace.canOpenTerminal)
         }
         .foregroundStyle(VS.text)
         .frame(height: 35)

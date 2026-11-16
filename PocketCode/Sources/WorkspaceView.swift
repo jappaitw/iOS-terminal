@@ -56,7 +56,7 @@ struct WorkspaceView: View {
                 Button { Task { await workspace.saveAll() } } label: { Label("Save All", systemImage: "square.and.arrow.down.on.square") }
                 Button { Task { await workspace.refreshAll() } } label: { Label("Refresh Explorer", systemImage: "arrow.clockwise") }
                 Toggle(isOn: $workspace.showHidden) { Label("Show Hidden Files", systemImage: "eye") }
-                if workspace.isRemote {
+                if workspace.canOpenTerminal {
                     Button { workspace.newTerminal() } label: { Label("New Terminal", systemImage: "terminal") }
                 }
                 Divider()
@@ -165,7 +165,7 @@ struct WorkspaceView: View {
                     }
                 }
                 .hoverEffect(.highlight)
-                .disabled(p == .terminal && !workspace.isRemote)
+                .disabled(p == .terminal && !workspace.canOpenTerminal)
             }
             if vertical { Spacer() }
         }

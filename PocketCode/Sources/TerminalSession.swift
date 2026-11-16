@@ -6,8 +6,9 @@ import Citadel
 import NIOCore
 import NIOSSH
 
-/// A shell running in a remote PTY, rendered by a SwiftTerm view that the session owns
-/// (so scrollback survives tab switches).
+/// A terminal tab, rendered by a SwiftTerm view that the session owns (so scrollback
+/// survives tab switches). The backend is either a shell in a remote PTY over SSH, or
+/// PocketCode's on-device `LocalShell`; the UI, input ordering and link handling are shared.
 @MainActor
 final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalViewDelegate {
     let id = UUID()
@@ -25,7 +26,11 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     private var forwards: [Int: LocalPortForward] = [:]
 
     let terminalView: SwiftTerm.TerminalView
-    private var client: SSHClient
+    /// SSH backend (nil for a local terminal).
+    private var client: SSHClient?
+    /// Local backend (nil for an SSH terminal).
+    private(set) var shell: LocalShell?
+    var isLocal: Bool { shell != nil }
     /// Bumped on every start; a finishing task only updates state if it is still the current run.
     private var runID = 0
     /// Only the very first shell clears the screen after cd; restarts keep the scrollback visible.
@@ -55,6 +60,22 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         self.terminalView = PocketTerminalView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         super.init()
         configureView()
+        start()
+    }
+
+    /// A terminal running PocketCode's local shell inside `root` (no SSH).
+    init(localRoot: URL, index: Int, initialDirectory: String?, services: ShellServices) {
+        self.client = nil
+        self.initialDirectory = initialDirectory
+        self.title = "local \(index)"
+        self.terminalView = PocketTerminalView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        super.init()
+        configureView()
+        let tv = terminalView
+        shell = LocalShell(root: localRoot, services: services) { [weak self, weak tv] text in
+            tv?.feed(text: text)
+            self?.scheduleLinkScan()
+        }
         start()
     }
 
@@ -92,7 +113,11 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         hasStarted = true
         let (stream, continuation) = AsyncStream<[UInt8]>.makeStream()
         input.set(continuation)
-        let client = client
+        if let shell {
+            startLocal(shell, stream: stream, run: run)
+            return
+        }
+        guard let client else { return }
         let request = SSHChannelRequestEvent.PseudoTerminalRequest(
             wantReply: true,
             term: "xterm-256color",
@@ -140,6 +165,21 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         }
     }
 
+    private func startLocal(_ shell: LocalShell, stream: AsyncStream<[UInt8]>, run: Int) {
+        shell.onExit = { [weak self] in self?.finish(run, message: "Shell exited") }
+        shell.resize(cols: size.cols)
+        shell.start(initialDirectory: hasStartedLocal ? nil : initialDirectory)
+        hasStartedLocal = true
+        // Keystrokes arrive in order through the same InputBox stream as SSH.
+        task = Task { [weak self] in
+            for await chunk in stream {
+                guard let self else { return }
+                self.shell?.receive(chunk)
+            }
+        }
+    }
+    private var hasStartedLocal = false
+
     private func finish(_ run: Int, message: String?) {
         guard run == runID, isRunning else { return }
         input.finish()
@@ -152,6 +192,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     func stop() {
         task?.cancel()
         task = nil
+        shell?.stop()
         stopAllForwards()
     }
 
@@ -190,7 +231,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     /// same port is first forwarded over SSH so the callback reaches the CLI on the host.
     func openLink(_ link: String) {
         guard let url = URL(string: link), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { return }
-        guard let port = OAuthRedirect.localCallbackPort(in: link) else {
+        guard let client, let port = OAuthRedirect.localCallbackPort(in: link) else {
             InAppBrowser.present(url)
             return
         }
@@ -252,6 +293,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     nonisolated func sizeChanged(source: SwiftTerm.TerminalView, newCols: Int, newRows: Int) {
         Task { @MainActor in
             self.size = (newCols, newRows)
+            self.shell?.resize(cols: newCols)
             if let writer = self.writer {
                 try? await writer.changeSize(cols: newCols, rows: newRows, pixelWidth: 0, pixelHeight: 0)
             }

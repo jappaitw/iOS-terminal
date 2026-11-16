@@ -17,7 +17,7 @@ struct WorkspaceCommands: Commands {
         CommandGroup(after: .newItem) {
             Button("New Terminal") { workspace?.newTerminal() }
                 .keyboardShortcut("`", modifiers: [.control, .shift])
-                .disabled(workspace?.isRemote != true)
+                .disabled(workspace?.canOpenTerminal != true)
             Button("Close Editor") { if let w = workspace, let d = w.activeDocument { w.close(d) } }
                 .keyboardShortcut("w")
                 .disabled(workspace?.activeDocument == nil)

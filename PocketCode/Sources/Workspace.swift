@@ -526,15 +526,38 @@ final class Workspace: ObservableObject {
 
     // MARK: Terminal
 
+    /// Remote workspaces open a shell over SSH; local ones open PocketCode's on-device shell
+    /// rooted at the workspace folder.
+    var canOpenTerminal: Bool { isRemote || !rootPath.isEmpty }
+
     func newTerminal(at directory: String? = nil) {
-        guard let connection else { return }
         terminalCounter += 1
-        let session = TerminalSession(client: connection.client, index: terminalCounter,
-                                      initialDirectory: directory ?? (rootPath.isEmpty ? nil : rootPath))
+        let dir = directory ?? (rootPath.isEmpty ? nil : rootPath)
+        let session: TerminalSession
+        if let connection {
+            session = TerminalSession(client: connection.client, index: terminalCounter, initialDirectory: dir)
+        } else {
+            guard !rootPath.isEmpty else { terminalCounter -= 1; return }
+            session = TerminalSession(localRoot: URL(fileURLWithPath: rootPath), index: terminalCounter,
+                                      initialDirectory: dir, services: localShellServices())
+        }
         terminals.append(session)
         activeTerminalID = session.id
         panel = .terminal
         terminalVisible = true
+    }
+
+    /// Hooks the local shell uses to reach the rest of the app.
+    private func localShellServices() -> ShellServices {
+        var services = ShellServices()
+        services.openInEditor = { path in
+            Task { @MainActor [weak self] in
+                await self?.refreshAll()
+                self?.open(path)
+            }
+        }
+        services.runPython = PythonRuntime.shellCommand
+        return services
     }
 
     func killTerminal(_ session: TerminalSession) {

@@ -187,7 +187,7 @@ struct ExplorerView: View {
                 Label(workspace.isRemote ? "Download…" : "Share…", systemImage: "square.and.arrow.up")
             }
         }
-        if workspace.isRemote {
+        if workspace.canOpenTerminal {
             Button { workspace.newTerminal(at: dir) } label: { Label("Open in Integrated Terminal", systemImage: "terminal") }
         }
         Divider()
