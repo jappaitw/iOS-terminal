@@ -4,6 +4,18 @@ struct ExplorerView: View {
     @ObservedObject var workspace: Workspace
     @State private var prompt: NamePrompt?
     @State private var pendingDelete: FileItem?
+    /// Folder the file importer will upload into. Kept apart from the presentation flag:
+    /// SwiftUI resets the binding *before* calling the completion handler.
+    @State private var uploadDir: String?
+    @State private var showImporter = false
+    @State private var pendingUpload: PendingUpload?
+
+    struct PendingUpload: Identifiable {
+        let id = UUID()
+        let urls: [URL]
+        let dir: String
+        let conflicts: [String]
+    }
 
     struct NamePrompt: Identifiable {
         enum Kind { case newFile, newFolder, rename(FileItem) }
@@ -40,6 +52,47 @@ struct ExplorerView: View {
             .refreshable { await workspace.refreshAll() }
         }
         .background(VS.sidebarBG)
+        .overlay(alignment: .bottom) {
+            if let status = workspace.transferStatus {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text(status).font(.system(size: 12)).lineLimit(1)
+                }
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(Color(hex: 0x2D2D30), in: Capsule())
+                .overlay(Capsule().stroke(VS.border))
+                .foregroundStyle(VS.text)
+                .padding(.bottom, 12)
+            }
+        }
+        .fileImporter(isPresented: $showImporter, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
+            guard let dir = uploadDir, case .success(let urls) = result, !urls.isEmpty else { return }
+            let conflicts = workspace.uploadConflicts(urls, in: dir)
+            if conflicts.isEmpty {
+                Task { await workspace.upload(urls, to: dir) }
+            } else {
+                // Let the picker finish dismissing, or the dialog is dropped.
+                Task {
+                    try? await Task.sleep(nanoseconds: 450_000_000)
+                    pendingUpload = PendingUpload(urls: urls, dir: dir, conflicts: conflicts)
+                }
+            }
+        }
+        .confirmationDialog(pendingUpload.map { $0.conflicts.count == 1 ? "Replace “\($0.conflicts[0])”?" : "Replace \($0.conflicts.count) existing files?" } ?? "",
+                            isPresented: Binding(get: { pendingUpload != nil }, set: { if !$0 { pendingUpload = nil } }),
+                            titleVisibility: .visible, presenting: pendingUpload) { p in
+            Button("Replace", role: .destructive) { Task { await workspace.upload(p.urls, to: p.dir) } }
+            let fresh = p.urls.filter { !p.conflicts.contains($0.lastPathComponent) }
+            if !fresh.isEmpty {
+                Button("Upload Only New Files (\(fresh.count))") { Task { await workspace.upload(fresh, to: p.dir) } }
+            }
+        } message: { p in
+            Text(p.conflicts.prefix(5).joined(separator: ", ") + (p.conflicts.count > 5 ? "…" : "") + (p.conflicts.count == 1 ? " already exists" : " already exist") + " in this folder.")
+        }
+        .sheet(item: $workspace.shareItem, onDismiss: nil) { item in
+            ShareSheet(url: item.url) { workspace.finishedSharing(item); workspace.shareItem = nil }
+                .presentationDetents([.medium, .large])
+        }
         .alert(prompt?.title ?? "", isPresented: Binding(get: { prompt != nil }, set: { if !$0 { prompt = nil } })) {
             TextField("Name", text: Binding(get: { prompt?.text ?? "" }, set: { prompt?.text = $0 }))
                 .textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -100,6 +153,8 @@ struct ExplorerView: View {
             Spacer()
             Button { newItem(folder: false, in: workspace.targetDirectory) } label: { Image(systemName: "doc.badge.plus") }
             Button { newItem(folder: true, in: workspace.targetDirectory) } label: { Image(systemName: "folder.badge.plus") }
+            Button { pickUpload(workspace.targetDirectory) } label: { Image(systemName: "square.and.arrow.down.on.square") }
+                .accessibilityLabel("Upload Files")
             Button { Task { await workspace.refreshAll() } } label: { Image(systemName: "arrow.clockwise") }
             Button { workspace.collapseAll() } label: { Image(systemName: "rectangle.compress.vertical") }
         }
@@ -126,6 +181,12 @@ struct ExplorerView: View {
         }
         Button { newItem(folder: false, in: dir) } label: { Label("New File…", systemImage: "doc.badge.plus") }
         Button { newItem(folder: true, in: dir) } label: { Label("New Folder…", systemImage: "folder.badge.plus") }
+        Button { pickUpload(dir) } label: { Label("Upload Files Here…", systemImage: "square.and.arrow.down.on.square") }
+        if !item.isDirectory {
+            Button { Task { await workspace.download(item) } } label: {
+                Label(workspace.isRemote ? "Download…" : "Share…", systemImage: "square.and.arrow.up")
+            }
+        }
         if workspace.isRemote {
             Button { workspace.newTerminal(at: dir) } label: { Label("Open in Integrated Terminal", systemImage: "terminal") }
         }
@@ -142,10 +203,16 @@ struct ExplorerView: View {
     @ViewBuilder private var rootMenu: some View {
         Button { newItem(folder: false, in: workspace.rootPath) } label: { Label("New File…", systemImage: "doc.badge.plus") }
         Button { newItem(folder: true, in: workspace.rootPath) } label: { Label("New Folder…", systemImage: "folder.badge.plus") }
+        Button { pickUpload(workspace.rootPath) } label: { Label("Upload Files Here…", systemImage: "square.and.arrow.down.on.square") }
     }
 
     private func relativePath(_ path: String) -> String {
         path.hasPrefix(workspace.rootPath + "/") ? String(path.dropFirst(workspace.rootPath.count + 1)) : path
+    }
+
+    private func pickUpload(_ dir: String) {
+        uploadDir = dir
+        showImporter = true
     }
 
     private func newItem(folder: Bool, in dir: String) {
@@ -175,6 +242,9 @@ private struct ExplorerRow: View {
     var body: some View {
         let selected = workspace.selectedPath == item.path
         let openDoc = workspace.documents.first { $0.path == item.path }
+        let change = workspace.git?.change(for: item.path)
+        let nameColor: Color = openDoc?.isDirty == true ? VS.modified
+            : change?.color ?? (item.name.hasPrefix(".") ? VS.textDim : VS.text)
         Group {
             HStack(spacing: 4) {
                 // Indent guides
@@ -203,11 +273,17 @@ private struct ExplorerRow: View {
                 }
                 Text(item.name)
                     .font(.system(size: 13))
-                    .foregroundStyle(openDoc?.isDirty == true ? VS.modified : (item.name.hasPrefix(".") ? VS.textDim : VS.text))
+                    .foregroundStyle(nameColor)
                     .lineLimit(1)
                 if item.isSymlink { Image(systemName: "arrow.turn.down.right").font(.system(size: 9)).foregroundStyle(VS.textDim) }
                 Spacer(minLength: 0)
-                if openDoc?.isDirty == true { Text("M").font(.system(size: 11, weight: .semibold)).foregroundStyle(VS.modified) }
+                if item.isDirectory, let change, workspace.git?.files[item.path] == nil {
+                    Circle().fill(change.color).frame(width: 5, height: 5).padding(.trailing, 3)
+                } else if let change {
+                    Text(change.letter).font(.system(size: 11, weight: .semibold)).foregroundStyle(change.color)
+                } else if openDoc?.isDirty == true {
+                    Text("M").font(.system(size: 11, weight: .semibold)).foregroundStyle(VS.modified)
+                }
             }
             .padding(.leading, 8)
             .padding(.trailing, 12)
@@ -221,4 +297,18 @@ private struct ExplorerRow: View {
         }
         .accessibilityAddTraits(.isButton)
     }
+}
+
+/// UIKit share sheet (Save to Files, AirDrop, Open in…).
+struct ShareSheet: UIViewControllerRepresentable {
+    let url: URL
+    let onComplete: () -> Void
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let vc = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        vc.completionWithItemsHandler = { _, _, _, _ in onComplete() }
+        return vc
+    }
+
+    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }

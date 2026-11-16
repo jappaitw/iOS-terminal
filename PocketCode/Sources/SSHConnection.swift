@@ -27,14 +27,11 @@ let sshLog = Logger(subsystem: "com.jlmxstudio.pocketcode", category: "ssh")
 
 enum SSHConnectError: LocalizedError {
     case hostKeyChanged(String)
-    case badPrivateKey
 
     var errorDescription: String? {
         switch self {
         case .hostKeyChanged:
             return "The host key for this server has changed. This could mean someone is intercepting the connection. If you expected this (e.g. the server was reinstalled), use “Forget Host Key” in the host settings."
-        case .badPrivateKey:
-            return "Could not read the private key. Paste an OpenSSH ed25519 or RSA key (-----BEGIN OPENSSH PRIVATE KEY-----)."
         }
     }
 }
@@ -87,15 +84,8 @@ final class SSHConnection {
         case .password:
             auth = .passwordBased(username: host.username, password: secrets.password)
         case .privateKey:
-            let pass = secrets.passphrase.isEmpty ? nil : Data(secrets.passphrase.utf8)
-            let pem = SSHConnection.normalizedOpenSSHKey(secrets.privateKey)
-            if let k = try? Curve25519.Signing.PrivateKey(sshEd25519: pem, decryptionKey: pass) {
-                auth = .ed25519(username: host.username, privateKey: k)
-            } else if let k = try? Insecure.RSA.PrivateKey(sshRsa: pem, decryptionKey: pass) {
-                auth = .rsa(username: host.username, privateKey: k)
-            } else {
-                throw SSHConnectError.badPrivateKey
-            }
+            auth = try PrivateKeyParser.parse(secrets.privateKey, passphrase: secrets.passphrase)
+                .authMethod(username: host.username)
         }
         let validator = TOFUHostKeyValidator(pinned: pinned)
         #if DEBUG
@@ -162,6 +152,34 @@ final class SSHConnection {
         sshLog.info("reconnected")
     }
 
+    enum RunError: LocalizedError {
+        case timedOut
+        var errorDescription: String? { "The server took too long to answer." }
+    }
+
+    /// Runs a POSIX `sh` script on the host and returns stdout. The script's own failures
+    /// are swallowed (Citadel throws on any non-zero exit or stderr output), so callers
+    /// interpret empty output themselves. Works the same whatever the login shell is.
+    func run(_ script: String, timeoutSeconds: UInt64 = 30, maxBytes: Int = 8 << 20) async throws -> String {
+        let client = client
+        let command = "sh -c \(PathUtil.shellQuote(script)) 2>/dev/null; true"
+        let once = Once()
+        return try await withCheckedThrowingContinuation { cont in
+            Task {
+                do {
+                    let buf = try await client.executeCommand(command, maxResponseSize: maxBytes)
+                    if once.claim() { cont.resume(returning: String(decoding: buf.readableBytesView, as: UTF8.self)) }
+                } catch {
+                    if once.claim() { cont.resume(throwing: error) }
+                }
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: timeoutSeconds * 1_000_000_000)
+                if once.claim() { cont.resume(throwing: RunError.timedOut) }
+            }
+        }
+    }
+
     /// Retries the SFTP subsystem on the existing session (e.g. after the user enabled it on the server).
     func reopenSFTP() async -> SFTPClient? {
         if let sftp { return sftp }
@@ -185,24 +203,8 @@ final class SSHConnection {
         }
     }
 
-    /// Rebuilds the BEGIN/END lines and strips stray whitespace, so a key whose dashes were
-    /// mangled by smart punctuation (or that lost line breaks when pasted) still parses.
-    nonisolated static func normalizedOpenSSHKey(_ raw: String) -> String {
-        let text = raw.replacingOccurrences(of: "\r", with: "")
-        guard let begin = text.range(of: "BEGIN OPENSSH PRIVATE KEY"),
-              let end = text.range(of: "END OPENSSH PRIVATE KEY", range: begin.upperBound..<text.endIndex)
-        else { return raw.trimmingCharacters(in: .whitespacesAndNewlines) }
-        let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=")
-        let body = String(text[begin.upperBound..<end.lowerBound].unicodeScalars.filter { allowed.contains($0) })
-        var lines: [String] = []
-        var i = body.startIndex
-        while i < body.endIndex {
-            let j = body.index(i, offsetBy: 70, limitedBy: body.endIndex) ?? body.endIndex
-            lines.append(String(body[i..<j]))
-            i = j
-        }
-        return (["-----BEGIN OPENSSH PRIVATE KEY-----"] + lines + ["-----END OPENSSH PRIVATE KEY-----"]).joined(separator: "\n")
-    }
+    /// Kept for callers/tests written against the original OpenSSH-only helper.
+    nonisolated static func normalizedOpenSSHKey(_ raw: String) -> String { PrivateKeyParser.normalizedPEM(raw) }
 
     func close() {
         let client = client, sftp = sftp

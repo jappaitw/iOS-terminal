@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import SwiftTerm
+import Combine
 import Citadel
 import NIOCore
 import NIOSSH
@@ -35,6 +36,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         func finish() { lock.lock(); cont?.finish(); cont = nil; lock.unlock() }
     }
     private var task: Task<Void, Never>?
+    private var settingsSub: AnyCancellable?
     private var size = (cols: 80, rows: 24)
 
     init(client: SSHClient, index: Int, initialDirectory: String?) {
@@ -50,7 +52,10 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     private func configureView() {
         let tv = terminalView
         tv.terminalDelegate = self
-        tv.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        tv.font = .monospacedSystemFont(ofSize: AppSettings.shared.terminalFontSize, weight: .regular)
+        settingsSub = AppSettings.shared.$terminalFontSize
+            .removeDuplicates()
+            .sink { [weak tv] size in tv?.font = .monospacedSystemFont(ofSize: size, weight: .regular) }
         tv.nativeBackgroundColor = UIColor(hex: 0x1E1E1E)
         tv.nativeForegroundColor = UIColor(hex: 0xCCCCCC)
         tv.caretColor = UIColor(hex: 0xCCCCCC)
@@ -152,6 +157,12 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     }
 
     func send(text: String) { input.yield(Array(text.utf8)) }
+
+    /// Like VS Code's "Clear": wipe scrollback locally, then ask the shell to redraw its prompt (Ctrl-L).
+    func clearScreen() {
+        terminalView.feed(text: "\u{1B}[3J\u{1B}[2J\u{1B}[H")
+        if isRunning { send(text: "\u{0C}") }
+    }
 
     // MARK: TerminalViewDelegate
 

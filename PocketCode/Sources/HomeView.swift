@@ -11,6 +11,7 @@ struct HomeView: View {
     @State private var stage: SSHConnection.Stage?
     @State private var error: String?
     @State private var pickingFolder = false
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -54,6 +55,13 @@ struct HomeView: View {
             .scrollContentBackground(.hidden)
             .background(VS.sidebarBG)
             .navigationTitle("PocketCode")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showSettings = true } label: { Image(systemName: "gearshape") }
+                        .accessibilityLabel("Settings")
+                }
+            }
+            .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(item: $editing) { host in
                 HostEditorView(host: host, secrets: store.secrets(for: host)) { h, s in store.upsert(h, secrets: s) }
             }

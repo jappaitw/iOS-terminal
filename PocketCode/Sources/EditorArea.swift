@@ -135,14 +135,19 @@ private struct Breadcrumbs: View {
 private struct DocumentView: View {
     @ObservedObject var doc: EditorDocument
     @ObservedObject var workspace: Workspace
+    @ObservedObject private var settings = AppSettings.shared
 
     var body: some View {
         switch doc.content {
         case .loading:
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         case .text:
-            CodeEditor(doc: doc, onSave: { Task { await workspace.save(doc) } })
-                .ignoresSafeArea(.keyboard, edges: [])
+            VStack(spacing: 0) {
+                CodeEditor(doc: doc)
+                if doc.isEditing && settings.showKeyRow {
+                    EditorKeyRow(doc: doc, onSave: { Task { await workspace.save(doc) } })
+                }
+            }
         case .image(let img):
             ScrollView([.horizontal, .vertical]) {
                 Image(uiImage: img).interpolation(.none)
@@ -187,89 +192,63 @@ private struct DocumentView: View {
 /// Hosts the document's Runestone TextView.
 private struct CodeEditor: UIViewRepresentable {
     let doc: EditorDocument
-    let onSave: () -> Void
+    @Environment(\.panelActive) private var active
 
-    func makeCoordinator() -> Coordinator { Coordinator(doc: doc, onSave: onSave) }
+    func makeCoordinator() -> Coordinator { Coordinator(doc: doc) }
 
     func makeUIView(context: Context) -> TextView {
         let tv = doc.textView
         tv.editorDelegate = context.coordinator
-        tv.inputAccessoryView = context.coordinator.makeAccessory(for: tv)
+        tv.inputAccessoryView = nil // the key row lives in the layout (EditorKeyRow)
         return tv
     }
 
     func updateUIView(_ uiView: TextView, context: Context) {
-        context.coordinator.onSave = onSave
+        uiView.isUserInteractionEnabled = active
+        if !active, uiView.isFirstResponder { _ = uiView.resignFirstResponder() }
     }
 
     @MainActor
     final class Coordinator: NSObject, TextViewDelegate {
         let doc: EditorDocument
-        var onSave: () -> Void
-        weak var textView: TextView?
-
-        init(doc: EditorDocument, onSave: @escaping () -> Void) {
-            self.doc = doc
-            self.onSave = onSave
-        }
+        init(doc: EditorDocument) { self.doc = doc }
 
         func textViewDidChange(_ textView: TextView) { doc.textDidChange() }
+        func textViewDidBeginEditing(_ textView: TextView) { doc.isEditing = true }
+        func textViewDidEndEditing(_ textView: TextView) { doc.isEditing = false }
 
         func textViewDidChangeSelection(_ textView: TextView) {
             if let loc = textView.textLocation(at: textView.selectedRange.location) {
                 doc.cursor = (loc.lineNumber + 1, loc.column + 1)
             }
         }
+    }
+}
 
-        /// Keyboard row with the symbols that are painful to reach on the iOS keyboard.
-        func makeAccessory(for tv: TextView) -> UIView {
-            textView = tv
-            let bar = UIInputView(frame: CGRect(x: 0, y: 0, width: 400, height: 44), inputViewStyle: .keyboard)
-            let scroll = UIScrollView()
-            scroll.showsHorizontalScrollIndicator = false
-            scroll.translatesAutoresizingMaskIntoConstraints = false
-            bar.addSubview(scroll)
-            let stack = UIStackView()
-            stack.axis = .horizontal
-            stack.spacing = 6
-            stack.translatesAutoresizingMaskIntoConstraints = false
-            scroll.addSubview(stack)
+/// Editor symbols that are painful to reach on the iOS keyboard, on the shared key row.
+private struct EditorKeyRow: View {
+    let doc: EditorDocument
+    let onSave: () -> Void
 
-            func key(_ title: String?, image: String? = nil, _ action: @escaping () -> Void) -> UIButton {
-                var cfg = UIButton.Configuration.filled()
-                cfg.baseBackgroundColor = UIColor(hex: 0x3C3C3C)
-                cfg.baseForegroundColor = UIColor(hex: 0xE0E0E0)
-                cfg.contentInsets = .init(top: 6, leading: 10, bottom: 6, trailing: 10)
-                if let image { cfg.image = UIImage(systemName: image) }
-                if let title {
-                    cfg.attributedTitle = AttributedString(title, attributes: .init([.font: UIFont.monospacedSystemFont(ofSize: 15, weight: .medium)]))
-                }
-                return UIButton(configuration: cfg, primaryAction: UIAction { _ in action() })
-            }
+    var body: some View {
+        let tv = doc.textView
+        KeyRow(keys: [
+            .icon("arrow.right.to.line", id: "indent") { tv.insertText(AppSettings.shared.indentString) },
+            .icon("arrow.left", id: "left") { move(tv, -1) },
+            .icon("arrow.right", id: "right") { move(tv, 1) },
+        ] + ["{", "}", "(", ")", "[", "]", "<", ">", "=", ";", ":", "\"", "'", "`", "/", "\\", "|", "&", "$", "#", "_", "-", "+", "*", "!", "?"]
+            .map { s in RowKey.text(s) { tv.insertText(s) } } + [
+            .icon("arrow.uturn.backward", id: "undo") { tv.undoManager?.undo() },
+            .icon("arrow.uturn.forward", id: "redo") { tv.undoManager?.redo() },
+            .icon("magnifyingglass", id: "find") { tv.findInteraction?.presentFindNavigator(showingReplace: true) },
+            .icon("square.and.arrow.down", id: "save", onSave),
+            .icon("keyboard.chevron.compact.down", id: "hide keyboard") { _ = tv.resignFirstResponder() },
+        ])
+    }
 
-            stack.addArrangedSubview(key("⇥") { [weak self] in self?.textView?.insertText("    ") })
-            for s in ["{", "}", "(", ")", "[", "]", "<", ">", "=", ";", ":", "\"", "'", "`", "/", "\\", "|", "&", "$", "#", "_", "-", "+", "*", "!", "?"] {
-                stack.addArrangedSubview(key(s) { [weak self] in self?.textView?.insertText(s) })
-            }
-            stack.addArrangedSubview(key(nil, image: "arrow.uturn.backward") { [weak self] in self?.textView?.undoManager?.undo() })
-            stack.addArrangedSubview(key(nil, image: "arrow.uturn.forward") { [weak self] in self?.textView?.undoManager?.redo() })
-            stack.addArrangedSubview(key(nil, image: "magnifyingglass") { [weak self] in
-                self?.textView?.findInteraction?.presentFindNavigator(showingReplace: true)
-            })
-            stack.addArrangedSubview(key(nil, image: "square.and.arrow.down") { [weak self] in self?.onSave() })
-            stack.addArrangedSubview(key(nil, image: "keyboard.chevron.compact.down") { [weak self] in self?.textView?.resignFirstResponder() })
-
-            NSLayoutConstraint.activate([
-                scroll.leadingAnchor.constraint(equalTo: bar.leadingAnchor),
-                scroll.trailingAnchor.constraint(equalTo: bar.trailingAnchor),
-                scroll.topAnchor.constraint(equalTo: bar.topAnchor),
-                scroll.bottomAnchor.constraint(equalTo: bar.bottomAnchor),
-                stack.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor, constant: 8),
-                stack.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor, constant: -8),
-                stack.centerYAnchor.constraint(equalTo: scroll.centerYAnchor),
-                stack.heightAnchor.constraint(equalToConstant: 34),
-            ])
-            return bar
-        }
+    private func move(_ tv: TextView, _ delta: Int) {
+        let r = tv.selectedRange
+        let loc = delta < 0 ? max(r.location - 1, 0) : min(r.location + r.length + 1, (tv.text as NSString).length)
+        tv.selectedRange = NSRange(location: r.length > 0 ? (delta < 0 ? r.location : r.location + r.length) : loc, length: 0)
     }
 }

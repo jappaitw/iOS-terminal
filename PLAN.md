@@ -32,17 +32,19 @@
 | ✅ 1.4 | 語法高亮首次載入延遲 | 第二次開同語言 <0.5 秒 | 實測：首次建立高亮狀態有約 0.9 秒「全域一次性」成本（與語言無關），之後任何語言都 <0.1 秒 → app 啟動時背景 `warmUpHighlighting()`；實機 log：開 .py 0.03 秒 |
 | ✅ 1.5 | 單元測試 | `xcodebuild test` 全綠 | `PocketCodeTests`（13 項）：PathUtil、normalizedOpenSSHKey（含智慧破折號、斷行、CRLF）、LanguageInfo.detect、高亮計時診斷 |
 
-## Phase 2 — 功能補齊（3–5 天）
+## Phase 2 — 功能補齊（3–5 天）✅ 已完成 2026-11-16
 
-| # | 任務 | 驗收標準 |
-|---|------|---------|
-| 2.1 | 全專案搜尋（Explorer 加搜尋頁；遠端用 `grep -rn` over SSH exec，本機用檔案走訪） | 搜尋結果可點擊跳到該檔該行 |
-| 2.2 | Git 狀態：在遠端跑 `git status --porcelain`，Explorer 檔名著色（M/A/U）、狀態列顯示分支 | 開 git 專案可見分支與變更標記 |
-| 2.3 | 檔案上傳/下載：Explorer 長按→分享（下載到 Files）；工具列＋→從 Files 匯入上傳 | 雙向傳檔成功 |
-| 2.4 | 終端機長按選單：複製、貼上、清除畫面；字型大小設定 | 功能可用且不與選取手勢衝突 |
-| 2.5 | 設定頁：編輯器字級、縮排(空格數/Tab)、終端機字級、功能鍵列開關、隱藏檔預設值 | 設定持久化並即時生效 |
-| 2.6 | 編輯器符號鍵列與終端機鍵列統一成同一元件（版面式，非鍵盤附件） | 兩處外觀一致、實體鍵盤下不懸浮 |
-| 2.7 | 私鑰支援 ECDSA（P-256/384/521，Citadel 已有 API）與 OpenSSH 加密金鑰測試 | 三種金鑰可登入 |
+| # | 任務 | 驗收標準 | 實作 |
+|---|------|---------|------|
+| ✅ 2.1 | 全專案搜尋 | 結果可點擊跳到該檔該行 | 底部新增「Search」分頁（iPad 側欄、⌘⇧F）。遠端 `grep -rnI --null` over SSH exec（排除 .git/node_modules 等，上限 2000 筆），本機背景走訪；大小寫／全字／正規式切換；點結果 → `open(path, line:)` 選取該行 |
+| ✅ 2.2 | Git 狀態 | 可見分支與變更標記 | `GitSnapshot`：`git rev-parse --show-toplevel` + `git status --porcelain=v1 -b -z`；檔名著色＋M/A/U/D/R/! 字母，含變更的資料夾顯示圓點；狀態列顯示分支（有變更加 *，點擊重新整理）。存檔／新增／刪除／重連後自動更新。本機工作區（iOS 無 git）不顯示 |
+| ✅ 2.3 | 上傳／下載 | 雙向傳檔成功 | 長按檔案「Download…」→ 暫存 → 分享單（存到檔案、AirDrop）；Explorer 頂部與資料夾長按「Upload Files Here…」→ Files 多選匯入；同名檔詢問「取代／只傳新檔」；上限 100MB；底部進度膠囊 |
+| ✅ 2.4 | 終端機選單＋字級 | 不與選取手勢衝突 | 長按沿用 SwiftTerm 原生選單（Select／Copy／Paste，已測可複製）；終端機標頭「⋯」：Paste、Select All、Clear、字級±；雙指縮放調字級 |
+| ✅ 2.5 | 設定頁 | 持久化並即時生效 | `AppSettings`（UserDefaults）：編輯器字級、空格／Tab 與寬度、自動換行、終端機字級、鍵列開關、隱藏檔預設。首頁齒輪與工作區「⋯ → Settings…」進入；改動即時套用到已開啟的編輯器與終端機，狀態列顯示「Spaces: N」 |
+| ✅ 2.6 | 鍵列統一 | 兩處一致、實體鍵盤下不懸浮 | 共用 `KeyRow` 元件（版面內、42pt）；編輯器鍵列只在編輯中出現，移除 inputAccessoryView |
+| ✅ 2.7 | ECDSA 與加密金鑰 | 三種金鑰可登入 | `PrivateKeyParser`：先讀 openssh-key-v1 判斷型別；ECDSA P-256/384/521（Citadel 無解析器，自行解析）、PEM `EC PRIVATE KEY`（CryptoKit 不吃 ssh-keygen 格式，自寫 SEC1 讀取）、加密 ed25519／RSA（含錯誤密語提示）。實測 ECDSA 金鑰登入成功。未支援：加密 ECDSA、舊式 PEM RSA → 給出 `ssh-keygen -p` 轉換指示 |
+
+順手修正：iPhone 上隱藏中的終端機／編輯器仍會吃到長按手勢（Explorer 長按跳出終端機選單）→ 以 `panelActive` 環境值關閉非前景面板的 UIKit 互動；搜尋結果跨檔同行號列空白；狀態列窄螢幕被截斷（`ViewThatFits` 依序省略 UTF-8、縮排）。單元測試增至 26 項。
 
 ## Phase 3 — 商品化（3–5 天）
 
@@ -71,7 +73,9 @@
 4. **NAS 類主機**：SSH 通不代表 SFTP 有開；`openSFTP` 可能永不回應——`SSHConnection.openSFTP(_:timeoutSeconds:)` 的 race 寫法是刻意的，勿改回 task group（group 會等掛死子任務）。
 5. **重連**：`SSHConnection.client` 會被換掉，任何地方都不要快取舊 client；終端機一律經 `reattach` 換綁。`ensureConnected()` 已做併發合併（同時多次呼叫共用一個 task）。
 6. **終端機輸入順序**：所有寫入都必須走 `TerminalSession.InputBox`（同步 yield 保序），不要新開 per-key Task。
-7. **編譯/測試指令**：`xcodegen generate && xcodebuild -project PocketCode.xcodeproj -scheme PocketCode -destination 'id=<sim-udid>' -clonedSourcePackagesDirPath .spm -derivedDataPath .build CODE_SIGN_IDENTITY="-" build`（測試把 `build` 換成 `test`）
+7. **遠端指令**：一律用 `SSHConnection.run(script)`（包成 `sh -c '…' 2>/dev/null; true`）。Citadel 的 `executeCommand` 遇非零結束碼或任何 stderr 都會 throw。
+8. **iPhone 面板疊放**：三個面板在 ZStack 裡以 opacity 切換，`allowsHitTesting(false)` 擋不住 UIKit 手勢；新的 UIKit 面板要讀 `@Environment(\.panelActive)` 自行關閉互動。
+9. **編譯/測試指令**：`xcodegen generate && xcodebuild -project PocketCode.xcodeproj -scheme PocketCode -destination 'id=<sim-udid>' -clonedSourcePackagesDirPath .spm -derivedDataPath .build CODE_SIGN_IDENTITY="-" build`（測試把 `build` 換成 `test`）
 
 ## 測試主機備忘
 

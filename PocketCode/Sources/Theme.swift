@@ -34,6 +34,13 @@ enum VS {
     static let modified = Color(hex: 0xE2C08D)
     static let error = Color(hex: 0xF14C4C)
     static let indentGuide = Color(hex: 0x404040)
+    static let inputBG = Color(hex: 0x3C3C3C)
+    // Git decorations (gitDecoration.* in Dark+)
+    static let gitModified = Color(hex: 0xE2C08D)
+    static let gitAdded = Color(hex: 0x81B88B)
+    static let gitUntracked = Color(hex: 0x73C991)
+    static let gitDeleted = Color(hex: 0xC74E39)
+    static let gitConflict = Color(hex: 0xE4676B)
 
     static let monoFont = UIFont.monospacedSystemFont(ofSize: 13, weight: .regular)
 }

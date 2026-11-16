@@ -10,6 +10,9 @@ struct WorkspaceView: View {
     @State private var sidebarVisible = true
     @State private var terminalVisible = false
     @State private var terminalHeight: CGFloat = 260
+    @State private var showSettings = false
+    /// iPad: which view fills the sidebar.
+    @State private var sidebarPanel: Panel = .explorer
 
     var body: some View {
         VStack(spacing: 0) {
@@ -19,6 +22,7 @@ struct WorkspaceView: View {
             if hSize != .regular { activityBar(vertical: false) }
         }
         .background(VS.editorBG)
+        .sheet(isPresented: $showSettings) { SettingsView() }
         .task { await workspace.bootstrap() }
         .onChange(of: scenePhase) { _, phase in
             // iOS suspends sockets in the background; check (and rebuild) the session on return.
@@ -35,6 +39,8 @@ struct WorkspaceView: View {
                 Button("") { Task { await workspace.saveAll() } }.keyboardShortcut("s", modifiers: [.command, .option])
                 Button("") { if let d = workspace.activeDocument { workspace.close(d) } }.keyboardShortcut("w", modifiers: .command)
                 Button("") { sidebarVisible.toggle(); workspace.panel = .explorer }.keyboardShortcut("b", modifiers: .command)
+                Button("") { sidebarPanel = .search; sidebarVisible = true; workspace.panel = .search }
+                    .keyboardShortcut("f", modifiers: [.command, .shift])
                 Button("") { toggleTerminal() }.keyboardShortcut("`", modifiers: .control)
             }
             .opacity(0)
@@ -67,6 +73,7 @@ struct WorkspaceView: View {
                     Button { workspace.newTerminal(); terminalVisible = true } label: { Label("New Terminal", systemImage: "terminal") }
                 }
                 Divider()
+                Button { showSettings = true } label: { Label("Settings…", systemImage: "gearshape") }
                 Button(role: .destructive, action: onClose) { Label("Close Workspace", systemImage: "xmark") }
             } label: {
                 Image(systemName: "ellipsis").font(.system(size: 15, weight: .semibold)).frame(width: 28, height: 28)
@@ -84,10 +91,14 @@ struct WorkspaceView: View {
         ZStack {
             ExplorerView(workspace: workspace).opacity(workspace.panel == .explorer ? 1 : 0)
                 .allowsHitTesting(workspace.panel == .explorer)
+            SearchView(workspace: workspace, model: workspace.search).opacity(workspace.panel == .search ? 1 : 0)
+                .allowsHitTesting(workspace.panel == .search)
             EditorArea(workspace: workspace).opacity(workspace.panel == .editor ? 1 : 0)
                 .allowsHitTesting(workspace.panel == .editor)
+                .environment(\.panelActive, workspace.panel == .editor)
             TerminalPanel(workspace: workspace).opacity(workspace.panel == .terminal ? 1 : 0)
                 .allowsHitTesting(workspace.panel == .terminal)
+                .environment(\.panelActive, workspace.panel == .terminal)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -98,7 +109,11 @@ struct WorkspaceView: View {
         HStack(spacing: 0) {
             activityBar(vertical: true)
             if sidebarVisible {
-                ExplorerView(workspace: workspace).frame(width: 280)
+                Group {
+                    if sidebarPanel == .search { SearchView(workspace: workspace, model: workspace.search) }
+                    else { ExplorerView(workspace: workspace) }
+                }
+                .frame(width: 280)
                 Rectangle().fill(VS.border).frame(width: 1)
             }
             GeometryReader { geo in
@@ -167,7 +182,8 @@ struct WorkspaceView: View {
     private func isActive(_ p: Panel) -> Bool {
         if hSize == .regular {
             switch p {
-            case .explorer: return sidebarVisible
+            case .explorer: return sidebarVisible && sidebarPanel == .explorer
+            case .search: return sidebarVisible && sidebarPanel == .search
             case .editor: return true
             case .terminal: return terminalVisible
             }
@@ -178,7 +194,8 @@ struct WorkspaceView: View {
     private func select(_ p: Panel) {
         if hSize == .regular {
             switch p {
-            case .explorer: sidebarVisible.toggle()
+            case .explorer, .search:
+                if sidebarVisible && sidebarPanel == p { sidebarVisible = false } else { sidebarPanel = p; sidebarVisible = true }
             case .editor: sidebarVisible = false
             case .terminal: toggleTerminal()
             }
@@ -202,6 +219,16 @@ struct StatusBar: View {
             .padding(.horizontal, 8)
             .frame(maxHeight: .infinity)
             .background(workspace.isRemote ? VS.statusBarRemote : Color.clear)
+            if let git = workspace.git {
+                Button { Task { await workspace.refreshAll() } } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.triangle.branch")
+                        Text(git.branch + (git.files.isEmpty ? "" : "*")).lineLimit(1)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Branch \(git.branch), \(git.files.count) changes. Tap to refresh.")
+            }
             LinkIndicator(workspace: workspace)
             Spacer()
             if let doc = workspace.activeDocument {
@@ -258,13 +285,25 @@ private struct LinkIndicator: View {
 
 private struct DocumentStatus: View {
     @ObservedObject var doc: EditorDocument
+    @ObservedObject private var settings = AppSettings.shared
     var body: some View {
-        HStack(spacing: 12) {
+        // Drop the least useful items first when the bar is narrow (iPhone portrait).
+        ViewThatFits(in: .horizontal) {
+            items(indent: true, encoding: true)
+            items(indent: true, encoding: false)
+            items(indent: false, encoding: false)
             Text("Ln \(doc.cursor.line), Col \(doc.cursor.column)")
-            Text("Spaces: 4").opacity(0.9)
-            Text("UTF-8").opacity(0.9)
-            Text(doc.language.name)
         }
         .lineLimit(1)
+    }
+
+    private func items(indent: Bool, encoding: Bool) -> some View {
+        HStack(spacing: 12) {
+            Text("Ln \(doc.cursor.line), Col \(doc.cursor.column)")
+            if indent { Text(settings.indentLabel).opacity(0.9) }
+            if encoding { Text("UTF-8").opacity(0.9) }
+            Text(doc.language.name)
+        }
+        .fixedSize()
     }
 }

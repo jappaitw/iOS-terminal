@@ -1,16 +1,18 @@
 import SwiftUI
 import Runestone
+import Combine
 import TreeSitterSwiftRunestone
 import os
 
 let editorLog = Logger(subsystem: "com.jlmxstudio.pocketcode", category: "editor")
 
 enum Panel: String, CaseIterable, Identifiable {
-    case explorer, editor, terminal
+    case explorer, search, editor, terminal
     var id: String { rawValue }
     var icon: String {
         switch self {
         case .explorer: return "doc.on.doc"
+        case .search: return "magnifyingglass"
         case .editor: return "chevron.left.forwardslash.chevron.right"
         case .terminal: return "terminal"
         }
@@ -34,14 +36,38 @@ final class EditorDocument: ObservableObject, Identifiable {
     @Published var content: Content = .loading
     @Published var isDirty = false
     @Published var cursor = (line: 1, column: 1)
+    /// True while the editor has keyboard focus (drives the editor key row).
+    @Published var isEditing = false
     var name: String { PathUtil.name(path) }
     var language: LanguageInfo { LanguageInfo.detect(path) }
 
     /// The Runestone view lives with the document so undo history and scroll position survive tab switches.
-    lazy var textView: TextView = EditorDocument.makeTextView()
+    lazy var textView: TextView = { textViewMade = true; return EditorDocument.makeTextView() }()
+    private var textViewMade = false
     private var savedText = ""
+    private var settingsSub: AnyCancellable?
 
-    init(path: String) { self.path = path }
+    init(path: String) {
+        self.path = path
+        // objectWillChange fires before the value changes; hop a runloop to read the new value.
+        settingsSub = AppSettings.shared.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.applySettings() }
+    }
+
+    /// Pushes font / indent / wrap preferences into the live editor view.
+    func applySettings() {
+        guard textViewMade else { return }
+        Self.apply(AppSettings.shared, to: textView)
+    }
+
+    private static func apply(_ s: AppSettings, to tv: TextView) {
+        if (tv.theme as? DarkPlusTheme)?.font.pointSize != CGFloat(s.editorFontSize) {
+            tv.theme = DarkPlusTheme(fontSize: s.editorFontSize)
+        }
+        tv.indentStrategy = s.indentWithTabs ? .tab(length: s.indentWidth) : .space(length: s.indentWidth)
+        tv.isLineWrappingEnabled = s.lineWrapping
+    }
 
     /// - Parameter force: skip the "this file is large" confirmation (the user tapped Open Anyway).
     func load(from fs: FileSystemProvider, force: Bool = false) async {
@@ -63,15 +89,17 @@ final class EditorDocument: ObservableObject, Identifiable {
             }
             savedText = text
             let lang = data.count > Self.highlightLimit ? nil : language.treeSitter
-            let theme = DarkPlusTheme()
+            let theme = DarkPlusTheme(fontSize: AppSettings.shared.editorFontSize)
             // Parsing large files can take a moment, so build the state off the main thread.
             let state = await Task.detached { () -> UncheckedBox<TextViewState> in
                 if let lang { return UncheckedBox(TextViewState(text: text, theme: theme, language: lang)) }
                 return UncheckedBox(TextViewState(text: text, theme: theme))
             }.value
             textView.setState(state.value)
+            Self.apply(AppSettings.shared, to: textView)
             isDirty = false
             content = .text
+            if let line = pendingLine { pendingLine = nil; goTo(line: line) }
             editorLog.info("opened \(data.count) bytes, highlight=\(lang != nil), \(String(format: "%.2f", Date().timeIntervalSince(t0)), privacy: .public)s")
         } catch {
             content = .failed(error.localizedDescription)
@@ -98,15 +126,23 @@ final class EditorDocument: ObservableObject, Identifiable {
         isDirty = false
     }
 
+    /// 1-based line to reveal once the file has loaded (from a search result).
+    var pendingLine: Int?
+
+    /// Scrolls to and selects a 1-based line.
+    func goTo(line: Int) {
+        guard case .text = content else { pendingLine = line; return }
+        _ = textView.goToLine(max(line - 1, 0), select: .line)
+        cursor = (line, 1) // programmatic selection doesn't call the delegate
+    }
+
     private static func makeTextView() -> TextView {
         let tv = TextView()
         tv.backgroundColor = UIColor(hex: 0x1E1E1E)
-        tv.theme = DarkPlusTheme()
         tv.showLineNumbers = true
         tv.lineSelectionDisplayType = .line
         tv.lineHeightMultiplier = 1.35
-        tv.isLineWrappingEnabled = false
-        tv.indentStrategy = .space(length: 4)
+        apply(AppSettings.shared, to: tv)
         tv.gutterLeadingPadding = 8
         tv.gutterTrailingPadding = 8
         tv.textContainerInset = UIEdgeInsets(top: 8, left: 4, bottom: 120, right: 16)
@@ -162,9 +198,13 @@ final class Workspace: ObservableObject {
     @Published var children: [String: [FileItem]] = [:]
     @Published var loading: Set<String> = []
     @Published var selectedPath: String?
-    @Published var showHidden = true
+    @Published var showHidden = AppSettings.shared.showHiddenFiles
 
     private var terminalCounter = 0
+    let search = SearchModel()
+    /// Git branch and per-file status for remote workspaces inside a repo (nil otherwise).
+    @Published private(set) var git: GitSnapshot?
+    private var gitTask: Task<Void, Never>?
 
     var isRemote: Bool { connection != nil }
     var activeDocument: EditorDocument? { documents.first { $0.id == activeDocumentID } }
@@ -182,6 +222,7 @@ final class Workspace: ObservableObject {
             rootError = nil
             expanded = [rootPath]
             await refresh(rootPath)
+            refreshGit()
         } catch {
             rootError = error.localizedDescription
         }
@@ -250,6 +291,20 @@ final class Workspace: ObservableObject {
 
     func refreshAll() async {
         for dir in expanded { await refresh(dir) }
+        refreshGit()
+    }
+
+    /// Re-reads `git status` on the host. Local workspaces can't run git on iOS, so they show none.
+    func refreshGit() {
+        guard let connection, !rootPath.isEmpty else { git = nil; return }
+        gitTask?.cancel()
+        let root = rootPath
+        gitTask = Task {
+            let out = try? await connection.run(GitSnapshot.script(root: root), timeoutSeconds: 20)
+            guard !Task.isCancelled else { return }
+            let snap = out.flatMap(GitSnapshot.parse)
+            if snap != git { git = snap }
+        }
     }
 
     func toggle(_ item: FileItem) {
@@ -299,6 +354,7 @@ final class Workspace: ObservableObject {
             expanded.insert(dir)
             await refresh(dir)
             selectedPath = path
+            refreshGit()
             if !directory { open(path) }
         } catch {
             errorMessage = error.localizedDescription
@@ -314,6 +370,7 @@ final class Workspace: ObservableObject {
                 doc.path = newPath + doc.path.dropFirst(item.path.count)
             }
             await refresh(dir)
+            refreshGit()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -325,18 +382,89 @@ final class Workspace: ObservableObject {
             documents.removeAll { $0.path == item.path || $0.path.hasPrefix(item.path + "/") }
             if activeDocument == nil { activeDocumentID = documents.last?.id }
             await refresh(PathUtil.parent(item.path))
+            refreshGit()
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
+    // MARK: Transfers
+
+    /// Progress text shown while uploading / downloading ("Uploading 2 of 5…").
+    @Published var transferStatus: String?
+    /// A downloaded file waiting to be handed to the share sheet.
+    @Published var shareItem: ShareItem?
+    struct ShareItem: Identifiable { let id = UUID(); let url: URL }
+
+    static let transferLimit: UInt64 = 100 * 1024 * 1024
+
+    /// Copies a file to a temporary local file and offers it through the share sheet
+    /// ("Save to Files", AirDrop, other apps).
+    func download(_ item: FileItem) async {
+        guard !item.isDirectory else { return }
+        if let size = (try? await fs.fileSize(item.path)) ?? item.size, size > Self.transferLimit {
+            errorMessage = "\(item.name) is \(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .binary)); downloads are limited to 100 MB. Use scp or rsync from a computer instead."
+            return
+        }
+        if !isRemote { shareItem = ShareItem(url: URL(fileURLWithPath: item.path)); return }
+        transferStatus = "Downloading \(item.name)…"
+        defer { transferStatus = nil }
+        do {
+            let data = try await fs.read(item.path)
+            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("downloads/\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let url = dir.appendingPathComponent(item.name)
+            try data.write(to: url)
+            shareItem = ShareItem(url: url)
+        } catch {
+            errorMessage = "Download failed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Removes the temporary copy once the share sheet is gone.
+    func finishedSharing(_ item: ShareItem) {
+        guard isRemote else { return }
+        try? FileManager.default.removeItem(at: item.url.deletingLastPathComponent())
+    }
+
+    /// Names in `dir` that an upload of `urls` would overwrite (from the explorer's listing).
+    func uploadConflicts(_ urls: [URL], in dir: String) -> [String] {
+        let existing = Set((children[dir] ?? []).map(\.name))
+        return urls.map(\.lastPathComponent).filter(existing.contains)
+    }
+
+    /// Uploads files picked from the Files app into `dir`, replacing same-named files.
+    func upload(_ urls: [URL], to dir: String) async {
+        defer { transferStatus = nil }
+        var failures: [String] = []
+        for (i, url) in urls.enumerated() {
+            transferStatus = urls.count == 1 ? "Uploading \(url.lastPathComponent)…" : "Uploading \(i + 1) of \(urls.count)…"
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            do {
+                let size = (try url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(UInt64.init) ?? 0
+                if size > Self.transferLimit { failures.append("\(url.lastPathComponent) (over 100 MB)"); continue }
+                let data = try Data(contentsOf: url)
+                try await fs.write(data, to: PathUtil.join(dir, url.lastPathComponent))
+            } catch {
+                failures.append("\(url.lastPathComponent): \(error.localizedDescription)")
+            }
+        }
+        expanded.insert(dir)
+        await refresh(dir)
+        refreshGit()
+        if !failures.isEmpty { errorMessage = "Some files weren't uploaded:\n" + failures.joined(separator: "\n") }
+    }
+
     // MARK: Editor
 
-    func open(_ path: String) {
+    func open(_ path: String, line: Int? = nil) {
         if let doc = documents.first(where: { $0.path == path }) {
             activeDocumentID = doc.id
+            if let line { doc.goTo(line: line) }
         } else {
             let doc = EditorDocument(path: path)
+            doc.pendingLine = line
             documents.append(doc)
             activeDocumentID = doc.id
             Task { await doc.load(from: fs) }
@@ -354,7 +482,7 @@ final class Workspace: ObservableObject {
     }
 
     func save(_ doc: EditorDocument) async {
-        do { try await doc.save(to: fs) } catch { errorMessage = "Save failed: \(error.localizedDescription)" }
+        do { try await doc.save(to: fs); refreshGit() } catch { errorMessage = "Save failed: \(error.localizedDescription)" }
     }
 
     func saveAll() async {
