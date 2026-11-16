@@ -30,4 +30,4 @@ activity bar + explorer sidebar + editor with a resizable terminal panel (⌃` t
 - Real-device testing & TestFlight: [docs/RELEASE.md](docs/RELEASE.md)
 - App Store listing, privacy, screenshots: [docs/appstore/AppStore.md](docs/appstore/AppStore.md)
 - Regenerate open-source licenses after dependency changes: `python3 scripts/gen_acknowledgements.py`
-- Regenerate the app icon: `swift scripts/render_icon.swift <out-dir>`
+- App icon sources (SVG, Icon Composer layers, all PNG sizes): `icon_spec/` — see `icon_spec/README.md`

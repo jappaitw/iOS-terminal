@@ -50,7 +50,7 @@
 
 | # | 任務 | 狀態 | 實作 |
 |---|------|------|------|
-| ✅ 3.1 | App 圖示＋啟動畫面 | 完成 | 原創「口袋＋終端機提示字元 `>_`」圖示（`scripts/render_icon.swift` 以 CoreGraphics 產生，未使用任何 VS Code 元素），`Assets.xcassets` 單一 1024 圖示自動產出各尺寸；啟動畫面＝深色底＋標誌 |
+| ✅ 3.1 | App 圖示＋啟動畫面 | 完成 | 採用 `icon_spec/` 的摺帶 `>_` 圖示（淺色／深色／著色三種 1024 PNG，SVG 母檔與 Icon Composer 分層在同資料夾）；啟動畫面＝深色底＋深色版標誌 |
 | ✅ 3.2 | 開源授權頁 | 完成 | `scripts/gen_acknowledgements.py` 從 `.spm/checkouts` 產生 `Acknowledgements.json`（15 個套件全文，Apache 套件附 NOTICE；另列 20 個 tree-sitter 文法）。設定頁 → Open Source Licenses；並加註與 Microsoft/VS Code 無關 |
 | ✅ 3.3 | 主機金鑰警示 UI | 完成 | 取代靜默 TOFU：首次連線顯示 SHA256 指紋請使用者確認；金鑰變更時紅色警示、新舊指紋並列，預設按鈕為「Don’t Connect」，信任才更新並重連。指紋格式與 `ssh-keygen -lf` 一致（單元測試比對） |
 | ⏳ 3.4 | 真機／TestFlight | 待執行 | 需要你的 Developer 帳號與 iPhone：照 [docs/RELEASE.md](docs/RELEASE.md) 填 Team ID → 實機驗收清單 → Archive → TestFlight。版本號改由 `MARKETING_VERSION`／`CURRENT_PROJECT_VERSION` 控制 |
