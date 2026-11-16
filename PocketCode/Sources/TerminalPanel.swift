@@ -67,6 +67,9 @@ private struct TerminalBody: View {
 
     var body: some View {
         TerminalHost(session: session)
+        if let link = session.detectedLink {
+            LinkBar(link: link) { session.detectedLink = nil }
+        }
         if !session.isRunning {
             HStack(spacing: 10) {
                 Image(systemName: "exclamationmark.circle").foregroundStyle(VS.textDim)
@@ -126,6 +129,7 @@ private struct TerminalTabChip: View {
 private struct TerminalMenu: View {
     let session: TerminalSession
     @ObservedObject private var settings = AppSettings.shared
+    @State private var showLinks = false
 
     var body: some View {
         Menu {
@@ -133,6 +137,7 @@ private struct TerminalMenu: View {
                 .disabled(!UIPasteboard.general.hasStrings)
             Button { session.terminalView.selectAll(nil) } label: { Label("Select All", systemImage: "selection.pin.in.out") }
             Button { session.clearScreen() } label: { Label("Clear", systemImage: "clear") }
+            Button { showLinks = true } label: { Label("Open Link…", systemImage: "link") }
             Divider()
             ControlGroup {
                 Button { settings.clampTerminalFont(-1) } label: { Label("Smaller", systemImage: "textformat.size.smaller") }
@@ -140,6 +145,90 @@ private struct TerminalMenu: View {
             } label: { Text("Font Size \(Int(settings.terminalFontSize))") }
         } label: { Image(systemName: "ellipsis") }
         .accessibilityLabel("Terminal Actions")
+        .sheet(isPresented: $showLinks) { LinksSheet(links: session.visibleLinks().reversed()) }
+    }
+}
+
+/// Bar shown when a URL appears in the output: the remote program can't open the
+/// phone's browser, so offer it here (e.g. `claude` / `gh auth login` sign-in links).
+private struct LinkBar: View {
+    let link: String
+    let onDismiss: () -> Void
+    @State private var copied = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "link").foregroundStyle(VS.accent)
+            Text(TerminalLinks.display(link))
+                .font(.system(size: 12, design: .monospaced)).foregroundStyle(VS.text)
+                .lineLimit(1).truncationMode(.middle)
+            Spacer(minLength: 4)
+            Button(copied ? "Copied" : "Copy") {
+                UIPasteboard.general.string = link
+                copied = true
+            }
+            .font(.system(size: 13))
+            Button { TerminalLinks.open(link) } label: {
+                Text("Open").font(.system(size: 13, weight: .semibold))
+                    .padding(.horizontal, 12).padding(.vertical, 5)
+                    .background(Color(hex: 0x0E639C), in: RoundedRectangle(cornerRadius: 4))
+                    .foregroundStyle(.white)
+            }
+            Button(action: onDismiss) { Image(systemName: "xmark").font(.system(size: 12, weight: .semibold)) }
+                .foregroundStyle(VS.textDim)
+                .accessibilityLabel("Dismiss link")
+        }
+        .padding(.horizontal, 12).padding(.vertical, 7)
+        .background(Color(hex: 0x252526))
+        .overlay(alignment: .top) { Rectangle().fill(VS.border).frame(height: 1) }
+        .onChange(of: link) { _, _ in copied = false }
+    }
+}
+
+/// All URLs currently on screen, newest first.
+private struct LinksSheet: View {
+    let links: [String]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if links.isEmpty {
+                    Text("No links on the screen.").foregroundStyle(.secondary)
+                }
+                ForEach(links, id: \.self) { link in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(link).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).lineLimit(4)
+                        HStack {
+                            Button { TerminalLinks.open(link); dismiss() } label: { Label("Open in Safari", systemImage: "safari") }
+                                .buttonStyle(.borderedProminent)
+                            Button { UIPasteboard.general.string = link; dismiss() } label: { Label("Copy", systemImage: "doc.on.doc") }
+                                .buttonStyle(.bordered)
+                        }
+                        .font(.callout)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            .navigationTitle("Links")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+        .presentationDetents([.medium, .large])
+        .preferredColorScheme(.dark)
+    }
+}
+
+enum TerminalLinks {
+    @MainActor static func open(_ link: String) {
+        guard let url = URL(string: link), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { return }
+        UIApplication.shared.open(url)
+    }
+
+    /// "claude.com/cai/oauth/authorize?…" — host and path, for the compact bar.
+    static func display(_ link: String) -> String {
+        guard let url = URL(string: link), let host = url.host else { return link }
+        return host + url.path + (url.query == nil ? "" : "?…")
     }
 }
 

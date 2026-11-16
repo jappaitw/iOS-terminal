@@ -14,6 +14,12 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     @Published var title: String
     @Published private(set) var isRunning = false
     @Published private(set) var exitMessage: String?
+    /// Newest URL that appeared in the output (e.g. an OAuth sign-in link printed by a CLI
+    /// running on the host). Shown as a bar with Open / Copy, since the remote program
+    /// can't open the phone's browser itself.
+    @Published var detectedLink: String?
+    private var seenLinks: Set<String> = []
+    private var linkScan: Task<Void, Never>?
 
     let terminalView: SwiftTerm.TerminalView
     private var client: SSHClient
@@ -111,6 +117,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
                         switch chunk {
                         case .stdout(let buf), .stderr(let buf):
                             self.terminalView.feed(byteArray: ArraySlice(buf.readableBytesView))
+                            self.scheduleLinkScan()
                         }
                     }
                     continuation.finish()
@@ -157,6 +164,32 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     }
 
     func send(text: String) { input.yield(Array(text.utf8)) }
+
+    // MARK: Links
+
+    /// URLs on the visible screen, oldest first.
+    func visibleLinks() -> [String] {
+        let t = terminalView.getTerminal()
+        var lines: [TerminalLinkScanner.Line] = []
+        for row in 0..<t.rows {
+            guard let line = t.getLine(row: row) else { continue }
+            lines.append(.init(text: line.translateToString(trimRight: true), wrapped: line.isWrapped))
+        }
+        return TerminalLinkScanner.links(in: lines, cols: t.cols)
+    }
+
+    /// Debounced: output arrives in bursts; scan once it settles.
+    private func scheduleLinkScan() {
+        linkScan?.cancel()
+        linkScan = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard let self, !Task.isCancelled else { return }
+            if let newest = self.visibleLinks().last, !self.seenLinks.contains(newest) {
+                self.seenLinks.insert(newest)
+                self.detectedLink = newest
+            }
+        }
+    }
 
     /// Like VS Code's "Clear": wipe scrollback locally, then ask the shell to redraw its prompt (Ctrl-L).
     func clearScreen() {
@@ -234,3 +267,39 @@ final class PocketTerminalView: SwiftTerm.TerminalView {
     }
 }
 
+
+/// Finds http(s) URLs in terminal text, rejoining URLs that wrap across rows — either
+/// soft-wrapped by the terminal (`wrapped`) or hard-broken by a TUI exactly at the edge.
+enum TerminalLinkScanner {
+    struct Line { let text: String; let wrapped: Bool }
+
+    private static let pattern = try! NSRegularExpression(pattern: #"https?://[^\s"'<>`]+"#)
+    private static let urlChars = CharacterSet.urlQueryAllowed.union(.urlPathAllowed).union(CharacterSet(charactersIn: "%#"))
+
+    static func links(in lines: [Line], cols: Int) -> [String] {
+        // Build logical lines.
+        var logical: [String] = []
+        for (i, line) in lines.enumerated() {
+            let joinToPrevious: Bool = {
+                guard i > 0, !logical.isEmpty else { return false }
+                if line.wrapped { return true }
+                // Hard break at the right edge in the middle of a URL-looking run.
+                let prev = lines[i - 1].text
+                guard prev.count >= cols, let last = prev.unicodeScalars.last, urlChars.contains(last),
+                      let first = line.text.unicodeScalars.first, urlChars.contains(first) else { return false }
+                return logical[logical.count - 1].range(of: "https?://[^\\s]*$", options: .regularExpression) != nil
+            }()
+            if joinToPrevious { logical[logical.count - 1] += line.text } else { logical.append(line.text) }
+        }
+        var out: [String] = []
+        for text in logical {
+            let ns = text as NSString
+            for m in pattern.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+                var url = ns.substring(with: m.range)
+                while let c = url.last, ".,;:!?)]}".contains(c) { url.removeLast() }
+                if URL(string: url) != nil, !out.contains(url) { out.append(url) }
+            }
+        }
+        return out
+    }
+}

@@ -15,3 +15,38 @@ final class TerminalViewTests: XCTestCase {
         XCTAssertTrue((ours as UIKeyInput).hasText)
     }
 }
+
+final class TerminalLinkScannerTests: XCTestCase {
+    typealias L = TerminalLinkScanner.Line
+
+    func testSoftWrappedURLIsJoined() {
+        let cols = 20
+        let lines = [L(text: "Visit:", wrapped: false),
+                     L(text: "https://claude.com/c", wrapped: false),
+                     L(text: "ai/oauth?code=true&c", wrapped: true),
+                     L(text: "lient=abc", wrapped: true),
+                     L(text: "", wrapped: false)]
+        XCTAssertEqual(TerminalLinkScanner.links(in: lines, cols: cols),
+                       ["https://claude.com/cai/oauth?code=true&client=abc"])
+    }
+
+    func testHardBreakAtRightEdgeIsJoined() {
+        // TUIs (Ink) may print explicit newlines exactly at the terminal width.
+        let cols = 20
+        let lines = [L(text: "https://example.com/", wrapped: false),
+                     L(text: "path%2Fto?x=1", wrapped: false),
+                     L(text: "Paste code here >", wrapped: false)]
+        XCTAssertEqual(TerminalLinkScanner.links(in: lines, cols: cols), ["https://example.com/path%2Fto?x=1"])
+    }
+
+    func testShortLinesAreNotJoinedAndPunctuationTrimmed() {
+        let lines = [L(text: "see https://a.dev/x).", wrapped: false),
+                     L(text: "next line", wrapped: false),
+                     L(text: "and http://b.test:8080/y,", wrapped: false)]
+        XCTAssertEqual(TerminalLinkScanner.links(in: lines, cols: 80), ["https://a.dev/x", "http://b.test:8080/y"])
+    }
+
+    func testDisplayShortensQuery() {
+        XCTAssertEqual(TerminalLinks.display("https://claude.com/cai/oauth/authorize?code=true"), "claude.com/cai/oauth/authorize?…")
+    }
+}
