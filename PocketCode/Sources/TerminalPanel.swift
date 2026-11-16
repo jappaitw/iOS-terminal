@@ -150,12 +150,12 @@ private struct TerminalKeyRow: View {
 
     var body: some View {
         KeyRow(keys: [
+            .icon("arrow.right.to.line", id: "tab") { send("\t") },
             .text("esc") { send("\u{1b}") },
             RowKey(id: "ctrl", title: "ctrl", highlighted: ctrlOn) {
                 session.terminalView.controlModifier.toggle()
                 ctrlOn = session.terminalView.controlModifier
             },
-            .icon("arrow.right.to.line", id: "tab") { send("\t") },
         ] + ["~", "|", "/", "-", "_", "$", "\"", "'"].map { s in RowKey.text(s) { send(s) } } + [
             arrow("arrow.left", "D"), arrow("arrow.down", "B"), arrow("arrow.up", "A"), arrow("arrow.right", "C"),
             .icon("keyboard.chevron.compact.down", id: "hide keyboard") { _ = session.terminalView.resignFirstResponder() },

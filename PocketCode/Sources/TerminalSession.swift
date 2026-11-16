@@ -43,7 +43,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         self.client = client
         self.initialDirectory = initialDirectory
         self.title = "bash \(index)"
-        self.terminalView = SwiftTerm.TerminalView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        self.terminalView = PocketTerminalView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         super.init()
         configureView()
         start()
@@ -201,3 +201,36 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
 /// Replaces SwiftTerm's built-in accessory bar, which clips its buttons at the bottom
 /// of the screen. Same construction as the editor's symbol row: a scrollable stack
 /// laid out with Auto Layout inside a keyboard-styled UIInputView.
+
+/// SwiftTerm's view with one UIKit behaviour fixed: holding the keyboard's delete key
+/// should keep deleting. iOS only auto-repeats delete while the input view reports
+/// `hasText == true`, but SwiftTerm reports true only while it buffers unsent input —
+/// in a terminal every keystroke goes straight to the remote shell, so it is almost
+/// always false and delete fires once. The remote side owns the text, so from the
+/// keyboard's point of view there is always something to delete.
+///
+/// `hasText` is `public` (not `open`) in SwiftTerm, so it can't be overridden in Swift;
+/// UIKit reads it through Objective-C, so we add our own implementation to this
+/// subclass only (the superclass and SwiftTerm's internal Swift calls are untouched).
+final class PocketTerminalView: SwiftTerm.TerminalView {
+    private static let installHasText: Void = {
+        let sel = NSSelectorFromString("hasText")
+        let block: @convention(block) (AnyObject) -> Bool = { _ in true }
+        let imp = imp_implementationWithBlock(block)
+        // "B@:" = returns BOOL, takes self and _cmd.
+        if !class_addMethod(PocketTerminalView.self, sel, imp, "B@:") {
+            if let m = class_getInstanceMethod(PocketTerminalView.self, sel) { method_setImplementation(m, imp) }
+        }
+    }()
+
+    override init(frame: CGRect) {
+        _ = Self.installHasText
+        super.init(frame: frame)
+    }
+
+    required init?(coder: NSCoder) {
+        _ = Self.installHasText
+        super.init(coder: coder)
+    }
+}
+

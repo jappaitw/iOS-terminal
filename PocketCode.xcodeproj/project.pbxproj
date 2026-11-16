@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		085FAF17544DF6315C79602D /* TerminalViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF2F6FD9F595D2ED39082293 /* TerminalViewTests.swift */; };
 		0C78082812EF0D1CDBF10306 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C135FAFB9D3ADBCFC2460B9 /* Assets.xcassets */; };
 		0CFEDC256BF160E42CEAF87E /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = D09CFD6FAC8FF17844259C81 /* Runestone */; };
 		0F7BC015545EE2FFADD1A40C /* KeyRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889CCE1593AB54A414178109 /* KeyRow.swift */; };
@@ -104,6 +105,7 @@
 		E9A2339A84E26A6139EF8C57 /* FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
 		EC92B4DBE3DBFF98B4CDB4F8 /* Git.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Git.swift; sourceTree = "<group>"; };
 		F10284767E38CBC9495600BE /* PrivateKeyParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeyParserTests.swift; sourceTree = "<group>"; };
+		FF2F6FD9F595D2ED39082293 /* TerminalViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalViewTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +152,7 @@
 				C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */,
 				F10284767E38CBC9495600BE /* PrivateKeyParserTests.swift */,
 				C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */,
+				FF2F6FD9F595D2ED39082293 /* TerminalViewTests.swift */,
 			);
 			path = PocketCodeTests;
 			sourceTree = "<group>";
@@ -292,11 +295,11 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					2319DF1487FB856CDE54E057 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = TUBWWB43W7;
 						ProvisioningStyle = Automatic;
 					};
 					AC63DE89FF221ED7E4F84D2B = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = TUBWWB43W7;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -351,6 +354,7 @@
 				6316666237B4FAE83E0934D3 /* PathUtilTests.swift in Sources */,
 				B3EF423C094C6DC84AB5F286 /* PrivateKeyParserTests.swift in Sources */,
 				50C8BD4C63CD03B73BA4B6CE /* SearchAndGitTests.swift in Sources */,
+				085FAF17544DF6315C79602D /* TerminalViewTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -428,7 +432,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = TUBWWB43W7;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -546,7 +550,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = TUBWWB43W7;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
