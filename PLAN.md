@@ -22,15 +22,15 @@
 
 另外順手修了：主機表單在「私鑰」驗證但金鑰欄空白時不能存檔（以前會存進空金鑰、連線才報錯）；SFTP 不可用時 Explorer 頂部按鈕變灰。
 
-## Phase 1 — 穩定性（1–2 天）
+## Phase 1 — 穩定性（1–2 天）✅ 已完成 2026-11-16
 
-| # | 任務 | 驗收標準 |
-|---|------|---------|
-| 1.1 | 背景→前景斷線自動重連：SSH 連線層加 health check，斷線時重建 client、SFTP、終端機提示「已重連」 | 鎖屏 1 分鐘回來，Explorer 操作與新終端機正常 |
-| 1.2 | 終端機 session 斷線後按鈕重啟（已有 `start()`）補測與 UI 完善 | kill -9 遠端 shell 後可一鍵重開 |
-| 1.3 | 大檔案保護：>5MB 文字檔先問、>50MB 拒開 | 開大檔不再無限等待 |
-| 1.4 | 語法高亮首次載入 2–3 秒 → 背景預載常用語言或顯示骨架 | 第二次開同語言 <0.5 秒 |
-| 1.5 | 單元測試：PathUtil、normalizedOpenSSHKey、LanguageInfo.detect | `xcodebuild test` 全綠 |
+| # | 任務 | 驗收標準 | 實作 |
+|---|------|---------|------|
+| ✅ 1.1 | 背景→前景斷線自動重連 | 回前景時連線死掉 → 自動重登、Explorer 與終端機恢復 | `Workspace.ensureConnected()`（scenePhase .active 觸發）→ `SSHConnection.isHealthy()`（5 秒 round-trip 探測，SFTP realpath 或 exec `true`）→ `reconnect()`（同憑證、沿用首次連線的主機金鑰）→ 換 fs、`TerminalSession.reattach(client:)`。狀態列顯示 Checking/Reconnecting/「Disconnected · Retry」 |
+| ✅ 1.2 | 終端機 session 結束後一鍵重開 | kill -9 遠端 shell 後可一鍵重開 | 終端機下方 Restart 橫幅（取代鍵列）；`Workspace.restart` 先檢查連線再 `start()`；`runID` 防止舊 task 覆蓋新狀態；重開不 `clear`，保留捲動紀錄 |
+| ✅ 1.3 | 大檔案保護 | >5MB 先問、>50MB 拒開 | `FileSystemProvider.fileSize`；`EditorDocument.softLimit/hardLimit`；>2MB 自動關閉語法高亮 |
+| ✅ 1.4 | 語法高亮首次載入延遲 | 第二次開同語言 <0.5 秒 | 實測：首次建立高亮狀態有約 0.9 秒「全域一次性」成本（與語言無關），之後任何語言都 <0.1 秒 → app 啟動時背景 `warmUpHighlighting()`；實機 log：開 .py 0.03 秒 |
+| ✅ 1.5 | 單元測試 | `xcodebuild test` 全綠 | `PocketCodeTests`（13 項）：PathUtil、normalizedOpenSSHKey（含智慧破折號、斷行、CRLF）、LanguageInfo.detect、高亮計時診斷 |
 
 ## Phase 2 — 功能補齊（3–5 天）
 
@@ -69,12 +69,14 @@
 2. **SwiftTerm 鎖 1.18.0**：1.19+ 引入 build plugin，CI/本機編譯會要求信任；如需升版改用 `-skipPackagePluginValidation` 並審 plugin 原始碼。
 3. **模擬器 Keychain**：必須 `CODE_SIGN_IDENTITY="-"`（ad-hoc），`CODE_SIGNING_ALLOWED=NO` 會導致存取靜默失敗（-34018）。
 4. **NAS 類主機**：SSH 通不代表 SFTP 有開；`openSFTP` 可能永不回應——`SSHConnection.openSFTP(_:timeoutSeconds:)` 的 race 寫法是刻意的，勿改回 task group（group 會等掛死子任務）。
-5. **終端機輸入順序**：所有寫入都必須走 `TerminalSession.InputBox`（同步 yield 保序），不要新開 per-key Task。
-6. **編譯指令**：`xcodegen generate && xcodebuild -project PocketCode.xcodeproj -scheme PocketCode -destination 'id=<sim-udid>' -clonedSourcePackagesDirPath .spm -derivedDataPath .build CODE_SIGN_IDENTITY="-" build`
+5. **重連**：`SSHConnection.client` 會被換掉，任何地方都不要快取舊 client；終端機一律經 `reattach` 換綁。`ensureConnected()` 已做併發合併（同時多次呼叫共用一個 task）。
+6. **終端機輸入順序**：所有寫入都必須走 `TerminalSession.InputBox`（同步 yield 保序），不要新開 per-key Task。
+7. **編譯/測試指令**：`xcodegen generate && xcodebuild -project PocketCode.xcodeproj -scheme PocketCode -destination 'id=<sim-udid>' -clonedSourcePackagesDirPath .spm -derivedDataPath .build CODE_SIGN_IDENTITY="-" build`（測試把 `build` 換成 `test`）
 
 ## 測試主機備忘
 
 - CRA（Mac, 10.0.1.201, jlmx）：全功能驗證基準。
 - JP Nas（Synology, 10.0.1.108/nas.jappai.tw, codex）：SSH＋SFTP 皆已開啟並驗證（Explorer 顯示共用資料夾）。
 - M1U（10.0.1.198, soulfyai）：帳密待確認（該機 `whoami` 核對短名）；app 內其密碼當初在未簽章版存入、Keychain 實際為空，需重新輸入。
+- 測重連：本機 sshd（127.0.0.1:2222）連上後，對該連線的 `sshd-session` 行程 `kill -STOP`（模擬背景後 socket 假活），按 Home 再開回 app → 約 5 秒後自動重連；再把 listener 也停掉可看到「Disconnected · Retry」。
 - 測「SFTP 不可用」畫面：在本機起一個不含 `Subsystem sftp` 的 sshd（127.0.0.1 限定、金鑰登入）即可重現。

@@ -15,7 +15,11 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     @Published private(set) var exitMessage: String?
 
     let terminalView: SwiftTerm.TerminalView
-    private let client: SSHClient
+    private var client: SSHClient
+    /// Bumped on every start; a finishing task only updates state if it is still the current run.
+    private var runID = 0
+    /// Only the very first shell clears the screen after cd; restarts keep the scrollback visible.
+    private var hasStarted = false
     private let initialDirectory: String?
     private var writer: TTYStdinWriter?
     /// Single ordered pipeline for everything typed; unstructured per-key Tasks
@@ -66,6 +70,10 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         guard !isRunning else { return }
         isRunning = true
         exitMessage = nil
+        runID += 1
+        let run = runID
+        let clear = !hasStarted
+        hasStarted = true
         let (stream, continuation) = AsyncStream<[UInt8]>.makeStream()
         input.set(continuation)
         let client = client
@@ -84,7 +92,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
                     guard let self else { return }
                     self.writer = outbound
                     if let dir = self.initialDirectory {
-                        continuation.yield(Array("cd \(PathUtil.shellQuote(dir)) && clear\n".utf8))
+                        continuation.yield(Array("cd \(PathUtil.shellQuote(dir))\(clear ? " && clear" : "")\n".utf8))
                     }
                     try await outbound.changeSize(cols: self.size.cols, rows: self.size.rows, pixelWidth: 0, pixelHeight: 0)
                     // Writer pump: consumes the ordered stream off the main actor.
@@ -103,16 +111,20 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
                     continuation.finish()
                     await pump
                 }
-                self?.finish(message: nil)
+                self?.finish(run, message: nil)
             } catch is CancellationError {
-                self?.finish(message: nil)
+                self?.finish(run, message: nil)
+            } catch is ChannelError {
+                // The SSH channel closed under us: the shell was killed or the connection dropped.
+                self?.finish(run, message: "Session ended")
             } catch {
-                self?.finish(message: error.localizedDescription)
+                self?.finish(run, message: error.localizedDescription)
             }
         }
     }
 
-    private func finish(message: String?) {
+    private func finish(_ run: Int, message: String?) {
+        guard run == runID, isRunning else { return }
         input.finish()
         writer = nil
         isRunning = false
@@ -123,6 +135,20 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     func stop() {
         task?.cancel()
         task = nil
+    }
+
+    /// Moves the session onto a fresh SSH client (after a reconnect) and starts a new shell.
+    /// The old run is abandoned silently; scrollback is kept.
+    func reattach(client: SSHClient) {
+        task?.cancel()
+        task = nil
+        runID += 1 // the old task's finish() becomes a no-op
+        input.finish()
+        writer = nil
+        isRunning = false
+        self.client = client
+        terminalView.feed(text: "\r\n\u{1B}[33m[Reconnected]\u{1B}[0m\r\n")
+        start()
     }
 
     func send(text: String) { input.yield(Array(text.utf8)) }

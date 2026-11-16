@@ -45,6 +45,9 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.jlmxstudio.pocketcode
         TARGETED_DEVICE_FAMILY: "1,2"
         ENABLE_PREVIEWS: YES
+    scheme:
+      testTargets:
+        - PocketCodeTests
     dependencies:
       - package: Citadel
       - package: SwiftTerm
@@ -72,3 +75,14 @@ targets:
           - TreeSitterSQLRunestone
           - TreeSitterPHPRunestone
           - TreeSitterCSharpRunestone
+  PocketCodeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - PocketCodeTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jlmxstudio.pocketcode.tests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: PocketCode

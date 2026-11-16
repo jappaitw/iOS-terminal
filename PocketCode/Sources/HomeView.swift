@@ -98,13 +98,7 @@ struct HomeView: View {
                     pinned.pinnedHostKey = seenKey
                     store.update(pinned)
                 }
-                let fs: FileSystemProvider
-                if let sftp = conn.sftp {
-                    fs = SFTPFileSystem(sftp: sftp, startPath: host.startPath)
-                } else {
-                    fs = UnavailableFileSystem(message: "Logged in to \(host.hostname), but it does not offer SFTP, so files can't be browsed. On a NAS, enable SFTP (Synology: Control Panel → File Services → FTP). The terminal works normally.")
-                }
-                onOpen(Workspace(title: host.displayName, fs: fs, connection: conn))
+                onOpen(Workspace(title: host.displayName, fs: conn.makeFileSystem(), connection: conn))
             } catch {
                 sshLog.error("connect failed: \(String(describing: error), privacy: .public)")
                 self.error = Self.describe(error, host: host)

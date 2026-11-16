@@ -6,6 +6,7 @@ struct WorkspaceView: View {
     @ObservedObject var workspace: Workspace
     let onClose: () -> Void
     @Environment(\.horizontalSizeClass) private var hSize
+    @Environment(\.scenePhase) private var scenePhase
     @State private var sidebarVisible = true
     @State private var terminalVisible = false
     @State private var terminalHeight: CGFloat = 260
@@ -19,6 +20,10 @@ struct WorkspaceView: View {
         }
         .background(VS.editorBG)
         .task { await workspace.bootstrap() }
+        .onChange(of: scenePhase) { _, phase in
+            // iOS suspends sockets in the background; check (and rebuild) the session on return.
+            if phase == .active { Task { await workspace.ensureConnected() } }
+        }
         .alert("Error", isPresented: .constant(workspace.errorMessage != nil), presenting: workspace.errorMessage) { _ in
             Button("OK") { workspace.errorMessage = nil }
         } message: { Text($0) }
@@ -197,6 +202,7 @@ struct StatusBar: View {
             .padding(.horizontal, 8)
             .frame(maxHeight: .infinity)
             .background(workspace.isRemote ? VS.statusBarRemote : Color.clear)
+            LinkIndicator(workspace: workspace)
             Spacer()
             if let doc = workspace.activeDocument {
                 DocumentStatus(doc: doc)
@@ -207,6 +213,46 @@ struct StatusBar: View {
         .padding(.trailing, 8)
         .frame(height: 22)
         .background(VS.statusBar)
+    }
+}
+
+/// Shows reconnect progress; when the link is lost, tapping it retries.
+private struct LinkIndicator: View {
+    @ObservedObject var workspace: Workspace
+    /// A healthy check takes milliseconds; only surface it once it has dragged on for a second.
+    @State private var slowCheck = false
+
+    var body: some View {
+        Group {
+            switch workspace.link {
+            case .connected:
+                EmptyView()
+            case .checking:
+                if slowCheck { spinner("Checking connection…") }
+            case .reconnecting:
+                spinner("Reconnecting…")
+            case .lost(let reason):
+                Button { Task { await workspace.ensureConnected() } } label: {
+                    Label("Disconnected · Retry", systemImage: "exclamationmark.triangle.fill")
+                        .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(reason)
+            }
+        }
+        .task(id: workspace.link) {
+            slowCheck = false
+            guard workspace.link == .checking else { return }
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            if !Task.isCancelled { slowCheck = true }
+        }
+    }
+
+    private func spinner(_ text: String) -> some View {
+        HStack(spacing: 4) {
+            ProgressView().controlSize(.mini).tint(.white)
+            Text(text)
+        }
     }
 }
 

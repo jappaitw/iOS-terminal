@@ -8,8 +8,7 @@ struct TerminalPanel: View {
         VStack(spacing: 0) {
             header
             if let session = workspace.activeTerminal {
-                TerminalHost(session: session).id(session.id)
-                TerminalKeyRow(session: session)
+                TerminalBody(session: session, workspace: workspace).id(session.id)
             } else {
                 VStack(spacing: 12) {
                     if workspace.isRemote {
@@ -45,7 +44,6 @@ struct TerminalPanel: View {
             Group {
                 Button { workspace.newTerminal() } label: { Image(systemName: "plus") }
                 if let s = workspace.activeTerminal {
-                    if !s.isRunning { Button { s.start() } label: { Image(systemName: "arrow.clockwise") } }
                     Button { workspace.killTerminal(s) } label: { Image(systemName: "trash") }
                 }
             }
@@ -56,6 +54,48 @@ struct TerminalPanel: View {
         .foregroundStyle(VS.text)
         .frame(height: 35)
         .overlay(alignment: .top) { Rectangle().fill(VS.border).frame(height: 1) }
+    }
+}
+
+/// The terminal, its key row, and (once the shell has ended) a restart banner.
+private struct TerminalBody: View {
+    @ObservedObject var session: TerminalSession
+    @ObservedObject var workspace: Workspace
+    @State private var restarting = false
+
+    var body: some View {
+        TerminalHost(session: session)
+        if !session.isRunning {
+            HStack(spacing: 10) {
+                Image(systemName: "exclamationmark.circle").foregroundStyle(VS.textDim)
+                Text(session.exitMessage ?? "Process exited")
+                    .font(.system(size: 12)).foregroundStyle(VS.text).lineLimit(2)
+                Spacer()
+                Button {
+                    restarting = true
+                    Task {
+                        await workspace.restart(session)
+                        restarting = false
+                        _ = session.terminalView.becomeFirstResponder()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        if restarting { ProgressView().controlSize(.mini) } else { Image(systemName: "arrow.clockwise") }
+                        Text("Restart")
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(Color(hex: 0x0E639C), in: RoundedRectangle(cornerRadius: 4))
+                    .foregroundStyle(.white)
+                }
+                .disabled(restarting)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(Color(hex: 0x252526))
+            .overlay(alignment: .top) { Rectangle().fill(VS.border).frame(height: 1) }
+        } else {
+            TerminalKeyRow(session: session)
+        }
     }
 }
 

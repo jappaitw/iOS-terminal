@@ -151,16 +151,34 @@ private struct DocumentView: View {
         case .binary(let size):
             message(icon: "doc.questionmark",
                     text: "The file is not displayed in the text editor because it is either binary or uses an unsupported text encoding.\n\(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file))")
+        case .tooLarge(let size):
+            message(icon: "doc.badge.ellipsis",
+                    text: "This file is \(Self.format(size)), which is too large to open in the editor (limit \(Self.format(EditorDocument.hardLimit))).\nUse the terminal (less, head, tail) to view it.",
+                    reload: false)
+        case .confirmLarge(let size):
+            VStack(spacing: 12) {
+                Image(systemName: "doc.badge.ellipsis").font(.largeTitle)
+                Text("This file is \(Self.format(size)). Opening it may be slow\(size > EditorDocument.highlightLimit ? " and syntax highlighting will be turned off" : "").")
+                    .multilineTextAlignment(.center).font(.callout)
+                Button("Open Anyway") { Task { await doc.load(from: workspace.fs, force: true) } }
+                    .buttonStyle(.borderedProminent)
+                    .foregroundStyle(.white)
+            }
+            .foregroundStyle(VS.textDim).padding(30).frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed(let err):
             message(icon: "exclamationmark.triangle", text: err)
         }
     }
 
-    private func message(icon: String, text: String) -> some View {
+    private static func format(_ bytes: UInt64) -> String {
+        ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .binary)
+    }
+
+    private func message(icon: String, text: String, reload: Bool = true) -> some View {
         VStack(spacing: 12) {
             Image(systemName: icon).font(.largeTitle)
             Text(text).multilineTextAlignment(.center).font(.callout)
-            Button("Reload") { Task { await doc.load(from: workspace.fs) } }
+            if reload { Button("Reload") { Task { await doc.load(from: workspace.fs) } } }
         }
         .foregroundStyle(VS.textDim).padding(30).frame(maxWidth: .infinity, maxHeight: .infinity)
     }

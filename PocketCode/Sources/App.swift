@@ -6,6 +6,7 @@ struct PocketCodeApp: App {
 
     init() {
         LocalFileSystem.seedWelcomeProjectIfNeeded()
+        EditorDocument.warmUpHighlighting()
     }
 
     var body: some Scene {

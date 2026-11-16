@@ -24,6 +24,8 @@ protocol FileSystemProvider: AnyObject {
     func initialPath() async throws -> String
     func list(_ path: String) async throws -> [FileItem]
     func read(_ path: String) async throws -> Data
+    /// Size in bytes, or nil if the server doesn't say.
+    func fileSize(_ path: String) async throws -> UInt64?
     func write(_ data: Data, to path: String) async throws
     func createDirectory(_ path: String) async throws
     func delete(_ item: FileItem) async throws
@@ -85,6 +87,9 @@ final class LocalFileSystem: FileSystemProvider {
     }
 
     func read(_ path: String) async throws -> Data { try Data(contentsOf: URL(fileURLWithPath: path)) }
+    func fileSize(_ path: String) async throws -> UInt64? {
+        (try FileManager.default.attributesOfItem(atPath: path)[.size] as? NSNumber)?.uint64Value
+    }
     func write(_ data: Data, to path: String) async throws { try data.write(to: URL(fileURLWithPath: path), options: .atomic) }
     func createDirectory(_ path: String) async throws {
         try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false)
@@ -119,6 +124,7 @@ final class UnavailableFileSystem: FileSystemProvider {
     func initialPath() async throws -> String { throw error }
     func list(_ path: String) async throws -> [FileItem] { throw error }
     func read(_ path: String) async throws -> Data { throw error }
+    func fileSize(_ path: String) async throws -> UInt64? { throw error }
     func write(_ data: Data, to path: String) async throws { throw error }
     func createDirectory(_ path: String) async throws { throw error }
     func delete(_ item: FileItem) async throws { throw error }
@@ -166,6 +172,8 @@ final class SFTPFileSystem: FileSystemProvider {
         let buffer = try await sftp.withFile(filePath: path, flags: .read) { try await $0.readAll() }
         return Data(buffer.readableBytesView)
     }
+
+    func fileSize(_ path: String) async throws -> UInt64? { try await sftp.getAttributes(at: path).size }
 
     func write(_ data: Data, to path: String) async throws {
         let buffer = ByteBuffer(bytes: data)

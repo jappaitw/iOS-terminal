@@ -39,12 +39,24 @@ enum SSHConnectError: LocalizedError {
     }
 }
 
+/// Claims a one-shot continuation: whichever racer calls `claim()` first wins.
+final class Once: @unchecked Sendable {
+    private let lock = NSLock()
+    private var fired = false
+    func claim() -> Bool { lock.lock(); defer { lock.unlock() }; if fired { return false }; fired = true; return true }
+}
+
 /// One SSH connection shared by the SFTP explorer and any number of terminals.
+/// The underlying client can be rebuilt (`reconnect()`) after iOS drops the socket in the background.
 @MainActor
 final class SSHConnection {
     let host: SSHHost
-    let client: SSHClient
+    private(set) var client: SSHClient
     private(set) var sftp: SFTPClient?
+    /// Kept in memory only, so the session can sign in again without asking.
+    private let secrets: HostSecrets
+    /// Host key seen on the first connect; later reconnects must present the same key.
+    private var pinnedKey: String?
 
     /// Connection phases shown in the UI while connecting.
     enum Stage: String {
@@ -52,15 +64,24 @@ final class SSHConnection {
         case openingFiles = "Opening file browser…"
     }
 
-    private init(host: SSHHost, client: SSHClient, sftp: SFTPClient?) {
+    private init(host: SSHHost, secrets: HostSecrets, client: SSHClient, sftp: SFTPClient?, pinnedKey: String?) {
         self.host = host
+        self.secrets = secrets
         self.client = client
         self.sftp = sftp
+        self.pinnedKey = pinnedKey
     }
 
     /// Connects and returns the connection plus the server's host key (for pinning).
     static func connect(host: SSHHost, secrets: HostSecrets,
                         progress: @escaping (Stage) -> Void = { _ in }) async throws -> (SSHConnection, String?) {
+        let (client, sftp, seenKey) = try await open(host: host, secrets: secrets, pinned: host.pinnedHostKey, progress: progress)
+        let conn = SSHConnection(host: host, secrets: secrets, client: client, sftp: sftp, pinnedKey: seenKey ?? host.pinnedHostKey)
+        return (conn, seenKey)
+    }
+
+    private static func open(host: SSHHost, secrets: HostSecrets, pinned: String?,
+                             progress: @escaping (Stage) -> Void) async throws -> (SSHClient, SFTPClient?, String?) {
         let auth: SSHAuthenticationMethod
         switch host.auth {
         case .password:
@@ -76,7 +97,7 @@ final class SSHConnection {
                 throw SSHConnectError.badPrivateKey
             }
         }
-        let validator = TOFUHostKeyValidator(pinned: host.pinnedHostKey)
+        let validator = TOFUHostKeyValidator(pinned: pinned)
         #if DEBUG
         sshLog.debug("connect start \(host.hostname, privacy: .public):\(host.port) auth=\(host.auth.rawValue, privacy: .public)")
         #endif
@@ -97,7 +118,48 @@ final class SSHConnection {
         // Hard 10s cap: some servers accept the channel but never answer the subsystem request.
         let sftp = await Self.openSFTP(client, timeoutSeconds: 10)
         sshLog.info("sftp \(sftp == nil ? "unavailable" : "OK", privacy: .public) at \(String(format: "%.1f", Date().timeIntervalSince(t0)), privacy: .public)s")
-        return (SSHConnection(host: host, client: client, sftp: sftp), validator.seenKey)
+        return (client, sftp, validator.seenKey)
+    }
+
+    /// The file system the explorer should use for this connection right now.
+    func makeFileSystem() -> FileSystemProvider {
+        if let sftp { return SFTPFileSystem(sftp: sftp, startPath: host.startPath) }
+        return UnavailableFileSystem(message: "Logged in to \(host.hostname), but it does not offer SFTP, so files can't be browsed. On a NAS, enable SFTP (Synology: Control Panel → File Services → FTP). The terminal works normally.")
+    }
+
+    /// True if the session still answers a round trip within `timeoutSeconds`.
+    /// After a long background stint the socket can look open while the peer is long gone,
+    /// so `isConnected` alone is not enough.
+    func isHealthy(timeoutSeconds: UInt64 = 5) async -> Bool {
+        guard client.isConnected else { return false }
+        let client = client, sftp = sftp
+        let once = Once()
+        return await withCheckedContinuation { cont in
+            Task {
+                let ok: Bool
+                if let sftp, sftp.isActive {
+                    ok = (try? await sftp.getRealPath(atPath: ".")) != nil
+                } else {
+                    ok = (try? await client.executeCommand("true")) != nil
+                }
+                if once.claim() { cont.resume(returning: ok) }
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: timeoutSeconds * 1_000_000_000)
+                if once.claim() { cont.resume(returning: false) }
+            }
+        }
+    }
+
+    /// Throws away the old session and signs in again with the same credentials and pinned host key.
+    func reconnect() async throws {
+        let oldClient = client, oldSFTP = sftp
+        Task { try? await oldSFTP?.close(); try? await oldClient.close() }
+        let (client, sftp, seenKey) = try await Self.open(host: host, secrets: secrets, pinned: pinnedKey, progress: { _ in })
+        self.client = client
+        self.sftp = sftp
+        if pinnedKey == nil { pinnedKey = seenKey }
+        sshLog.info("reconnected")
     }
 
     /// Retries the SFTP subsystem on the existing session (e.g. after the user enabled it on the server).
@@ -110,11 +172,6 @@ final class SSHConnection {
     /// Opens SFTP with a hard timeout. A task group would await the hung child on exit,
     /// so this races two unstructured tasks instead; whichever claims first wins.
     private static func openSFTP(_ client: SSHClient, timeoutSeconds: UInt64) async -> SFTPClient? {
-        final class Once: @unchecked Sendable {
-            private let lock = NSLock()
-            private var fired = false
-            func claim() -> Bool { lock.lock(); defer { lock.unlock() }; if fired { return false }; fired = true; return true }
-        }
         let once = Once()
         return await withCheckedContinuation { cont in
             Task {
@@ -130,7 +187,7 @@ final class SSHConnection {
 
     /// Rebuilds the BEGIN/END lines and strips stray whitespace, so a key whose dashes were
     /// mangled by smart punctuation (or that lost line breaks when pasted) still parses.
-    static func normalizedOpenSSHKey(_ raw: String) -> String {
+    nonisolated static func normalizedOpenSSHKey(_ raw: String) -> String {
         let text = raw.replacingOccurrences(of: "\r", with: "")
         guard let begin = text.range(of: "BEGIN OPENSSH PRIVATE KEY"),
               let end = text.range(of: "END OPENSSH PRIVATE KEY", range: begin.upperBound..<text.endIndex)

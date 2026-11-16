@@ -1,5 +1,9 @@
 import SwiftUI
 import Runestone
+import TreeSitterSwiftRunestone
+import os
+
+let editorLog = Logger(subsystem: "com.jlmxstudio.pocketcode", category: "editor")
 
 enum Panel: String, CaseIterable, Identifiable {
     case explorer, editor, terminal
@@ -17,7 +21,13 @@ enum Panel: String, CaseIterable, Identifiable {
 /// An open editor tab.
 @MainActor
 final class EditorDocument: ObservableObject, Identifiable {
-    enum Content { case loading, text, image(UIImage), binary(Int), failed(String) }
+    enum Content { case loading, text, image(UIImage), binary(Int), tooLarge(UInt64), confirmLarge(UInt64), failed(String) }
+
+    /// Files above this size ask before opening; above `hardLimit` they are refused.
+    static let softLimit: UInt64 = 5 * 1024 * 1024
+    static let hardLimit: UInt64 = 50 * 1024 * 1024
+    /// Above this size syntax highlighting is turned off so typing stays responsive.
+    static let highlightLimit: UInt64 = 2 * 1024 * 1024
 
     let id = UUID()
     @Published var path: String
@@ -33,9 +43,15 @@ final class EditorDocument: ObservableObject, Identifiable {
 
     init(path: String) { self.path = path }
 
-    func load(from fs: FileSystemProvider) async {
+    /// - Parameter force: skip the "this file is large" confirmation (the user tapped Open Anyway).
+    func load(from fs: FileSystemProvider, force: Bool = false) async {
         content = .loading
+        let t0 = Date()
         do {
+            if let size = try? await fs.fileSize(path) {
+                if size > Self.hardLimit { content = .tooLarge(size); return }
+                if size > Self.softLimit && !force { content = .confirmLarge(size); return }
+            }
             let data = try await fs.read(path)
             if let image = UIImage(data: data), LanguageInfo.imageExtensions.contains((path as NSString).pathExtension.lowercased()) {
                 content = .image(image)
@@ -46,7 +62,7 @@ final class EditorDocument: ObservableObject, Identifiable {
                 return
             }
             savedText = text
-            let lang = language.treeSitter
+            let lang = data.count > Self.highlightLimit ? nil : language.treeSitter
             let theme = DarkPlusTheme()
             // Parsing large files can take a moment, so build the state off the main thread.
             let state = await Task.detached { () -> UncheckedBox<TextViewState> in
@@ -56,8 +72,20 @@ final class EditorDocument: ObservableObject, Identifiable {
             textView.setState(state.value)
             isDirty = false
             content = .text
+            editorLog.info("opened \(data.count) bytes, highlight=\(lang != nil), \(String(format: "%.2f", Date().timeIntervalSince(t0)), privacy: .public)s")
         } catch {
             content = .failed(error.localizedDescription)
+        }
+    }
+
+    /// The first syntax-highlighted state the app builds pays a one-time ~1s setup cost
+    /// (measured in LanguageTests.testHighlightStateTiming); later ones, in any language, are fast.
+    /// Paying it in the background at launch keeps the first file open snappy.
+    nonisolated static func warmUpHighlighting() {
+        Task.detached(priority: .utility) {
+            let t0 = Date()
+            _ = TextViewState(text: "let x = 1 // warm-up\n", theme: DarkPlusTheme(), language: .swift)
+            editorLog.info("highlight warm-up \(String(format: "%.2f", Date().timeIntervalSince(t0)), privacy: .public)s")
         }
     }
 
@@ -121,6 +149,11 @@ final class Workspace: ObservableObject {
     /// Set when the explorer root can't be loaded at all; shown inline instead of an alert.
     @Published var rootError: String?
     @Published var isRetrying = false
+
+    enum LinkState: Equatable { case connected, checking, reconnecting, lost(String) }
+    /// State of the SSH link, shown in the status bar. Always `.connected` for local workspaces.
+    @Published private(set) var link: LinkState = .connected
+    private var reconnectTask: Task<Bool, Never>?
     /// True when logged in over SSH but the host offers no SFTP (terminal still works).
     var sftpUnavailable: Bool { fs is UnavailableFileSystem }
 
@@ -162,6 +195,40 @@ final class Workspace: ObservableObject {
             fs = SFTPFileSystem(sftp: sftp, startPath: connection.host.startPath)
         }
         await bootstrap()
+    }
+
+    /// Health check (run when the app returns to the foreground or before restarting a shell).
+    /// If the session died, signs in again and moves the explorer and all terminals onto it.
+    /// Returns true if the connection is usable afterwards.
+    @discardableResult
+    func ensureConnected() async -> Bool {
+        guard let connection else { return true }
+        if let reconnectTask { return await reconnectTask.value }
+        let task = Task<Bool, Never> { @MainActor in
+            defer { self.reconnectTask = nil }
+            self.link = .checking
+            if await connection.isHealthy() { self.link = .connected; return true }
+            self.link = .reconnecting
+            do {
+                try await connection.reconnect()
+            } catch {
+                self.link = .lost(error.localizedDescription)
+                return false
+            }
+            self.fs = connection.makeFileSystem()
+            self.link = .connected
+            if self.rootError == nil && !self.rootPath.isEmpty { await self.refreshAll() } else { await self.bootstrap() }
+            for t in self.terminals { t.reattach(client: connection.client) }
+            return true
+        }
+        reconnectTask = task
+        return await task.value
+    }
+
+    /// Restart a dead shell, reconnecting first if the SSH session itself is gone.
+    func restart(_ session: TerminalSession) async {
+        guard await ensureConnected(), !session.isRunning else { return }
+        session.start()
     }
 
     func shutdown() {
