@@ -68,7 +68,7 @@ private struct TerminalBody: View {
     var body: some View {
         TerminalHost(session: session)
         if let link = session.detectedLink {
-            LinkBar(link: link) { session.detectedLink = nil }
+            LinkBar(link: link, onOpen: { session.openLink(link) }) { session.detectedLink = nil }
         }
         if !session.isRunning {
             HStack(spacing: 10) {
@@ -145,7 +145,9 @@ private struct TerminalMenu: View {
             } label: { Text("Font Size \(Int(settings.terminalFontSize))") }
         } label: { Image(systemName: "ellipsis") }
         .accessibilityLabel("Terminal Actions")
-        .sheet(isPresented: $showLinks) { LinksSheet(links: session.visibleLinks().reversed()) }
+        .sheet(isPresented: $showLinks) {
+            LinksSheet(links: session.visibleLinks().reversed()) { link in session.openLink(link) }
+        }
     }
 }
 
@@ -153,6 +155,7 @@ private struct TerminalMenu: View {
 /// phone's browser, so offer it here (e.g. `claude` / `gh auth login` sign-in links).
 private struct LinkBar: View {
     let link: String
+    let onOpen: () -> Void
     let onDismiss: () -> Void
     @State private var copied = false
 
@@ -168,7 +171,7 @@ private struct LinkBar: View {
                 copied = true
             }
             .font(.system(size: 13))
-            Button { TerminalLinks.open(link) } label: {
+            Button(action: onOpen) {
                 Text("Open").font(.system(size: 13, weight: .semibold))
                     .padding(.horizontal, 12).padding(.vertical, 5)
                     .background(Color(hex: 0x0E639C), in: RoundedRectangle(cornerRadius: 4))
@@ -188,6 +191,7 @@ private struct LinkBar: View {
 /// All URLs currently on screen, newest first.
 private struct LinksSheet: View {
     let links: [String]
+    let onOpen: (String) -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -200,7 +204,11 @@ private struct LinksSheet: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(link).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).lineLimit(4)
                         HStack {
-                            Button { TerminalLinks.open(link); dismiss() } label: { Label("Open in Safari", systemImage: "safari") }
+                            Button {
+                                dismiss()
+                                // Present after this sheet is gone.
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { onOpen(link) }
+                            } label: { Label("Open", systemImage: "safari") }
                                 .buttonStyle(.borderedProminent)
                             Button { UIPasteboard.general.string = link; dismiss() } label: { Label("Copy", systemImage: "doc.on.doc") }
                                 .buttonStyle(.bordered)
@@ -220,11 +228,6 @@ private struct LinksSheet: View {
 }
 
 enum TerminalLinks {
-    @MainActor static func open(_ link: String) {
-        guard let url = URL(string: link), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { return }
-        UIApplication.shared.open(url)
-    }
-
     /// "claude.com/cai/oauth/authorize?…" — host and path, for the compact bar.
     static func display(_ link: String) -> String {
         guard let url = URL(string: link), let host = url.host else { return link }

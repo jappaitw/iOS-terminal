@@ -59,3 +59,11 @@ xcodegen generate
 - [ ] App 隱私問卷：Data Not Collected
 - [ ] 開源授權頁內容與實際相依套件一致（升級套件後跑 `python3 scripts/gen_acknowledgements.py`）
 - [ ] Tree-sitter 文法授權：確認 `scripts/gen_acknowledgements.py` 裡 `GRAMMARS` 的每個上游 repo 仍為 MIT，必要時補上各自的著作權人
+
+## 附錄：SSH 連接埠轉送整合測試
+
+`PocketCodeTests/PortForwardIntegrationTests` 平常會自動略過；要實測 `LocalPortForward`，先在本機起一個只聽 127.0.0.1 的 sshd（金鑰登入、`AllowTcpForwarding yes`）和一個 HTTP 伺服器（回應內容含 `PORT_FORWARD_OK`），再執行：
+
+```bash
+TEST_RUNNER_PC_SSH_KEY=<私鑰路徑> TEST_RUNNER_PC_SSH_USER=$(whoami) TEST_RUNNER_PC_SSH_PORT=2222 TEST_RUNNER_PC_HTTP_PORT=18455 xcodebuild test -project PocketCode.xcodeproj -scheme PocketCode -destination 'id=<模擬器 UDID>' -clonedSourcePackagesDirPath .spm -derivedDataPath .build CODE_SIGN_IDENTITY="-" -only-testing:PocketCodeTests/PortForwardIntegrationTests
+```

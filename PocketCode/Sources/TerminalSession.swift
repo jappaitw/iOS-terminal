@@ -18,8 +18,11 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     /// running on the host). Shown as a bar with Open / Copy, since the remote program
     /// can't open the phone's browser itself.
     @Published var detectedLink: String?
-    private var seenLinks: Set<String> = []
+    /// Links on screen at the last scan; a link counts as new when it (re)appears.
+    private var visibleLinkSet: Set<String> = []
     private var linkScan: Task<Void, Never>?
+    /// Port forwards opened for OAuth callbacks, by local port.
+    private var forwards: [Int: LocalPortForward] = [:]
 
     let terminalView: SwiftTerm.TerminalView
     private var client: SSHClient
@@ -66,6 +69,8 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         tv.nativeForegroundColor = UIColor(hex: 0xCCCCCC)
         tv.caretColor = UIColor(hex: 0xCCCCCC)
         tv.optionAsMetaKey = true
+        // Touch screens never "hover", so with the default mode OSC 8 links can't be tapped.
+        tv.linkHighlightMode = .always
         tv.inputAccessoryView = nil // key row lives in TerminalPanel's layout instead
         // VS Code's integrated terminal ANSI palette.
         let palette: [UInt32] = [0x000000, 0xCD3131, 0x0DBC79, 0xE5E510, 0x2472C8, 0xBC3FBC, 0x11A8CD, 0xE5E5E5,
@@ -147,6 +152,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     func stop() {
         task?.cancel()
         task = nil
+        stopAllForwards()
     }
 
     /// Moves the session onto a fresh SSH client (after a reconnect) and starts a new shell.
@@ -158,6 +164,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         input.finish()
         writer = nil
         isRunning = false
+        stopAllForwards() // they rode on the old client
         self.client = client
         terminalView.feed(text: "\r\n\u{1B}[33m[Reconnected]\u{1B}[0m\r\n")
         start()
@@ -178,16 +185,55 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         return TerminalLinkScanner.links(in: lines, cols: t.cols)
     }
 
+    /// Opens a link from the terminal in the in-app browser. If it is an OAuth link whose
+    /// redirect goes to localhost on the host (e.g. `codex login` → localhost:1455), the
+    /// same port is first forwarded over SSH so the callback reaches the CLI on the host.
+    func openLink(_ link: String) {
+        guard let url = URL(string: link), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { return }
+        guard let port = OAuthRedirect.localCallbackPort(in: link) else {
+            InAppBrowser.present(url)
+            return
+        }
+        Task { @MainActor in
+            if forwards[port] == nil {
+                do {
+                    forwards[port] = try await LocalPortForward.start(client: client, localPort: port, remotePort: port)
+                    terminalView.feed(text: "\r\n\u{1B}[2m[Forwarding localhost:\(port) to the host for sign-in]\u{1B}[0m\r\n")
+                } catch {
+                    terminalView.feed(text: "\r\n\u{1B}[33m[Couldn't forward port \(port): \(error.localizedDescription)]\u{1B}[0m\r\n")
+                }
+            }
+            InAppBrowser.present(url) { [weak self] in
+                // Give the final redirect a moment to finish before tearing down.
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    self?.stopForward(port)
+                }
+            }
+        }
+    }
+
+    private func stopForward(_ port: Int) {
+        forwards.removeValue(forKey: port)?.stop()
+    }
+
+    private func stopAllForwards() {
+        forwards.values.forEach { $0.stop() }
+        forwards.removeAll()
+    }
+
     /// Debounced: output arrives in bursts; scan once it settles.
     private func scheduleLinkScan() {
         linkScan?.cancel()
         linkScan = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 350_000_000)
             guard let self, !Task.isCancelled else { return }
-            if let newest = self.visibleLinks().last, !self.seenLinks.contains(newest) {
-                self.seenLinks.insert(newest)
+            let links = self.visibleLinks()
+            // Show a link when it (re)appears, so running a login twice still offers it.
+            if let newest = links.last(where: { !self.visibleLinkSet.contains($0) }) {
                 self.detectedLink = newest
             }
+            self.visibleLinkSet = Set(links)
         }
     }
 
@@ -221,8 +267,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     nonisolated func rangeChanged(source: SwiftTerm.TerminalView, startY: Int, endY: Int) {}
 
     nonisolated func requestOpenLink(source: SwiftTerm.TerminalView, link: String, params: [String: String]) {
-        guard let url = URL(string: link), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { return }
-        Task { @MainActor in UIApplication.shared.open(url) }
+        Task { @MainActor in self.openLink(link) }
     }
 
     nonisolated func clipboardCopy(source: SwiftTerm.TerminalView, content: Data) {

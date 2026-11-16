@@ -50,3 +50,15 @@ final class TerminalLinkScannerTests: XCTestCase {
         XCTAssertEqual(TerminalLinks.display("https://claude.com/cai/oauth/authorize?code=true"), "claude.com/cai/oauth/authorize?…")
     }
 }
+
+final class OAuthRedirectTests: XCTestCase {
+    func testLocalhostCallbackPort() {
+        let codex = "https://auth.openai.com/oauth/authorize?response_type=code&client_id=app_x&redirect_uri=http%3A%2F%2Flocalhost%3A1455%2Fauth%2Fcallback&scope=openid"
+        XCTAssertEqual(OAuthRedirect.localCallbackPort(in: codex), 1455)
+        XCTAssertEqual(OAuthRedirect.localCallbackPort(in: "https://x.dev/a?redirect_uri=http://127.0.0.1:8085/cb"), 8085)
+        // Claude's flow redirects to a public https page: nothing to forward.
+        let claude = "https://claude.com/cai/oauth/authorize?code=true&redirect_uri=https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback"
+        XCTAssertNil(OAuthRedirect.localCallbackPort(in: claude))
+        XCTAssertNil(OAuthRedirect.localCallbackPort(in: "https://auth.openai.com/codex/device"))
+    }
+}
