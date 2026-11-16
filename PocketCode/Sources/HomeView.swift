@@ -12,13 +12,14 @@ struct HomeView: View {
     @State private var error: String?
     @State private var pickingFolder = false
     @State private var showSettings = false
+    @State private var hostKeyPrompt: HostKeyPrompt?
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    Button { openLocal(LocalFileSystem.documents, title: "On My iPhone", scoped: false) } label: {
-                        row(icon: "iphone", title: "On My iPhone", subtitle: "App documents (visible in the Files app)")
+                    Button { openLocal(LocalFileSystem.documents, title: Self.deviceTitle, scoped: false) } label: {
+                        row(icon: Self.isPad ? "ipad" : "iphone", title: Self.deviceTitle, subtitle: "App documents (visible in the Files app)")
                     }
                     Button { pickingFolder = true } label: {
                         row(icon: "folder.badge.plus", title: "Open Folder…", subtitle: "From Files, iCloud Drive or a provider")
@@ -62,6 +63,16 @@ struct HomeView: View {
                 }
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
+            .sheet(item: $hostKeyPrompt) { prompt in
+                HostKeyPromptView(prompt: prompt) {
+                    var trusted = prompt.host
+                    trusted.pinnedHostKey = prompt.newKey
+                    store.update(trusted)
+                    hostKeyPrompt = nil
+                    connect(trusted)
+                } onReject: { hostKeyPrompt = nil }
+                .interactiveDismissDisabled()
+            }
             .sheet(item: $editing) { host in
                 HostEditorView(host: host, secrets: store.secrets(for: host)) { h, s in store.upsert(h, secrets: s) }
             }
@@ -76,6 +87,9 @@ struct HomeView: View {
             } message: { Text($0) }
         }
     }
+
+    private static var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+    private static var deviceTitle: String { isPad ? "On My iPad" : "On My iPhone" }
 
     private func row(icon: String, title: String, subtitle: String) -> some View {
         HStack(spacing: 12) {
@@ -98,15 +112,15 @@ struct HomeView: View {
         Task {
             defer { connecting = nil; stage = nil }
             do {
-                let (conn, seenKey) = try await SSHConnection.connect(host: host, secrets: store.secrets(for: host)) { s in
+                let (conn, _) = try await SSHConnection.connect(host: host, secrets: store.secrets(for: host)) { s in
                     Task { @MainActor in stage = s }
                 }
-                if host.pinnedHostKey == nil, let seenKey {
-                    var pinned = host
-                    pinned.pinnedHostKey = seenKey
-                    store.update(pinned)
-                }
                 onOpen(Workspace(title: host.displayName, fs: conn.makeFileSystem(), connection: conn))
+            } catch SSHConnectError.unknownHost(let key) {
+                hostKeyPrompt = HostKeyPrompt(host: host, newKey: key, oldKey: nil)
+            } catch SSHConnectError.hostKeyChanged(let key) {
+                sshLog.error("host key changed for \(host.hostname, privacy: .public)")
+                hostKeyPrompt = HostKeyPrompt(host: host, newKey: key, oldKey: host.pinnedHostKey)
             } catch {
                 sshLog.error("connect failed: \(String(describing: error), privacy: .public)")
                 self.error = Self.describe(error, host: host)
@@ -205,7 +219,7 @@ struct HostEditorView: View {
                         Text(key).font(.caption2.monospaced()).foregroundStyle(.secondary).lineLimit(3).textSelection(.enabled)
                         Button("Forget Host Key", role: .destructive) { host.pinnedHostKey = nil }
                     } header: { Text("Trusted Host Key") } footer: {
-                        Text("Pinned on first connect. A different key will be refused.")
+                        Text("Trusted on first connect. If the server presents a different key you’ll be asked before connecting.")
                     }
                 }
             }
@@ -253,5 +267,92 @@ struct PlainTextView: UIViewRepresentable {
         var text: Binding<String>
         init(text: Binding<String>) { self.text = text }
         func textViewDidChange(_ textView: UITextView) { text.wrappedValue = textView.text }
+    }
+}
+
+/// A host key the person has to rule on: a first connection, or a key that changed.
+struct HostKeyPrompt: Identifiable {
+    let id = UUID()
+    let host: SSHHost
+    let newKey: String
+    /// The previously trusted key; nil on first connection.
+    let oldKey: String?
+    var changed: Bool { oldKey != nil }
+}
+
+struct HostKeyPromptView: View {
+    let prompt: HostKeyPrompt
+    let onTrust: () -> Void
+    let onReject: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack(spacing: 12) {
+                        Image(systemName: prompt.changed ? "exclamationmark.shield.fill" : "lock.shield")
+                            .font(.system(size: 34))
+                            .foregroundStyle(prompt.changed ? Color.red : VS.accent)
+                        Text(prompt.changed ? "Host Key Has Changed" : "Verify New Host")
+                            .font(.title2.bold())
+                    }
+                    Text(prompt.changed
+                         ? "\(prompt.host.hostname) is presenting a different identity than last time. This happens when a server is reinstalled or its SSH keys are regenerated — but it is also exactly what an attacker intercepting the connection would look like."
+                         : "This is the first connection to \(prompt.host.hostname). Check that the fingerprint below matches the server’s (on the server: ssh-keygen -lf /etc/ssh/ssh_host_*_key.pub). It will be remembered, and you’ll be warned if it ever changes.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+
+                    if let old = prompt.oldKey {
+                        fingerprint("Previously trusted", old, color: .secondary)
+                    }
+                    fingerprint(prompt.changed ? "Presented now" : "Server fingerprint", prompt.newKey,
+                                color: prompt.changed ? .red : .primary)
+
+                    if prompt.changed {
+                        Label("Only trust the new key if you know why it changed. If unsure, ask the server’s administrator.",
+                              systemImage: "hand.raised.fill")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
+                    }
+
+                    VStack(spacing: 10) {
+                        if prompt.changed {
+                            // Changed key: the safe choice is the prominent one.
+                            Button(action: onReject) { Text("Don’t Connect").frame(maxWidth: .infinity) }
+                                .buttonStyle(.borderedProminent)
+                            Button(role: .destructive, action: onTrust) { Text("Trust New Key and Connect").frame(maxWidth: .infinity) }
+                                .buttonStyle(.bordered)
+                                .tint(.red)
+                        } else {
+                            Button(action: onTrust) { Text("Trust and Connect").frame(maxWidth: .infinity) }
+                                .buttonStyle(.borderedProminent)
+                            Button(action: onReject) { Text("Cancel").frame(maxWidth: .infinity) }
+                                .buttonStyle(.bordered)
+                        }
+                    }
+                    .controlSize(.large)
+                    .padding(.top, 6)
+                }
+                .padding(20)
+            }
+            .navigationTitle(prompt.host.displayName)
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func fingerprint(_ title: String, _ key: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased()).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+            Text(HostKeyFingerprint.type(key)).font(.caption.weight(.medium))
+            Text(HostKeyFingerprint.sha256(key))
+                .font(.system(.footnote, design: .monospaced))
+                .foregroundStyle(color)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(hex: 0x2D2D30), in: RoundedRectangle(cornerRadius: 8))
     }
 }

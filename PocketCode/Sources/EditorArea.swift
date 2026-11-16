@@ -34,7 +34,7 @@ struct EditorArea: View {
             Image(systemName: "chevron.left.forwardslash.chevron.right").font(.system(size: 64, weight: .ultraLight))
                 .foregroundStyle(VS.textDim.opacity(0.4))
             Text("Open a file from the Explorer").foregroundStyle(VS.textDim)
-            Button("Show Explorer") { workspace.panel = .explorer }.font(.callout)
+            Button("Show Explorer") { workspace.showSidebar(.explorer) }.font(.callout)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -101,6 +101,7 @@ private struct EditorTab: View {
         .background(active ? VS.editorBG : VS.tabInactiveBG)
         .overlay(alignment: .top) { if active { Rectangle().fill(VS.accent).frame(height: 1) } }
         .contentShape(Rectangle())
+        .hoverEffect(.highlight)
         .onTapGesture(perform: onSelect)
         .contextMenu {
             Button("Close", action: onClose)
@@ -205,12 +206,17 @@ private struct CodeEditor: UIViewRepresentable {
 
     func updateUIView(_ uiView: TextView, context: Context) {
         uiView.isUserInteractionEnabled = active
-        if !active, uiView.isFirstResponder { _ = uiView.resignFirstResponder() }
+        // Runestone's first responder is an internal subview, so `isFirstResponder` is always
+        // false here; resign on the visible → hidden transition instead, or typing elsewhere
+        // (e.g. the Search field) would land in this hidden editor.
+        if context.coordinator.wasActive && !active { _ = uiView.resignFirstResponder() }
+        context.coordinator.wasActive = active
     }
 
     @MainActor
     final class Coordinator: NSObject, TextViewDelegate {
         let doc: EditorDocument
+        var wasActive = true
         init(doc: EditorDocument) { self.doc = doc }
 
         func textViewDidChange(_ textView: TextView) { doc.textDidChange() }

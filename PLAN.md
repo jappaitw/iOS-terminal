@@ -46,16 +46,18 @@
 
 順手修正：iPhone 上隱藏中的終端機／編輯器仍會吃到長按手勢（Explorer 長按跳出終端機選單）→ 以 `panelActive` 環境值關閉非前景面板的 UIKit 互動；搜尋結果跨檔同行號列空白；狀態列窄螢幕被截斷（`ViewThatFits` 依序省略 UTF-8、縮排）。單元測試增至 26 項。
 
-## Phase 3 — 商品化（3–5 天）
+## Phase 3 — 商品化（3–5 天）✅ 程式與素材完成 2026-11-16（3.4 待你用開發者帳號在真機執行）
 
-| # | 任務 | 驗收標準 |
-|---|------|---------|
-| 3.1 | App 圖示＋啟動畫面（注意：不得使用/近似 VS Code 商標） | 全尺寸圖示齊備 |
-| 3.2 | 開源授權頁（Citadel/SwiftTerm/Runestone/TreeSitter* 等 MIT/Apache 條款全文） | 設定頁可開啟授權清單 |
-| 3.3 | 主機金鑰變更警示 UI：顯示新舊指紋、讓使用者選擇信任或拒絕（取代只能去設定頁 Forget） | 模擬金鑰變更有清楚對話框 |
-| 3.4 | 真機測試（Developer 帳號、自動簽章、TestFlight 內測） | 實體 iPhone 跑通三大功能 |
-| 3.5 | App Store 素材：截圖、描述（中英）、隱私標示（資料不離裝置） | 可送審狀態 |
-| 3.6 | iPad 分割版面打磨：側欄寬度記憶、⌘ 快捷鍵完整清單、游標支援 | iPad 實測體驗順暢 |
+| # | 任務 | 狀態 | 實作 |
+|---|------|------|------|
+| ✅ 3.1 | App 圖示＋啟動畫面 | 完成 | 原創「口袋＋終端機提示字元 `>_`」圖示（`scripts/render_icon.swift` 以 CoreGraphics 產生，未使用任何 VS Code 元素），`Assets.xcassets` 單一 1024 圖示自動產出各尺寸；啟動畫面＝深色底＋標誌 |
+| ✅ 3.2 | 開源授權頁 | 完成 | `scripts/gen_acknowledgements.py` 從 `.spm/checkouts` 產生 `Acknowledgements.json`（15 個套件全文，Apache 套件附 NOTICE；另列 20 個 tree-sitter 文法）。設定頁 → Open Source Licenses；並加註與 Microsoft/VS Code 無關 |
+| ✅ 3.3 | 主機金鑰警示 UI | 完成 | 取代靜默 TOFU：首次連線顯示 SHA256 指紋請使用者確認；金鑰變更時紅色警示、新舊指紋並列，預設按鈕為「Don’t Connect」，信任才更新並重連。指紋格式與 `ssh-keygen -lf` 一致（單元測試比對） |
+| ⏳ 3.4 | 真機／TestFlight | 待執行 | 需要你的 Developer 帳號與 iPhone：照 [docs/RELEASE.md](docs/RELEASE.md) 填 Team ID → 實機驗收清單 → Archive → TestFlight。版本號改由 `MARKETING_VERSION`／`CURRENT_PROJECT_VERSION` 控制 |
+| ✅ 3.5 | App Store 素材 | 完成（部分需你決定） | [docs/appstore/AppStore.md](docs/appstore/AppStore.md)：中英描述、副標題、關鍵字、隱私問卷（Data Not Collected）、隱私權政策草稿、審查備註範本；`PrivacyInfo.xcprivacy`；截圖 iPhone 6.9"×4、iPad 13"×2（乾淨模擬器、無個人資料）。⚠️ 需你提供：支援／隱私網址、審查用示範主機、出口合規作答、價格 |
+| ✅ 3.6 | iPad 打磨 | 完成 | 側欄可拖曳調寬、寬度與終端機高度記憶（AppStorage）；快捷鍵改為 Scene `Commands`（⌘ 長按清單／iPadOS 選單列）：⌘S、⌥⌘S、⌘W、⌃⇧`、⌘,、⌘⇧E、⌘⇧F、⌘B、⌃`、⌘J、⌘=／⌘-／⌘0、⌘⇧]／⌘⇧[；列表、分頁、活動列加上游標 hover 效果。「On My iPad」字樣 |
+
+順手修正：隱藏中的編輯器仍持有鍵盤焦點（在搜尋框打字會跑進編輯器）——Runestone 的焦點在內部 `textInputView`，改為面板切走時一律 resign；授權清單點進去重複推入同一頁（value/目的地 NavigationLink 混用）；iPad「Show Explorer」無作用；終端機高度拖曳累加過快。
 
 ## Phase 4 — 進階（選做）
 
@@ -75,7 +77,10 @@
 6. **終端機輸入順序**：所有寫入都必須走 `TerminalSession.InputBox`（同步 yield 保序），不要新開 per-key Task。
 7. **遠端指令**：一律用 `SSHConnection.run(script)`（包成 `sh -c '…' 2>/dev/null; true`）。Citadel 的 `executeCommand` 遇非零結束碼或任何 stderr 都會 throw。
 8. **iPhone 面板疊放**：三個面板在 ZStack 裡以 opacity 切換，`allowsHitTesting(false)` 擋不住 UIKit 手勢；新的 UIKit 面板要讀 `@Environment(\.panelActive)` 自行關閉互動。
-9. **編譯/測試指令**：`xcodegen generate && xcodebuild -project PocketCode.xcodeproj -scheme PocketCode -destination 'id=<sim-udid>' -clonedSourcePackagesDirPath .spm -derivedDataPath .build CODE_SIGN_IDENTITY="-" build`（測試把 `build` 換成 `test`）
+9. **鍵盤焦點**：Runestone `TextView.isFirstResponder` 永遠是 false（焦點在內部子視圖），要判斷或交出焦點請直接呼叫 `resignFirstResponder()`。
+10. **主機金鑰**：`PinnedHostKeyValidator` 對未釘選主機也會拒絕（丟 `unknownHost`），由 UI 確認後釘選再連；不要改回靜默信任。
+11. **授權清單**：升級任何套件後執行 `python3 scripts/gen_acknowledgements.py`，它會對未登記的套件發出警告。
+12. **編譯/測試指令**：`xcodegen generate && xcodebuild -project PocketCode.xcodeproj -scheme PocketCode -destination 'id=<sim-udid>' -clonedSourcePackagesDirPath .spm -derivedDataPath .build CODE_SIGN_IDENTITY="-" build`（測試把 `build` 換成 `test`）
 
 ## 測試主機備忘
 

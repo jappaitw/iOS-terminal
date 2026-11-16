@@ -24,3 +24,10 @@ Citadel is pinned to exactly 0.12.0 because 0.12.1 switched to a third-party swi
 
 Layout: iPhone shows one panel at a time with an activity bar at the bottom; iPad / landscape shows
 activity bar + explorer sidebar + editor with a resizable terminal panel (⌃` toggles it, ⌘B the sidebar).
+
+## Release
+
+- Real-device testing & TestFlight: [docs/RELEASE.md](docs/RELEASE.md)
+- App Store listing, privacy, screenshots: [docs/appstore/AppStore.md](docs/appstore/AppStore.md)
+- Regenerate open-source licenses after dependency changes: `python3 scripts/gen_acknowledgements.py`
+- Regenerate the app icon: `swift scripts/render_icon.swift <out-dir>`

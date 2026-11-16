@@ -68,3 +68,15 @@ final class PrivateKeyParserTests: XCTestCase {
         assertParses(mangledPEM, expect: "ECDSA P-256", pub: KeyFixtures.p256pemPub)
     }
 }
+
+final class HostKeyFingerprintTests: XCTestCase {
+    /// Expected values from `ssh-keygen -lf` on the fixture public keys.
+    func testMatchesSSHKeygen() {
+        for (pub, expected) in KeyFixtures.fingerprints {
+            XCTAssertEqual(HostKeyFingerprint.sha256(pub), expected)
+        }
+        XCTAssertEqual(HostKeyFingerprint.type(KeyFixtures.p256Pub), "ECDSA")
+        XCTAssertEqual(HostKeyFingerprint.type(KeyFixtures.edencPub), "ED25519")
+        XCTAssertEqual(HostKeyFingerprint.sha256("garbage"), "(unreadable key)")
+    }
+}

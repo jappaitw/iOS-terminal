@@ -289,6 +289,7 @@ private struct ExplorerRow: View {
             .padding(.trailing, 12)
             .frame(height: 26)
             .contentShape(Rectangle())
+            .hoverEffect(.highlight)
             .background(selected ? VS.selectionActive : Color.clear)
             .overlay(alignment: .leading) { if selected { Rectangle().fill(VS.accent).frame(width: 1) } }
         }

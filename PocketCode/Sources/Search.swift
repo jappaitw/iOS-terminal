@@ -281,6 +281,7 @@ struct SearchView: View {
         }
         .padding(.leading, 26).padding(.trailing, 8).frame(height: 22)
         .contentShape(Rectangle())
+        .hoverEffect(.highlight)
         .onTapGesture { workspace.open(file.path, line: m.line) }
     }
 

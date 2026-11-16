@@ -193,12 +193,14 @@ private struct TerminalHost: UIViewRepresentable {
     func updateUIView(_ container: UIView, context: Context) {
         if session.terminalView.superview !== container { attach(session.terminalView, to: container) }
         container.isUserInteractionEnabled = active
-        if !active, session.terminalView.isFirstResponder { _ = session.terminalView.resignFirstResponder() }
+        if context.coordinator.wasActive && !active { _ = session.terminalView.resignFirstResponder() }
+        context.coordinator.wasActive = active
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     @MainActor final class Coordinator: NSObject {
+        var wasActive = true
         private var startSize: Double = 12
         @objc func pinched(_ g: UIPinchGestureRecognizer) {
             let settings = AppSettings.shared

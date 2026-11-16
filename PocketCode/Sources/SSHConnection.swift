@@ -5,8 +5,10 @@ import Crypto
 import NIOCore
 import NIOSSH
 
-/// Pins the server's host key on first connect and rejects later mismatches (trust-on-first-use).
-final class TOFUHostKeyValidator: NIOSSHClientServerAuthenticationDelegate, @unchecked Sendable {
+/// Accepts only the pinned host key. An unknown host (nothing pinned yet) or a changed key
+/// aborts the handshake with an error carrying the key, so the UI can show its fingerprint
+/// and let the person decide; trusting it pins the key and connects again.
+final class PinnedHostKeyValidator: NIOSSHClientServerAuthenticationDelegate, @unchecked Sendable {
     let pinned: String?
     private(set) var seenKey: String?
 
@@ -15,10 +17,29 @@ final class TOFUHostKeyValidator: NIOSSHClientServerAuthenticationDelegate, @unc
     func validateHostKey(hostKey: NIOSSHPublicKey, validationCompletePromise: EventLoopPromise<Void>) {
         let key = String(openSSHPublicKey: hostKey)
         seenKey = key
-        if let pinned, pinned != key {
-            validationCompletePromise.fail(SSHConnectError.hostKeyChanged(key))
-        } else {
-            validationCompletePromise.succeed(())
+        switch pinned {
+        case nil: validationCompletePromise.fail(SSHConnectError.unknownHost(key))
+        case key: validationCompletePromise.succeed(())
+        default: validationCompletePromise.fail(SSHConnectError.hostKeyChanged(key))
+        }
+    }
+}
+
+/// OpenSSH-style fingerprint of a public key line ("ssh-ed25519 AAAA…"): "SHA256:base64-no-padding".
+enum HostKeyFingerprint {
+    static func sha256(_ openSSHKey: String) -> String {
+        let parts = openSSHKey.split(separator: " ")
+        guard parts.count >= 2, let blob = Data(base64Encoded: String(parts[1])) else { return "(unreadable key)" }
+        let digest = Data(SHA256.hash(data: blob)).base64EncodedString()
+        return "SHA256:" + digest.replacingOccurrences(of: "=", with: "")
+    }
+
+    static func type(_ openSSHKey: String) -> String {
+        switch openSSHKey.split(separator: " ").first.map(String.init) ?? "" {
+        case "ssh-ed25519": return "ED25519"
+        case "ssh-rsa": return "RSA"
+        case let t where t.hasPrefix("ecdsa-sha2-"): return "ECDSA"
+        case let t: return t
         }
     }
 }
@@ -26,12 +47,17 @@ final class TOFUHostKeyValidator: NIOSSHClientServerAuthenticationDelegate, @unc
 let sshLog = Logger(subsystem: "com.jlmxstudio.pocketcode", category: "ssh")
 
 enum SSHConnectError: LocalizedError {
+    /// The server presented a different key than the one pinned (associated: the new key).
     case hostKeyChanged(String)
+    /// First connection: nothing pinned yet (associated: the server's key).
+    case unknownHost(String)
 
     var errorDescription: String? {
         switch self {
+        case .unknownHost:
+            return "This server hasn't been verified yet."
         case .hostKeyChanged:
-            return "The host key for this server has changed. This could mean someone is intercepting the connection. If you expected this (e.g. the server was reinstalled), use “Forget Host Key” in the host settings."
+            return "The host key for this server has changed. This could mean someone is intercepting the connection. If you expected this (e.g. the server was reinstalled), reconnect and choose “Trust New Key” after checking the fingerprint."
         }
     }
 }
@@ -87,7 +113,7 @@ final class SSHConnection {
             auth = try PrivateKeyParser.parse(secrets.privateKey, passphrase: secrets.passphrase)
                 .authMethod(username: host.username)
         }
-        let validator = TOFUHostKeyValidator(pinned: pinned)
+        let validator = PinnedHostKeyValidator(pinned: pinned)
         #if DEBUG
         sshLog.debug("connect start \(host.hostname, privacy: .public):\(host.port) auth=\(host.auth.rawValue, privacy: .public)")
         #endif

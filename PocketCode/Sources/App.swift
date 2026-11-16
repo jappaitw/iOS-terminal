@@ -16,6 +16,7 @@ struct PocketCodeApp: App {
                 .preferredColorScheme(.dark)
                 .tint(VS.accent)
         }
+        .commands { WorkspaceCommands() }
     }
 }
 

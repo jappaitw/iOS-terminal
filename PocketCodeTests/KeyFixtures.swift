@@ -167,4 +167,9 @@ FBJQf5gQ==
 """
     static let rsaencPub = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCcrSvYI4Vi1BISSW8yPqPB5Pjs9gxKSvrbl6w1tOvEjAeQLqhVZteAppFFZcNkBtR5ssIulMq9tJ6kOqPKh9BGJ+b6stxFgWtacfRbNVOQHrIVIRoct4i0nmO0tNg8+HEOs7NG/AIwytkn9D5KZfznP0Iv4okTFJ4riU6SeLygFSy4L7OpqhOjL/32dhcXPPnMk8U8bcLW+TzPYtX416PBrkl9fgn5Rsfdz4Ko2dzh7+5MBtKfOM8Dq9XWaMHLYZqgFzEtUJwogXQO5NIuobN8RbS3vcWRNgSdW3TQGoMtqmCRKbBA112r9DMcJ9i7qZTfr807GgsGWNCIBtahRfY5"
     static let passphrase = "pocket-test"
+    static let fingerprints: [(String, String)] = [
+        (p256Pub, "SHA256:G7f2hINj3psoYDkV+m000sm/jLSwKq1P94NyyxjdZMw"),
+        (p384Pub, "SHA256:DjqA1NniZf6fBMty5sPweXmrz7ivWgH7sLAGWP43M7o"),
+        (p521Pub, "SHA256:oQPNlOv1VnW/c6vR/XgvguOCQAVnCSoUAIqkkxfRE8U"),
+    ]
 }

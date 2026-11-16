@@ -201,6 +201,41 @@ final class Workspace: ObservableObject {
     @Published var showHidden = AppSettings.shared.showHiddenFiles
 
     private var terminalCounter = 0
+
+    // Layout (iPad / regular width). Lives here so menu commands can drive it.
+    @Published var isCompact = true
+    @Published var sidebarVisible = true
+    @Published var sidebarPanel: Panel = .explorer
+    @Published var terminalVisible = false
+    @Published var showSettings = false
+
+    func showSidebar(_ p: Panel) {
+        sidebarPanel = p
+        sidebarVisible = true
+        panel = p
+    }
+
+    func toggleSidebar() {
+        if isCompact { panel = .explorer } else { sidebarVisible.toggle() }
+    }
+
+    func toggleTerminal() {
+        if isCompact {
+            if terminals.isEmpty { newTerminal() }
+            panel = .terminal
+        } else {
+            terminalVisible.toggle()
+            if terminalVisible && terminals.isEmpty { newTerminal() }
+        }
+    }
+
+    /// Cycles editor tabs (⌘⇧] / ⌘⇧[).
+    func selectEditor(offset: Int) {
+        guard !documents.isEmpty else { return }
+        let i = documents.firstIndex { $0.id == activeDocumentID } ?? 0
+        activeDocumentID = documents[(i + offset + documents.count) % documents.count].id
+        panel = .editor
+    }
     let search = SearchModel()
     /// Git branch and per-file status for remote workspaces inside a repo (nil otherwise).
     @Published private(set) var git: GitSnapshot?
@@ -499,6 +534,7 @@ final class Workspace: ObservableObject {
         terminals.append(session)
         activeTerminalID = session.id
         panel = .terminal
+        terminalVisible = true
     }
 
     func killTerminal(_ session: TerminalSession) {

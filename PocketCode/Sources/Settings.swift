@@ -79,7 +79,10 @@ struct SettingsView: View {
                     Toggle("Show Hidden Files by Default", isOn: $settings.showHiddenFiles)
                 }
                 Section {
-                    LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–")
+                    NavigationLink("Open Source Licenses") { LicensesView() }
+                    LabeledContent("Version", value: AppInfo.versionString)
+                } footer: {
+                    Text("PocketCode is not affiliated with or endorsed by Microsoft or Visual Studio Code.")
                 }
             }
             .navigationTitle("Settings")
@@ -87,5 +90,14 @@ struct SettingsView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .preferredColorScheme(.dark)
+    }
+}
+
+enum AppInfo {
+    static var versionString: String {
+        let info = Bundle.main.infoDictionary
+        let v = info?["CFBundleShortVersionString"] as? String ?? "–"
+        let b = info?["CFBundleVersion"] as? String ?? "–"
+        return "\(v) (\(b))"
     }
 }

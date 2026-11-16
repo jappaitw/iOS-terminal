@@ -7,12 +7,9 @@ struct WorkspaceView: View {
     let onClose: () -> Void
     @Environment(\.horizontalSizeClass) private var hSize
     @Environment(\.scenePhase) private var scenePhase
-    @State private var sidebarVisible = true
-    @State private var terminalVisible = false
-    @State private var terminalHeight: CGFloat = 260
-    @State private var showSettings = false
-    /// iPad: which view fills the sidebar.
-    @State private var sidebarPanel: Panel = .explorer
+    @AppStorage("layout.terminalHeight") private var terminalHeight: Double = 260
+    @AppStorage("layout.sidebarWidth") private var sidebarWidth: Double = 280
+    @State private var dragStart: Double?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,7 +19,7 @@ struct WorkspaceView: View {
             if hSize != .regular { activityBar(vertical: false) }
         }
         .background(VS.editorBG)
-        .sheet(isPresented: $showSettings) { SettingsView() }
+        .sheet(isPresented: $workspace.showSettings) { SettingsView() }
         .task { await workspace.bootstrap() }
         .onChange(of: scenePhase) { _, phase in
             // iOS suspends sockets in the background; check (and rebuild) the session on return.
@@ -31,20 +28,10 @@ struct WorkspaceView: View {
         .alert("Error", isPresented: .constant(workspace.errorMessage != nil), presenting: workspace.errorMessage) { _ in
             Button("OK") { workspace.errorMessage = nil }
         } message: { Text($0) }
-        .background {
-            // Hardware keyboard shortcuts
-            Group {
-                Button("") { if let d = workspace.activeDocument { Task { await workspace.save(d) } } }
-                    .keyboardShortcut("s", modifiers: .command)
-                Button("") { Task { await workspace.saveAll() } }.keyboardShortcut("s", modifiers: [.command, .option])
-                Button("") { if let d = workspace.activeDocument { workspace.close(d) } }.keyboardShortcut("w", modifiers: .command)
-                Button("") { sidebarVisible.toggle(); workspace.panel = .explorer }.keyboardShortcut("b", modifiers: .command)
-                Button("") { sidebarPanel = .search; sidebarVisible = true; workspace.panel = .search }
-                    .keyboardShortcut("f", modifiers: [.command, .shift])
-                Button("") { toggleTerminal() }.keyboardShortcut("`", modifiers: .control)
-            }
-            .opacity(0)
-        }
+        // Keyboard shortcuts live in WorkspaceCommands (menu bar / ⌘ overlay on iPad).
+        .focusedSceneObject(workspace)
+        .onAppear { workspace.isCompact = hSize != .regular }
+        .onChange(of: hSize) { _, h in workspace.isCompact = h != .regular }
     }
 
     // MARK: Title bar
@@ -70,10 +57,10 @@ struct WorkspaceView: View {
                 Button { Task { await workspace.refreshAll() } } label: { Label("Refresh Explorer", systemImage: "arrow.clockwise") }
                 Toggle(isOn: $workspace.showHidden) { Label("Show Hidden Files", systemImage: "eye") }
                 if workspace.isRemote {
-                    Button { workspace.newTerminal(); terminalVisible = true } label: { Label("New Terminal", systemImage: "terminal") }
+                    Button { workspace.newTerminal() } label: { Label("New Terminal", systemImage: "terminal") }
                 }
                 Divider()
-                Button { showSettings = true } label: { Label("Settings…", systemImage: "gearshape") }
+                Button { workspace.showSettings = true } label: { Label("Settings…", systemImage: "gearshape") }
                 Button(role: .destructive, action: onClose) { Label("Close Workspace", systemImage: "xmark") }
             } label: {
                 Image(systemName: "ellipsis").font(.system(size: 15, weight: .semibold)).frame(width: 28, height: 28)
@@ -108,36 +95,42 @@ struct WorkspaceView: View {
     private var regularLayout: some View {
         HStack(spacing: 0) {
             activityBar(vertical: true)
-            if sidebarVisible {
+            if workspace.sidebarVisible {
                 Group {
-                    if sidebarPanel == .search { SearchView(workspace: workspace, model: workspace.search) }
+                    if workspace.sidebarPanel == .search { SearchView(workspace: workspace, model: workspace.search) }
                     else { ExplorerView(workspace: workspace) }
                 }
-                .frame(width: 280)
+                .frame(width: sidebarWidth)
+                // Drag the divider to resize; the width is remembered.
                 Rectangle().fill(VS.border).frame(width: 1)
+                    .overlay(Color.clear.frame(width: 16).contentShape(Rectangle())
+                        .hoverEffect(.highlight)
+                        .gesture(DragGesture(minimumDistance: 1)
+                            .onChanged { v in
+                                let start = dragStart ?? sidebarWidth
+                                dragStart = start
+                                sidebarWidth = min(max(200, start + v.translation.width), 520)
+                            }
+                            .onEnded { _ in dragStart = nil }))
             }
             GeometryReader { geo in
                 VStack(spacing: 0) {
                     EditorArea(workspace: workspace)
-                    if terminalVisible {
+                    if workspace.terminalVisible {
                         Rectangle().fill(VS.border).frame(height: 1)
-                            .overlay(Color.clear.frame(height: 14).contentShape(Rectangle()).gesture(
-                                DragGesture().onChanged { v in
-                                    terminalHeight = min(max(120, terminalHeight - v.translation.height), geo.size.height - 120)
-                                }))
+                            .overlay(Color.clear.frame(height: 16).contentShape(Rectangle())
+                                .hoverEffect(.highlight)
+                                .gesture(DragGesture(minimumDistance: 1)
+                                    .onChanged { v in
+                                        let start = dragStart ?? terminalHeight
+                                        dragStart = start
+                                        terminalHeight = min(max(120, start - v.translation.height), geo.size.height - 120)
+                                    }
+                                    .onEnded { _ in dragStart = nil }))
                         TerminalPanel(workspace: workspace).frame(height: terminalHeight)
                     }
                 }
             }
-        }
-    }
-
-    private func toggleTerminal() {
-        if hSize == .regular {
-            terminalVisible.toggle()
-            if terminalVisible && workspace.terminals.isEmpty { workspace.newTerminal() }
-        } else {
-            workspace.panel = .terminal
         }
     }
 
@@ -171,6 +164,7 @@ struct WorkspaceView: View {
                         }
                     }
                 }
+                .hoverEffect(.highlight)
                 .disabled(p == .terminal && !workspace.isRemote)
             }
             if vertical { Spacer() }
@@ -182,10 +176,10 @@ struct WorkspaceView: View {
     private func isActive(_ p: Panel) -> Bool {
         if hSize == .regular {
             switch p {
-            case .explorer: return sidebarVisible && sidebarPanel == .explorer
-            case .search: return sidebarVisible && sidebarPanel == .search
+            case .explorer: return workspace.sidebarVisible && workspace.sidebarPanel == .explorer
+            case .search: return workspace.sidebarVisible && workspace.sidebarPanel == .search
             case .editor: return true
-            case .terminal: return terminalVisible
+            case .terminal: return workspace.terminalVisible
             }
         }
         return workspace.panel == p
@@ -195,9 +189,9 @@ struct WorkspaceView: View {
         if hSize == .regular {
             switch p {
             case .explorer, .search:
-                if sidebarVisible && sidebarPanel == p { sidebarVisible = false } else { sidebarPanel = p; sidebarVisible = true }
-            case .editor: sidebarVisible = false
-            case .terminal: toggleTerminal()
+                if workspace.sidebarVisible && workspace.sidebarPanel == p { workspace.sidebarVisible = false } else { workspace.showSidebar(p) }
+            case .editor: workspace.sidebarVisible = false
+            case .terminal: workspace.toggleTerminal()
             }
         } else {
             if p == .terminal && workspace.terminals.isEmpty { workspace.newTerminal() }
