@@ -1,0 +1,162 @@
+diff --git a/codex-rs/Cargo.toml b/codex-rs/Cargo.toml
+index 4bccad3..8745dae 100644
+--- a/codex-rs/Cargo.toml
++++ b/codex-rs/Cargo.toml
+@@ -698,3 +698,7 @@ v8 = { git = "https://github.com/openai-oss-forks/rusty_v8.git", rev = "90a65f88
+ 
+ [patch."ssh://git@github.com/openai-oss-forks/tungstenite-rs.git"]
+ tungstenite = { git = "https://github.com/openai-oss-forks/tungstenite-rs", rev = "bc589d684755a8c02da0fc7e58d0861cbfc306f1" }
++
++# iOS research: local mxc with the two desktop-only call sites cfg-gated (see PocketCode docs/ON_DEVICE_AI_CLI_FEASIBILITY.md)
++[patch."https://github.com/microsoft/mxc"]
++mxc-sdk = { path = "/Users/soulfyai/Documents/research/mxc-patched/src/mxc-sdk" }
+diff --git a/codex-rs/core/src/exec.rs b/codex-rs/core/src/exec.rs
+index a24be17..91e0794 100644
+--- a/codex-rs/core/src/exec.rs
++++ b/codex-rs/core/src/exec.rs
+@@ -309,6 +309,10 @@ pub async fn process_exec_tool_call(
+     use_legacy_landlock: bool,
+     stdout_stream: Option<StdoutStream>,
+ ) -> Result<ExecToolCallOutput> {
++    // Embedding hosts (iOS: no fork/exec) can take over shell tool execution.
++    if let Some(output) = crate::host_exec::run_on_host(&params).await {
++        return Ok(output);
++    }
+     let windows_sandbox_type = if params.windows_sandbox_level
+         == codex_protocol::config_types::WindowsSandboxLevel::Disabled
+     {
+diff --git a/codex-rs/core/src/host_exec.rs b/codex-rs/core/src/host_exec.rs
+new file mode 100644
+index 0000000..bd84f55
+--- /dev/null
++++ b/codex-rs/core/src/host_exec.rs
+@@ -0,0 +1,117 @@
++//! Optional host override for shell tool execution.
++//!
++//! An embedding application (e.g. an iOS app, where fork/exec is unavailable)
++//! registers a C callback; every shell tool call is then routed to the host,
++//! which runs the command however it can and returns the captured output.
++//! When no callback is registered this module is inert.
++
++use std::ffi::CStr;
++use std::ffi::CString;
++use std::ffi::c_char;
++use std::sync::atomic::AtomicUsize;
++use std::sync::atomic::Ordering;
++use std::time::Instant;
++
++use codex_protocol::exec_output::ExecToolCallOutput;
++use codex_protocol::exec_output::StreamOutput;
++
++use crate::exec::ExecParams;
++
++/// Takes a JSON request (`{"command":[…],"cwd":"…"}`); returns a malloc'ed JSON
++/// response (`{"exit_code":0,"stdout":"…","stderr":"…","timed_out":false}`),
++/// freed via the registered free function. Called on a blocking thread.
++pub type HostRunFn = unsafe extern "C" fn(request_json: *const c_char) -> *mut c_char;
++pub type HostFreeFn = unsafe extern "C" fn(*mut c_char);
++
++static HOST_RUN: AtomicUsize = AtomicUsize::new(0);
++static HOST_FREE: AtomicUsize = AtomicUsize::new(0);
++
++pub fn register(run: HostRunFn, free: HostFreeFn) {
++    HOST_FREE.store(free as usize, Ordering::SeqCst);
++    HOST_RUN.store(run as usize, Ordering::SeqCst);
++}
++
++#[derive(serde::Serialize)]
++struct HostRunRequest<'a> {
++    command: &'a [String],
++    cwd: String,
++}
++
++#[derive(serde::Deserialize)]
++struct HostRunResponse {
++    exit_code: i32,
++    #[serde(default)]
++    stdout: String,
++    #[serde(default)]
++    stderr: String,
++    #[serde(default)]
++    timed_out: bool,
++}
++
++/// None when no host handler is registered; otherwise always an output
++/// (host failures surface as exit 127 with a message on stderr).
++pub async fn run_on_host(params: &ExecParams) -> Option<ExecToolCallOutput> {
++    let f = HOST_RUN.load(Ordering::SeqCst);
++    if f == 0 {
++        return None;
++    }
++    let request = HostRunRequest {
++        command: &params.command,
++        cwd: params.cwd.as_path().display().to_string(),
++    };
++    let request_json = match serde_json::to_string(&request) {
++        Ok(s) => s,
++        Err(e) => return Some(failure(format!("host run: bad request: {e}"))),
++    };
++    let start = Instant::now();
++    let response = tokio::task::spawn_blocking(move || {
++        // SAFETY: the usize was stored from a HostRunFn in register().
++        let host: HostRunFn = unsafe { std::mem::transmute::<usize, HostRunFn>(f) };
++        let c_request = CString::new(request_json).ok()?;
++        let raw = unsafe { host(c_request.as_ptr()) };
++        if raw.is_null() {
++            return None;
++        }
++        let text = unsafe { CStr::from_ptr(raw) }.to_string_lossy().into_owned();
++        let free_fn = HOST_FREE.load(Ordering::SeqCst);
++        if free_fn != 0 {
++            let free: HostFreeFn = unsafe { std::mem::transmute::<usize, HostFreeFn>(free_fn) };
++            unsafe { free(raw) };
++        }
++        Some(text)
++    })
++    .await;
++    let duration = start.elapsed();
++    let text = match response {
++        Ok(Some(text)) => text,
++        Ok(None) => return Some(failure("host run: handler returned null".into())),
++        Err(e) => return Some(failure(format!("host run: join error: {e}"))),
++    };
++    match serde_json::from_str::<HostRunResponse>(&text) {
++        Ok(r) => {
++            let aggregated = if r.stderr.is_empty() {
++                r.stdout.clone()
++            } else {
++                format!("{}{}", r.stdout, r.stderr)
++            };
++            Some(ExecToolCallOutput {
++                exit_code: r.exit_code,
++                stdout: StreamOutput::new(r.stdout),
++                stderr: StreamOutput::new(r.stderr),
++                aggregated_output: StreamOutput::new(aggregated),
++                duration,
++                timed_out: r.timed_out,
++            })
++        }
++        Err(e) => Some(failure(format!("host run: bad response: {e}"))),
++    }
++}
++
++fn failure(message: String) -> ExecToolCallOutput {
++    ExecToolCallOutput {
++        exit_code: 127,
++        stderr: StreamOutput::new(message.clone()),
++        aggregated_output: StreamOutput::new(message),
++        ..Default::default()
++    }
++}
+diff --git a/codex-rs/core/src/lib.rs b/codex-rs/core/src/lib.rs
+index 1e9090a..a1f3b61 100644
+--- a/codex-rs/core/src/lib.rs
++++ b/codex-rs/core/src/lib.rs
+@@ -6,6 +6,7 @@
+ #![deny(clippy::print_stdout, clippy::print_stderr)]
+ 
+ mod apply_patch;
++pub mod host_exec;
+ mod apps;
+ mod client;
+ mod client_common;

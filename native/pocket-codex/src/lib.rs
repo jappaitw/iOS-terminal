@@ -128,6 +128,18 @@ pub unsafe extern "C" fn pc_start(
     }
 }
 
+/// Routes every Codex shell tool call to the host. `run` receives a JSON
+/// request ({"command":[…],"cwd":"…"}) and returns a malloc'ed JSON response
+/// ({"exit_code":…,"stdout":…,"stderr":…,"timed_out":…}); `free` releases it.
+/// Register before the first turn runs.
+#[no_mangle]
+pub extern "C" fn pc_set_exec_handler(
+    run: codex_core::host_exec::HostRunFn,
+    free: codex_core::host_exec::HostFreeFn,
+) {
+    codex_core::host_exec::register(run, free);
+}
+
 /// Frees a string returned through `error_out`.
 ///
 /// # Safety

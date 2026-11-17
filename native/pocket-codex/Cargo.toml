@@ -14,6 +14,7 @@ crate-type = ["staticlib"]
 # before the experimental target ships to anyone else's machine.
 [dependencies]
 codex-app-server = { path = "../../../research/codex/codex-rs/app-server" }
+codex-core = { path = "../../../research/codex/codex-rs/core" }
 codex-arg0 = { path = "../../../research/codex/codex-rs/arg0" }
 codex-utils-cli = { path = "../../../research/codex/codex-rs/utils/cli" }
 codex-utils-absolute-path = { path = "../../../research/codex/codex-rs/utils/absolute-path" }

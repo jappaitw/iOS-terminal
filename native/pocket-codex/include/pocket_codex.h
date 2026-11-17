@@ -13,6 +13,14 @@ int pc_start(const char *socket_path, const char *codex_home, char **error);
 /// Free a string returned through pc_start's error out-parameter.
 void pc_free(char *s);
 
+/// Route every Codex shell tool call to the host. `run` gets a JSON request
+/// ({"command":[...],"cwd":"..."}) and returns a malloc'ed JSON response
+/// ({"exit_code":...,"stdout":"...","stderr":"...","timed_out":false}); `free`
+/// releases that response. Register before the first turn runs.
+typedef char *(*pc_exec_run_fn)(const char *request_json);
+typedef void (*pc_exec_free_fn)(char *response);
+void pc_set_exec_handler(pc_exec_run_fn run, pc_exec_free_fn free);
+
 /// FFI contract version (bump on breaking changes).
 int pc_abi_version(void);
 

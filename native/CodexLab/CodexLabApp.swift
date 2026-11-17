@@ -1,69 +1,129 @@
 import SwiftUI
 
 /// Experimental harness for the embedded Codex app-server (pocket-codex).
-/// Proves, on simulator / device: pc_start() boots the server on a unix socket
-/// in the app container, and a JSON-RPC `initialize` handshake round-trips.
-/// Nothing here touches the real PocketCode app.
+/// Proves, on simulator / device: the server boots on a unix socket in the app
+/// container, JSON-RPC round-trips, login works, and a turn produces agent
+/// output. Nothing here touches the real PocketCode app.
 @main
 struct CodexLabApp: App {
     var body: some Scene { WindowGroup { CodexLabView() } }
 }
 
 struct CodexLabView: View {
-    @State private var log = "CodexLab — embedded Codex app-server PoC\n"
-    @State private var running = false
+    @StateObject private var client = CodexClient()
+    @State private var apiKey = ""
+    @State private var prompt = "Reply with exactly: HELLO FROM IOS"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("pocket-codex ABI v\(pc_abi_version())").font(.headline)
-            Button(running ? "Server running" : "Start server + initialize") { start() }
-                .disabled(running)
-                .buttonStyle(.borderedProminent)
-            ScrollView {
-                Text(log)
-                    .font(.system(size: 12, design: .monospaced))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("CodexLab — \(client.status)").font(.headline)
+            HStack {
+                SecureField("OpenAI API key (sk-…)", text: $apiKey).textFieldStyle(.roundedBorder)
+                Button("Login") { client.login(apiKey: apiKey) }.disabled(apiKey.isEmpty)
+            }
+            HStack {
+                TextField("Prompt", text: $prompt).textFieldStyle(.roundedBorder)
+                Button("Run turn") { client.runTurn(prompt: prompt) }.disabled(!client.ready)
+            }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    Text(client.log)
+                        .font(.system(size: 11, design: .monospaced))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                        .id("end")
+                }
+                .onChange(of: client.log) { _, _ in proxy.scrollTo("end", anchor: .bottom) }
             }
         }
         .padding()
-        .onAppear { if !running { start() } }
+        .onAppear { client.startIfNeeded() }
     }
+}
 
-    private func append(_ s: String) {
-        print("[codexlab] \(s)")
-        DispatchQueue.main.async { log += s + "\n" }
-    }
+/// Minimal app-server JSON-RPC client over WebSocket-on-unix-socket.
+final class CodexClient: ObservableObject {
+    @Published var log = ""
+    @Published var status = "idle"
+    @Published var ready = false
 
-    private func start() {
-        running = true
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let home = docs.appendingPathComponent("codex-home", isDirectory: true)
-        try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
-        // sockaddr_un caps paths at ~104 bytes. The device container's tmp fits;
-        // the simulator's host-side path doesn't, so use the host /tmp there.
+    private var fd: Int32 = -1
+    private var nextId = 1
+    private var threadId: String?
+    private var started = false
+    private let writeLock = NSLock()
+
+    func startIfNeeded() {
+        guard !started else { return }
+        started = true
+        status = "starting server…"
         #if targetEnvironment(simulator)
         let sock = "/tmp/codexlab.sock"
         #else
         let sock = NSTemporaryDirectory() + "codex.sock"
         #endif
         unlink(sock)
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let home = docs.appendingPathComponent("codex-home", isDirectory: true)
+        let workspace = docs.appendingPathComponent("workspace", isDirectory: true)
+        try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: workspace, withIntermediateDirectories: true)
+
+        // Host exec hook: every Codex shell tool call lands here instead of
+        // fork/exec. The lab answers with a marker (real integration routes to
+        // LocalShell); echo/pwd get a faithful reply so simple probes work.
+        pc_set_exec_handler({ requestPtr in
+            guard let requestPtr else { return nil }
+            let request = String(cString: requestPtr)
+            print("[codexlab] host-exec request: \(request)")
+            var exitCode: Int32 = 0
+            var stdout = ""
+            if let data = request.data(using: .utf8),
+               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let command = obj["command"] as? [String] {
+                if command.first == "echo" {
+                    stdout = command.dropFirst().joined(separator: " ") + "\n"
+                } else if command.count >= 3, command[1] == "-lc", command[2].hasPrefix("echo ") {
+                    stdout = String(command[2].dropFirst(5)) + "\n"
+                } else {
+                    stdout = "lab-exec placeholder: \(command.joined(separator: " "))\n"
+                }
+            } else {
+                exitCode = 127
+            }
+            let response: [String: Any] = ["exit_code": exitCode, "stdout": stdout, "stderr": ""]
+            let json = (try? JSONSerialization.data(withJSONObject: response))
+                .flatMap { String(data: $0, encoding: .utf8) } ?? #"{"exit_code":127}"#
+            return strdup(json)
+        }, { response in free(response) })
 
         var err: UnsafeMutablePointer<CChar>?
         let rc = pc_start(sock, home.path, &err)
-        if rc != 0 {
+        guard rc == 0 else {
             append("pc_start failed (\(rc)): \(err.map { String(cString: $0) } ?? "?")")
             if let err { pc_free(err) }
-            running = false
+            status = "server failed"
             return
         }
-        append("pc_start ok → \(sock)")
-        Thread.detachNewThread { handshake(sock) }
+        append("pc_start ok")
+        Thread.detachNewThread { [weak self] in self?.connectAndRun(sock) }
     }
 
-    private func handshake(_ path: String) {
-        // The server needs a moment to bind the socket; retry briefly.
-        var fd: Int32 = -1
+    func login(apiKey: String) {
+        send(method: "account/login/start", params: ["type": "apiKey", "apiKey": apiKey])
+    }
+
+    func runTurn(prompt: String) {
+        guard let threadId else { append("no thread yet"); return }
+        send(method: "turn/start", params: [
+            "threadId": threadId,
+            "input": [["type": "text", "text": prompt]],
+        ])
+    }
+
+    // MARK: transport
+
+    private func connectAndRun(_ path: String) {
         for attempt in 0..<40 {
             fd = socket(AF_UNIX, SOCK_STREAM, 0)
             var addr = sockaddr_un()
@@ -78,48 +138,102 @@ struct CodexLabView: View {
             if ok == 0 { break }
             close(fd); fd = -1
             usleep(250_000)
-            if attempt == 39 { append("could not connect to \(path)") ; return }
+            if attempt == 39 { append("could not connect"); return }
         }
-        append("socket connected")
 
-        // The app-server's unix-socket transport speaks WebSocket (tungstenite
-        // accept). Minimal RFC 6455 client: HTTP upgrade, then masked text frames.
         let key = Data((0..<16).map { _ in UInt8.random(in: 0...255) }).base64EncodedString()
         let upgrade = "GET / HTTP/1.1\r\nHost: codex\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: \(key)\r\n\r\n"
         _ = upgrade.withCString { write(fd, $0, strlen($0)) }
-        guard let head = readUntil(fd, marker: Array("\r\n\r\n".utf8)), head.contains("101") else {
+        guard let head = readUntil(marker: Array("\r\n\r\n".utf8)), head.contains("101") else {
             append("websocket upgrade refused"); close(fd); return
         }
-        append("websocket upgraded")
+        DispatchQueue.main.async { self.status = "connected" }
 
-        sendText(fd, """
-        {"id":1,"method":"initialize","params":{"clientInfo":{"name":"pocketcode-lab","title":"CodexLab","version":"0.1.0"}}}
-        """)
-        append("→ initialize sent, waiting for reply…")
+        send(method: "initialize", params: [
+            "clientInfo": ["name": "pocketcode-lab", "title": "CodexLab", "version": "0.1.0"],
+        ])
+        send(method: "getAuthStatus", params: [:])
 
-        while let text = readFrame(fd) {
-            append("← \(text)")
+        while let text = readFrame() {
+            if !text.isEmpty { handle(text) }
         }
         append("(connection closed)")
         close(fd)
     }
 
-    private func readUntil(_ fd: Int32, marker: [UInt8]) -> String? {
-        var data: [UInt8] = []
-        var byte: UInt8 = 0
-        while data.count < 16 * 1024 {
-            if read(fd, &byte, 1) != 1 { return nil }
-            data.append(byte)
-            if data.count >= marker.count, Array(data.suffix(marker.count)) == marker {
-                return String(bytes: data, encoding: .utf8)
+    private func handle(_ text: String) {
+        append("← \(text.prefix(2000))")
+        guard let data = text.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+
+        if let method = obj["method"] as? String {
+            // Server-initiated notifications / requests.
+            if method == "item/completed" || method == "turn/completed" {
+                DispatchQueue.main.async { self.status = "turn done — see log" }
+            }
+            if let id = obj["id"] {
+                // Server request needing an answer (e.g. approvals): approve everything in the lab.
+                reply(id: id, result: ["decision": "approved"])
+            }
+            return
+        }
+        // Responses by request id.
+        if obj["result"] != nil, let result = obj["result"] as? [String: Any] {
+            if result["platformOs"] != nil {
+                // initialize response → start a thread in the lab workspace.
+                let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                let ws = docs.appendingPathComponent("workspace").path
+                send(method: "thread/start", params: ["cwd": ws])
+            }
+            if let thread = result["thread"] as? [String: Any], let id = thread["id"] as? String {
+                threadId = id
+                DispatchQueue.main.async { self.ready = true; self.status = "thread \(id.prefix(8))… ready" }
+                // Automation: LAB_AUTOKEY (+ optional LAB_AUTOPROMPT) logs in and
+                // runs one turn unattended, for simctl-driven verification.
+                let env = ProcessInfo.processInfo.environment
+                if let key = env["LAB_AUTOKEY"] {
+                    login(apiKey: key)
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+                        self.runTurn(prompt: env["LAB_AUTOPROMPT"] ?? "Reply with exactly: HELLO FROM IOS")
+                    }
+                }
+            } else if let id = result["threadId"] as? String ?? result["id"] as? String, threadId == nil,
+                      id.count > 8 {
+                threadId = id
+                DispatchQueue.main.async { self.ready = true; self.status = "thread ready" }
             }
         }
-        return nil
     }
 
-    private func sendText(_ fd: Int32, _ text: String) {
+    // MARK: json-rpc plumbing
+
+    private func send(method: String, params: [String: Any]) {
+        let id = nextId; nextId += 1
+        let msg: [String: Any] = ["id": id, "method": method, "params": params]
+        guard let data = try? JSONSerialization.data(withJSONObject: msg),
+              let text = String(data: data, encoding: .utf8) else { return }
+        append("→ \(method)")
+        sendText(text)
+    }
+
+    private func reply(id: Any, result: [String: Any]) {
+        let msg: [String: Any] = ["id": id, "result": result]
+        guard let data = try? JSONSerialization.data(withJSONObject: msg),
+              let text = String(data: data, encoding: .utf8) else { return }
+        sendText(text)
+    }
+
+    private func append(_ s: String) {
+        print("[codexlab] \(s)")
+        DispatchQueue.main.async { self.log += s + "\n" }
+    }
+
+    // MARK: RFC 6455 client framing
+
+    private func sendText(_ text: String) {
+        writeLock.lock(); defer { writeLock.unlock() }
         let payload = [UInt8](text.utf8)
-        var frame: [UInt8] = [0x81] // FIN + text
+        var frame: [UInt8] = [0x81]
         if payload.count < 126 {
             frame.append(UInt8(payload.count) | 0x80)
         } else if payload.count <= 0xFFFF {
@@ -136,8 +250,21 @@ struct CodexLabView: View {
         frame.withUnsafeBufferPointer { _ = write(fd, $0.baseAddress, $0.count) }
     }
 
-    /// Reads one frame; returns text payload, "" for control frames, nil when closed.
-    private func readFrame(_ fd: Int32) -> String? {
+    private func readUntil(marker: [UInt8]) -> String? {
+        var data: [UInt8] = []
+        var byte: UInt8 = 0
+        while data.count < 16 * 1024 {
+            if read(fd, &byte, 1) != 1 { return nil }
+            data.append(byte)
+            if data.count >= marker.count, Array(data.suffix(marker.count)) == marker {
+                return String(bytes: data, encoding: .utf8)
+            }
+        }
+        return nil
+    }
+
+    /// One frame: text payload, "" for control frames, nil when closed.
+    private func readFrame() -> String? {
         func readN(_ n: Int) -> [UInt8]? {
             var out = [UInt8](); out.reserveCapacity(n)
             var buf = [UInt8](repeating: 0, count: n)
@@ -156,10 +283,22 @@ struct CodexLabView: View {
             guard let ext = readN(8) else { return nil }
             length = ext.reduce(0) { $0 << 8 | Int($1) }
         }
-        if head[1] & 0x80 != 0 { guard readN(4) != nil else { return nil } } // server frames shouldn't mask
+        if head[1] & 0x80 != 0 { guard readN(4) != nil else { return nil } }
         guard let payload = length > 0 ? readN(length) : [] else { return nil }
-        if opcode == 0x8 { return nil } // close
-        if opcode == 0x1 { return String(bytes: payload, encoding: .utf8) ?? "" }
-        return "" // ping/pong/binary ignored in the lab
+        switch opcode {
+        case 0x8: return nil // close
+        case 0x9: sendPong(payload); return ""
+        case 0x1: return String(bytes: payload, encoding: .utf8) ?? ""
+        default: return ""
+        }
+    }
+
+    private func sendPong(_ payload: [UInt8]) {
+        writeLock.lock(); defer { writeLock.unlock() }
+        var frame: [UInt8] = [0x8A, UInt8(payload.count) | 0x80]
+        let mask = (0..<4).map { _ in UInt8.random(in: 0...255) }
+        frame.append(contentsOf: mask)
+        frame.append(contentsOf: payload.enumerated().map { $1 ^ mask[$0 % 4] })
+        frame.withUnsafeBufferPointer { _ = write(fd, $0.baseAddress, $0.count) }
     }
 }

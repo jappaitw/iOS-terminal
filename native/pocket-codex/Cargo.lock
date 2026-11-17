@@ -9018,6 +9018,7 @@ dependencies = [
  "codex-app-server",
  "codex-arg0",
  "codex-config",
+ "codex-core",
  "codex-protocol",
  "codex-utils-absolute-path",
  "codex-utils-cli",
