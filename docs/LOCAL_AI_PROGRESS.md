@@ -9,9 +9,9 @@
 | Phase 0 稽核 | ✅ 完成 | `LOCAL_AI_ARCHITECTURE.md`、`LOCAL_AI_FEASIBILITY.md` |
 | Phase 1a 本機終端機 | ✅ 完成 | Swift 指令直譯器（`LocalShell/`，單元測試通過） |
 | Phase 1b Python | ✅ 完成 | 官方 CPython 3.15.2 iOS XCframework；`python` 指令、REPL、Ctrl-C、workspace 防護，模擬器測試 9/9 通過 |
-| Phase 2 Codex 研究 | 進行中 | ✅ codex-core 編譯 aarch64-apple-ios 成功(僅上游 mxc 兩行補丁);產品決策:Codex 先行(Apache-2.0),Claude Code 待授權。見 `ON_DEVICE_AI_CLI_FEASIBILITY.md` |
-| Phase 3 Agent 工具 | 待開始 | |
-| Phase 4 認證 | 待開始 | |
+| Phase 2 Codex 研究 | ✅ 完成 | 內嵌 Codex app-server 在 iOS 運行、連上 OpenAI API(401 於假 key 如預期)。產品決策:Codex 先行(Apache-2.0)。見 `ON_DEVICE_AI_CLI_FEASIBILITY.md` |
+| Phase 3 Agent 工具 | 大致完成 | host-exec → LocalShell + 內嵌 Python 路由,CodexLab 自測通過(`echo ping && python -c` → 42) |
+| Phase 4 認證 | 部分完成 | API key 登入 + CODEX_HOME 持久化已驗證;ChatGPT OAuth 待做。**待使用者提供真 key 完成驗收** |
 | Phase 5 混合工作區 | 待開始 | |
 | Phase 6 測試 | 待開始 | |
 
