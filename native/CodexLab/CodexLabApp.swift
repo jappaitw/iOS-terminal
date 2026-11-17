@@ -1,3 +1,4 @@
+import SafariServices
 import SwiftUI
 
 /// Experimental harness for the embedded Codex app-server (pocket-codex).
@@ -20,6 +21,11 @@ struct CodexLabView: View {
             HStack {
                 SecureField("OpenAI API key (sk-…)", text: $apiKey).textFieldStyle(.roundedBorder)
                 Button("Login") { client.login(apiKey: apiKey) }.disabled(apiKey.isEmpty)
+                Button("ChatGPT") { client.loginChatGPT() }
+            }
+            .sheet(item: $client.authURL) { item in
+                SafariView(url: item.url)   // in-app: keeps our process (and the
+                                            // localhost:1455 callback server) alive
             }
             HStack {
                 TextField("Prompt", text: $prompt).textFieldStyle(.roundedBorder)
@@ -41,11 +47,41 @@ struct CodexLabView: View {
     }
 }
 
+struct AuthURL: Identifiable {
+    let url: URL
+    var id: String { url.absoluteString }
+}
+
+/// In-app browser for the ChatGPT OAuth flow; the app (and its localhost:1455
+/// callback listener) stays alive while the user signs in.
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    func makeUIViewController(context: Context) -> SFSafariViewController { SFSafariViewController(url: url) }
+    func updateUIViewController(_ vc: SFSafariViewController, context: Context) {}
+}
+
 /// Minimal app-server JSON-RPC client over WebSocket-on-unix-socket.
 final class CodexClient: ObservableObject {
     @Published var log = ""
     @Published var status = "idle"
     @Published var ready = false
+    @Published var authURL: AuthURL?
+
+    /// Confirms codex's OAuth callback server is reachable on loopback.
+    func probeLoginServer(_ authURL: URL) {
+        let port = URLComponents(url: authURL, resolvingAgainstBaseURL: false)?
+            .queryItems?.first { $0.name == "redirect_uri" }?.value
+            .flatMap(URL.init(string:))?.port ?? 1455
+        var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/")!)
+        request.timeoutInterval = 3
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            if let http = response as? HTTPURLResponse {
+                self.append("login server listening on 127.0.0.1:\(port) (HTTP \(http.statusCode))")
+            } else {
+                self.append("login server probe: \(error?.localizedDescription ?? "no response")")
+            }
+        }.resume()
+    }
 
     private var fd: Int32 = -1
     private var nextId = 1
@@ -101,6 +137,10 @@ final class CodexClient: ObservableObject {
 
     func login(apiKey: String) {
         send(method: "account/login/start", params: ["type": "apiKey", "apiKey": apiKey])
+    }
+
+    func loginChatGPT() {
+        send(method: "account/login/start", params: ["type": "chatgpt"])
     }
 
     func runTurn(prompt: String) {
@@ -169,6 +209,11 @@ final class CodexClient: ObservableObject {
         }
         // Responses by request id.
         if obj["result"] != nil, let result = obj["result"] as? [String: Any] {
+            if let auth = result["authUrl"] as? String, let url = URL(string: auth) {
+                append("auth URL received; opening in-app browser")
+                probeLoginServer(url)
+                DispatchQueue.main.async { self.authURL = AuthURL(url: url) }
+            }
             if result["platformOs"] != nil {
                 // initialize response → start a thread in the lab workspace.
                 let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -181,6 +226,7 @@ final class CodexClient: ObservableObject {
                 // Automation: LAB_AUTOKEY (+ optional LAB_AUTOPROMPT) logs in and
                 // runs one turn unattended, for simctl-driven verification.
                 let env = ProcessInfo.processInfo.environment
+                if env["LAB_AUTOCHATGPT"] != nil { loginChatGPT() }
                 if let key = env["LAB_AUTOKEY"] {
                     login(apiKey: key)
                     DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
