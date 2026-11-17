@@ -75,9 +75,28 @@ AI 模型推論可以使用網路;CLI runtime、檔案存取、程式執行與�
 - `l-shell-ios` clone 並研讀(發現見上節)。
 - `@anthropic-ai/claude-code@2.1.112` npm metadata 確認授權為專有("SEE LICENSE IN README.md")。
 
+### 2026-11-17 — 路線 B 編譯可行性確認 ✅
+
+- `cargo check -p codex-core --target aarch64-apple-ios`:**通過**(1m38s,零錯誤)。
+- `cargo build -p codex-core --target aarch64-apple-ios --release`:**通過**(4m43s),產出 `libcodex_core.rlib`(557 MB 含 debuginfo;最終 app 內大小待 PoC 連結後量測)。
+- 唯一需要的修補:上游 `mxc-sdk`(microsoft/mxc,codex 的沙盒引擎)`dispatch.rs` 兩處無條件呼叫被 cfg 排除在 iOS 外的 `run` 模組;本地 vendor + 兩行 `#[cfg(any(windows, linux, macos))]` 解決(`~/Documents/research/mxc-patched`,workspace `[patch]` 指向)。可向上游提 PR。
+- 結論:**Codex 核心移植 iOS 的編譯障礙趨近於零**,工作量集中在(1)spawn/exec 層替換成 LocalShell(2)FFI 橋接(3)UI/登入整合。
+
+### 2026-11-17 — 產品決策與市場查證
+
+- **決策(產品負責人):Codex 先行,不等 Anthropic 授權。** Codex Apache-2.0 可直接商品化;Claude Code(Node 路線)降為後續實驗,等 Codex 整合完或授權明朗再啟動。
+- 市場查證(2026-11):App Store 上「手機跑 Claude Code/Codex」的產品(ServerCC、MobileCLI、Cosyra 等)**全部是 SSH thin client,裝置本身不執行程式碼**;唯一本機實作 l-shell-ios 僅側載、未商品化。**「App Store 第一個本機 AI CLI」位置目前無人佔據。**
+
+### 嵌入架構方向(路線 B,草案)
+
+- API 入口:`codex_core::ThreadManager`(= ConversationManager)/`CodexThread`;`exec` crate(無頭執行器)是驅動 core 的現成範例。
+- FFI:照 `pocket_python.c` 的成功模式 — Rust `staticlib` + C header + Swift 橋接;事件流(turn 進度、工具呼叫、輸出)經 callback 泵到終端機。
+- 工具執行:`core/src/spawn.rs`/`exec.rs` 的 `tokio::process` 路由改接 PocketCode LocalShell(內建指令)與內嵌 CPython;沙盒語意對映 workspace root。
+- 認證:API key 先行;OAuth 走既有的 port-forward 機制(Phase 4)。
+
 ### 待辦(依 codex 指令方向)
 
-- [ ] codex-core iOS 編譯結果與障礙清單(進行中)
+- [x] codex-core iOS 編譯結果與障礙清單(✅ check + release build 均通過,僅 mxc 兩行補丁)
 - [ ] 獨立實驗 target(不動正式 Terminal)嵌入 nodejs-mobile
 - [ ] Claude Code 實機啟動/登入/讀寫專案驗證
 - [ ] Agent Tool Bridge:AI 的 Bash tool → LocalShell;python → 內嵌 CPython

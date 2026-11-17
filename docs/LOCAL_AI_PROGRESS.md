@@ -9,7 +9,7 @@
 | Phase 0 稽核 | ✅ 完成 | `LOCAL_AI_ARCHITECTURE.md`、`LOCAL_AI_FEASIBILITY.md` |
 | Phase 1a 本機終端機 | ✅ 完成 | Swift 指令直譯器（`LocalShell/`，單元測試通過） |
 | Phase 1b Python | ✅ 完成 | 官方 CPython 3.15.2 iOS XCframework；`python` 指令、REPL、Ctrl-C、workspace 防護，模擬器測試 9/9 通過 |
-| Phase 2 Codex 研究 | 待開始 | Rust iOS 目標與原始碼下載已獲同意 |
+| Phase 2 Codex 研究 | 進行中 | ✅ codex-core 編譯 aarch64-apple-ios 成功(僅上游 mxc 兩行補丁);產品決策:Codex 先行(Apache-2.0),Claude Code 待授權。見 `ON_DEVICE_AI_CLI_FEASIBILITY.md` |
 | Phase 3 Agent 工具 | 待開始 | |
 | Phase 4 認證 | 待開始 | |
 | Phase 5 混合工作區 | 待開始 | |
