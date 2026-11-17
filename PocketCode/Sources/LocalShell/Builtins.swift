@@ -18,6 +18,7 @@ enum Builtins {
     /// Shown by `help` and used for Tab completion of command names.
     static let summaries: [(String, String)] = [
         ("cat", "print files"), ("cd", "change directory"), ("clear", "clear the screen"),
+        ("codex", "on-device AI coding agent (sign in, then ask it to build/edit/run)"),
         ("code", "open a file in the editor"), ("cp", "copy (-r for folders)"), ("echo", "print text"),
         ("find", "find files (-name, -type f|d, -maxdepth)"), ("grep", "search text (-i -n -v -r -l -c -F)"),
         ("head", "first lines (-n N)"), ("ls", "list files (-l -a -1 -h)"), ("mkdir", "make folders (-p)"),
@@ -26,7 +27,7 @@ enum Builtins {
         ("touch", "create file / update time"), ("tree", "folder tree"), ("wc", "count lines/words/bytes"),
     ]
 
-    static var commandNames: [String] { (Array(table.keys) + ["python", "python3", "exit"]).sorted() }
+    static var commandNames: [String] { (Array(table.keys) + ["python", "python3", "codex", "exit"]).sorted() }
 
     // MARK: Option parsing helper
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		037B734B9A62F33FC5ACC07C /* CodexProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356B37D833ED5AE59F37A0CC /* CodexProtocolClient.swift */; };
 		085FAF17544DF6315C79602D /* TerminalViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF2F6FD9F595D2ED39082293 /* TerminalViewTests.swift */; };
 		0C78082812EF0D1CDBF10306 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C135FAFB9D3ADBCFC2460B9 /* Assets.xcassets */; };
 		0CFEDC256BF160E42CEAF87E /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = D09CFD6FAC8FF17844259C81 /* Runestone */; };
@@ -25,6 +26,7 @@
 		33946154E2E024B58A4C65FA /* EditorArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7902E6722A8E6CF1EA2B774D /* EditorArea.swift */; };
 		34B6B26545365286361EAC38 /* TreeSitterCPPRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 8DA510828310DCECF976A567 /* TreeSitterCPPRunestone */; };
 		385111EFFB00638C31070C67 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7CC9261C691A0C0976BDE70 /* Commands.swift */; };
+		3B0F683FB41AF7914AC4080D /* CodexRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA061D823397F34BA998ECE /* CodexRuntime.swift */; };
 		3D1421B7F09748CFC23A6B67 /* PrivateKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D7DF1180249246978A4394 /* PrivateKeys.swift */; };
 		432562B5F8510625428DE229 /* ShellParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B527D8581A96F64959F1C3 /* ShellParser.swift */; };
 		46FF224EF3EF3143A750CFB1 /* TreeSitterYAMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = F48AF870890CF16744D9B302 /* TreeSitterYAMLRunestone */; };
@@ -37,6 +39,7 @@
 		5B273A9380645CF5D46F6499 /* pocket_python.c in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */; };
 		5E5BB3126A99C44E7E2FBD78 /* Git.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC92B4DBE3DBFF98B4CDB4F8 /* Git.swift */; };
 		6316666237B4FAE83E0934D3 /* PathUtilTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */; };
+		65CB32434238FF1458E5F500 /* CodexHostBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13C0AE4D154994285871F04C /* CodexHostBridge.swift */; };
 		67D1A1E5DE038724DA32F8DA /* PortForwardIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E057C343497EC75C982510 /* PortForwardIntegrationTests.swift */; };
 		6A040637F8DAD804E7C682A7 /* LocalShellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D090A69CED102FCBC7A37F /* LocalShellTests.swift */; };
 		6D0856B262B850B6A850D170 /* TreeSitterCSSRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = FF1AA2338C07BDAD15C17013 /* TreeSitterCSSRunestone */; };
@@ -56,9 +59,12 @@
 		98156726EC8D7D2B3444B77A /* PythonRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3687845290D50730FAE13489 /* PythonRuntimeTests.swift */; };
 		984DE125EA7926E8B7E68F3B /* TreeSitterJavaRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 550C859E14EFF5507F5511DF /* TreeSitterJavaRunestone */; };
 		99984E0402E16DFD81FEFF7F /* TreeSitterBashRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = ED9F9E39F4EA756F83125669 /* TreeSitterBashRunestone */; };
+		9AE6F426E2135A06275775C0 /* CodexProtocolClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356B37D833ED5AE59F37A0CC /* CodexProtocolClient.swift */; };
 		9B4210DAF2B02756228B8112 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FAAAB7BDC8CC8CAC20AC8C /* Settings.swift */; };
 		9E911E84C0DCC656FF3D66C3 /* Builtins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5178B136389BA8EF980003BE /* Builtins.swift */; };
+		A06D330E79CA0B2898C3E867 /* CodexHostBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13C0AE4D154994285871F04C /* CodexHostBridge.swift */; };
 		A072688E2342DB35E4814F51 /* LocalShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F9D72C19DD9C87F854898C2 /* LocalShell.swift */; };
+		A4292E40E944C8FC7C7A627B /* CodexRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA061D823397F34BA998ECE /* CodexRuntime.swift */; };
 		A42EB8146F8C3D419B9F76D5 /* TreeSitterTypeScriptRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 179F90AA7E4D3236F1B920DE /* TreeSitterTypeScriptRunestone */; };
 		A92F0A94E7C6EB6A987FAD1E /* TreeSitterMarkdownRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = B6E0523E47049614170F23B4 /* TreeSitterMarkdownRunestone */; };
 		AAECAE5BD513B5FCA88B4C40 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = B75325CA0BB6FEDFB4137371 /* SwiftTerm */; };
@@ -131,9 +137,11 @@
 		0D97815BAFF09F6B392795FD /* PocketCode-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PocketCode-Bridging-Header.h"; sourceTree = "<group>"; };
 		1092BCE1A7BB035737B19078 /* PortForward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForward.swift; sourceTree = "<group>"; };
 		121D67B9B434852B1AEA0792 /* CodexLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexLabApp.swift; sourceTree = "<group>"; };
+		13C0AE4D154994285871F04C /* CodexHostBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexHostBridge.swift; sourceTree = "<group>"; };
 		1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pocket_python.c; sourceTree = "<group>"; };
 		22D7DF1180249246978A4394 /* PrivateKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeys.swift; sourceTree = "<group>"; };
 		3451D64459E967828463C0B4 /* HostExec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostExec.swift; sourceTree = "<group>"; };
+		356B37D833ED5AE59F37A0CC /* CodexProtocolClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexProtocolClient.swift; sourceTree = "<group>"; };
 		3687845290D50730FAE13489 /* PythonRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntimeTests.swift; sourceTree = "<group>"; };
 		392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageTests.swift; sourceTree = "<group>"; };
 		3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyFixtures.swift; sourceTree = "<group>"; };
@@ -174,6 +182,7 @@
 		EC92B4DBE3DBFF98B4CDB4F8 /* Git.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Git.swift; sourceTree = "<group>"; };
 		F10284767E38CBC9495600BE /* PrivateKeyParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeyParserTests.swift; sourceTree = "<group>"; };
 		F8E057C343497EC75C982510 /* PortForwardIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForwardIntegrationTests.swift; sourceTree = "<group>"; };
+		FAA061D823397F34BA998ECE /* CodexRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRuntime.swift; sourceTree = "<group>"; };
 		FBE63FC6EC56188AC110DBD4 /* InAppBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppBrowser.swift; sourceTree = "<group>"; };
 		FF2F6FD9F595D2ED39082293 /* TerminalViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalViewTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -323,6 +332,9 @@
 			isa = PBXGroup;
 			children = (
 				5178B136389BA8EF980003BE /* Builtins.swift */,
+				13C0AE4D154994285871F04C /* CodexHostBridge.swift */,
+				356B37D833ED5AE59F37A0CC /* CodexProtocolClient.swift */,
+				FAA061D823397F34BA998ECE /* CodexRuntime.swift */,
 				8F9D72C19DD9C87F854898C2 /* LocalShell.swift */,
 				61ED2C230C88EFEC484D13EA /* PythonRuntime.swift */,
 				05B527D8581A96F64959F1C3 /* ShellParser.swift */,
@@ -566,7 +578,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				C42A26FD0F164C66DFB5E250 /* Builtins.swift in Sources */,
+				A06D330E79CA0B2898C3E867 /* CodexHostBridge.swift in Sources */,
 				7206C328B6D3972016D83B51 /* CodexLabApp.swift in Sources */,
+				037B734B9A62F33FC5ACC07C /* CodexProtocolClient.swift in Sources */,
+				3B0F683FB41AF7914AC4080D /* CodexRuntime.swift in Sources */,
 				E339DE59D0BBBE9757FC60D3 /* HostExec.swift in Sources */,
 				A072688E2342DB35E4814F51 /* LocalShell.swift in Sources */,
 				535A0333C46222FD2FA0B0EF /* PythonRuntime.swift in Sources */,
@@ -599,6 +614,9 @@
 			files = (
 				C69D69C913CA07006A2280DE /* App.swift in Sources */,
 				9E911E84C0DCC656FF3D66C3 /* Builtins.swift in Sources */,
+				65CB32434238FF1458E5F500 /* CodexHostBridge.swift in Sources */,
+				9AE6F426E2135A06275775C0 /* CodexProtocolClient.swift in Sources */,
+				A4292E40E944C8FC7C7A627B /* CodexRuntime.swift in Sources */,
 				385111EFFB00638C31070C67 /* Commands.swift in Sources */,
 				33946154E2E024B58A4C65FA /* EditorArea.swift in Sources */,
 				7E2E8001CC6C4D231E0C4884 /* ExplorerView.swift in Sources */,
@@ -767,7 +785,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "$(PROJECT_DIR)/ThirdParty/codex/device";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(PROJECT_DIR)/ThirdParty/codex/simulator";
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lpocket_codex";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode;
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "PocketCode/Python/PocketCode-Bridging-Header.h";
@@ -896,7 +917,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "$(PROJECT_DIR)/ThirdParty/codex/device";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(PROJECT_DIR)/ThirdParty/codex/simulator";
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lpocket_codex";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode;
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "PocketCode/Python/PocketCode-Bridging-Header.h";
