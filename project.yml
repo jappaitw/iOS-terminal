@@ -30,6 +30,11 @@ targets:
     platform: iOS
     sources:
       - native/CodexLab
+      - PocketCode/Sources/LocalShell
+      - PocketCode/Python
+      - path: PocketCode/PythonApp
+        type: folder
+        buildPhase: resources
     info:
       path: native/CodexLab/Info.plist
       properties:
@@ -38,10 +43,20 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jlmxstudio.pocketcode.codexlab
-        SWIFT_OBJC_BRIDGING_HEADER: native/pocket-codex/include/pocket_codex.h
+        SWIFT_OBJC_BRIDGING_HEADER: native/CodexLab/CodexLab-Bridging-Header.h
+        HEADER_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR)/Python.framework/Headers"
+        CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
         OTHER_LDFLAGS: "-lpocket_codex"
         "LIBRARY_SEARCH_PATHS[sdk=iphoneos*]": "$(PROJECT_DIR)/ThirdParty/codex/device"
         "LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]": "$(PROJECT_DIR)/ThirdParty/codex/simulator"
+    postBuildScripts:
+      - name: Install Python standard library
+        script: sh "$PROJECT_DIR/scripts/install_python_stdlib.sh"
+        basedOnDependencyAnalysis: false
+    dependencies:
+      - framework: ThirdParty/Python.xcframework
+        embed: true
   PocketCode:
     type: application
     platform: iOS

@@ -11,11 +11,15 @@
 		0C78082812EF0D1CDBF10306 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C135FAFB9D3ADBCFC2460B9 /* Assets.xcassets */; };
 		0CFEDC256BF160E42CEAF87E /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = D09CFD6FAC8FF17844259C81 /* Runestone */; };
 		0DCA96411008267F3561D69F /* Python.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62D0F3C9019637B448E0F39F /* Python.xcframework */; };
+		0DF2A135DACB8C513092B978 /* Python.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 62D0F3C9019637B448E0F39F /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0F7BC015545EE2FFADD1A40C /* KeyRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889CCE1593AB54A414178109 /* KeyRow.swift */; };
+		12C6A83A7DD73C019E4EC1C6 /* PythonApp in Resources */ = {isa = PBXBuildFile; fileRef = 5F05E9FD5C6E1824FCDAFB62 /* PythonApp */; };
 		14DD3658D8B089176346CF24 /* TreeSitterRustRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = DE4B5B0070252BCCE4C8A3BB /* TreeSitterRustRunestone */; };
 		16E903C85BC1D8971A341A0F /* TreeSitterTSXRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = F4C639AE97311A925F9C9854 /* TreeSitterTSXRunestone */; };
 		18CB8DDC5406F3BCA1926579 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8FBFA8228B763B4886EEFC5C /* PrivacyInfo.xcprivacy */; };
+		1C623FE1B65A2DEC04BCBB1C /* ShellParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B527D8581A96F64959F1C3 /* ShellParser.swift */; };
 		1DAA25C54C4BFA14308CE57A /* WorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BD973CD1A208DE0767150F8 /* WorkspaceView.swift */; };
+		23DF1E8FFD8659B477C48789 /* ShellRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B090FCEB9618984ECE6815A4 /* ShellRuntime.swift */; };
 		2AF4728094C2CECD15CD4FCE /* ShellRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B090FCEB9618984ECE6815A4 /* ShellRuntime.swift */; };
 		32F23952ECF56E6599A9A1A0 /* TreeSitterSQLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 2B1736E56B2EE74BC8E28557 /* TreeSitterSQLRunestone */; };
 		33946154E2E024B58A4C65FA /* EditorArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7902E6722A8E6CF1EA2B774D /* EditorArea.swift */; };
@@ -27,7 +31,10 @@
 		48904F1B95EF53B71F55596B /* Python.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 62D0F3C9019637B448E0F39F /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		50C8BD4C63CD03B73BA4B6CE /* SearchAndGitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */; };
 		52A2E7FDC86554F1A5168E93 /* SSHConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD585EAC031FAA4149CCB381 /* SSHConnection.swift */; };
+		535A0333C46222FD2FA0B0EF /* PythonRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61ED2C230C88EFEC484D13EA /* PythonRuntime.swift */; };
+		5731A2FC99411878550681E2 /* Python.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62D0F3C9019637B448E0F39F /* Python.xcframework */; };
 		586E03F67F5C93E4BBBF06E1 /* TreeSitterJavaScriptRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = E6D7966FD01E7F754899B2FF /* TreeSitterJavaScriptRunestone */; };
+		5B273A9380645CF5D46F6499 /* pocket_python.c in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */; };
 		5E5BB3126A99C44E7E2FBD78 /* Git.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC92B4DBE3DBFF98B4CDB4F8 /* Git.swift */; };
 		6316666237B4FAE83E0934D3 /* PathUtilTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */; };
 		67D1A1E5DE038724DA32F8DA /* PortForwardIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E057C343497EC75C982510 /* PortForwardIntegrationTests.swift */; };
@@ -51,6 +58,7 @@
 		99984E0402E16DFD81FEFF7F /* TreeSitterBashRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = ED9F9E39F4EA756F83125669 /* TreeSitterBashRunestone */; };
 		9B4210DAF2B02756228B8112 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FAAAB7BDC8CC8CAC20AC8C /* Settings.swift */; };
 		9E911E84C0DCC656FF3D66C3 /* Builtins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5178B136389BA8EF980003BE /* Builtins.swift */; };
+		A072688E2342DB35E4814F51 /* LocalShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F9D72C19DD9C87F854898C2 /* LocalShell.swift */; };
 		A42EB8146F8C3D419B9F76D5 /* TreeSitterTypeScriptRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 179F90AA7E4D3236F1B920DE /* TreeSitterTypeScriptRunestone */; };
 		A92F0A94E7C6EB6A987FAD1E /* TreeSitterMarkdownRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = B6E0523E47049614170F23B4 /* TreeSitterMarkdownRunestone */; };
 		AAECAE5BD513B5FCA88B4C40 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = B75325CA0BB6FEDFB4137371 /* SwiftTerm */; };
@@ -60,6 +68,7 @@
 		B3EF423C094C6DC84AB5F286 /* PrivateKeyParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10284767E38CBC9495600BE /* PrivateKeyParserTests.swift */; };
 		B5BED6C8CB938CDCF4B4595E /* TerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */; };
 		C22E24A08C0E8ECC2493CDB6 /* TreeSitterHTMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5257CD1845D3669F6DD764 /* TreeSitterHTMLRunestone */; };
+		C42A26FD0F164C66DFB5E250 /* Builtins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5178B136389BA8EF980003BE /* Builtins.swift */; };
 		C476D8D2CAF616253BCAA975 /* TreeSitterJSONRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = BCBEEB02D7716967C8EF04BF /* TreeSitterJSONRunestone */; };
 		C69D69C913CA07006A2280DE /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E2DD43F230F029102F0C73 /* App.swift */; };
 		DA609049CF8D02493E0234CF /* LanguageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */; };
@@ -67,6 +76,7 @@
 		DC5FC9F3F9655EC5EB924671 /* PythonRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61ED2C230C88EFEC484D13EA /* PythonRuntime.swift */; };
 		DFC527826D27B033B8B02D1E /* LocalShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F9D72C19DD9C87F854898C2 /* LocalShell.swift */; };
 		E1A7FCE3E38A539D78F893EC /* Hosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */; };
+		E339DE59D0BBBE9757FC60D3 /* HostExec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3451D64459E967828463C0B4 /* HostExec.swift */; };
 		E497B56819A6A320181321EC /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50A8682C83776C6CC8A37E4A /* Workspace.swift */; };
 		E86F0E3BD7C5BE0710A56450 /* pocket_python.c in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */; };
 		EBDA7802AE686C14E8841C5E /* KeyFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */; };
@@ -100,6 +110,17 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B4281722F38AE4C060637252 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				0DF2A135DACB8C513092B978 /* Python.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -112,6 +133,7 @@
 		121D67B9B434852B1AEA0792 /* CodexLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexLabApp.swift; sourceTree = "<group>"; };
 		1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pocket_python.c; sourceTree = "<group>"; };
 		22D7DF1180249246978A4394 /* PrivateKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeys.swift; sourceTree = "<group>"; };
+		3451D64459E967828463C0B4 /* HostExec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostExec.swift; sourceTree = "<group>"; };
 		3687845290D50730FAE13489 /* PythonRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntimeTests.swift; sourceTree = "<group>"; };
 		392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageTests.swift; sourceTree = "<group>"; };
 		3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyFixtures.swift; sourceTree = "<group>"; };
@@ -144,6 +166,7 @@
 		BD585EAC031FAA4149CCB381 /* SSHConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnection.swift; sourceTree = "<group>"; };
 		BEF36AEAF937EBE27049973E /* PocketCodeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PocketCodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAndGitTests.swift; sourceTree = "<group>"; };
+		C584A948FC3A6429035CBC36 /* CodexLab-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CodexLab-Bridging-Header.h"; sourceTree = "<group>"; };
 		C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathUtilTests.swift; sourceTree = "<group>"; };
 		D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSession.swift; sourceTree = "<group>"; };
 		DC98D580EE19DA748BBA834C /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
@@ -188,6 +211,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		25191413EDEBAA8056BF93A8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5731A2FC99411878550681E2 /* Python.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -211,7 +242,9 @@
 		2A6DB73FCE8E3AE159E876D4 /* CodexLab */ = {
 			isa = PBXGroup;
 			children = (
+				C584A948FC3A6429035CBC36 /* CodexLab-Bridging-Header.h */,
 				121D67B9B434852B1AEA0792 /* CodexLabApp.swift */,
+				3451D64459E967828463C0B4 /* HostExec.swift */,
 				843A86B33EFD137A25D8DF6E /* Info.plist */,
 			);
 			path = CodexLab;
@@ -380,6 +413,10 @@
 			buildConfigurationList = B3C9801EF444462A0065242B /* Build configuration list for PBXNativeTarget "CodexLab" */;
 			buildPhases = (
 				C5A05910C44C79146C061895 /* Sources */,
+				5CCD1E601FACBC47A0879EA8 /* Resources */,
+				25191413EDEBAA8056BF93A8 /* Frameworks */,
+				B4281722F38AE4C060637252 /* Embed Frameworks */,
+				8962F2C4EEF69CE333C48BC3 /* Install Python standard library */,
 			);
 			buildRules = (
 			);
@@ -461,6 +498,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		5CCD1E601FACBC47A0879EA8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				12C6A83A7DD73C019E4EC1C6 /* PythonApp in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D389D5EA7ED409D7EAE42E1D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -494,6 +539,25 @@
 			shellPath = /bin/sh;
 			shellScript = "sh \"$PROJECT_DIR/scripts/install_python_stdlib.sh\"";
 		};
+		8962F2C4EEF69CE333C48BC3 /* Install Python standard library */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Install Python standard library";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "sh \"$PROJECT_DIR/scripts/install_python_stdlib.sh\"";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -501,7 +565,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C42A26FD0F164C66DFB5E250 /* Builtins.swift in Sources */,
 				7206C328B6D3972016D83B51 /* CodexLabApp.swift in Sources */,
+				E339DE59D0BBBE9757FC60D3 /* HostExec.swift in Sources */,
+				A072688E2342DB35E4814F51 /* LocalShell.swift in Sources */,
+				535A0333C46222FD2FA0B0EF /* PythonRuntime.swift in Sources */,
+				1C623FE1B65A2DEC04BCBB1C /* ShellParser.swift in Sources */,
+				23DF1E8FFD8659B477C48789 /* ShellRuntime.swift in Sources */,
+				5B273A9380645CF5D46F6499 /* pocket_python.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -654,7 +725,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"ThirdParty\"",
+				);
+				HEADER_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)/Python.framework/Headers";
 				INFOPLIST_FILE = native/CodexLab/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -665,7 +743,7 @@
 				OTHER_LDFLAGS = "-lpocket_codex";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode.codexlab;
 				SDKROOT = iphoneos;
-				SWIFT_OBJC_BRIDGING_HEADER = "native/pocket-codex/include/pocket_codex.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "native/CodexLab/CodexLab-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -718,7 +796,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"ThirdParty\"",
+				);
+				HEADER_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)/Python.framework/Headers";
 				INFOPLIST_FILE = native/CodexLab/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -729,7 +814,7 @@
 				OTHER_LDFLAGS = "-lpocket_codex";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode.codexlab;
 				SDKROOT = iphoneos;
-				SWIFT_OBJC_BRIDGING_HEADER = "native/pocket-codex/include/pocket_codex.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "native/CodexLab/CodexLab-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

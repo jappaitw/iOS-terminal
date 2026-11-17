@@ -69,33 +69,23 @@ final class CodexClient: ObservableObject {
         try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
         try? FileManager.default.createDirectory(at: workspace, withIntermediateDirectories: true)
 
-        // Host exec hook: every Codex shell tool call lands here instead of
-        // fork/exec. The lab answers with a marker (real integration routes to
-        // LocalShell); echo/pwd get a faithful reply so simple probes work.
+        // Every Codex shell tool call runs through PocketCode's LocalShell
+        // (and the embedded CPython) instead of fork/exec.
+        HostShell.root = workspace
         pc_set_exec_handler({ requestPtr in
             guard let requestPtr else { return nil }
             let request = String(cString: requestPtr)
             print("[codexlab] host-exec request: \(request)")
-            var exitCode: Int32 = 0
-            var stdout = ""
-            if let data = request.data(using: .utf8),
-               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let command = obj["command"] as? [String] {
-                if command.first == "echo" {
-                    stdout = command.dropFirst().joined(separator: " ") + "\n"
-                } else if command.count >= 3, command[1] == "-lc", command[2].hasPrefix("echo ") {
-                    stdout = String(command[2].dropFirst(5)) + "\n"
-                } else {
-                    stdout = "lab-exec placeholder: \(command.joined(separator: " "))\n"
-                }
-            } else {
-                exitCode = 127
-            }
-            let response: [String: Any] = ["exit_code": exitCode, "stdout": stdout, "stderr": ""]
-            let json = (try? JSONSerialization.data(withJSONObject: response))
-                .flatMap { String(data: $0, encoding: .utf8) } ?? #"{"exit_code":127}"#
-            return strdup(json)
+            let response = HostShell.run(requestJSON: request)
+            print("[codexlab] host-exec response: \(response.prefix(500))")
+            return strdup(response)
         }, { response in free(response) })
+
+        // Self-test: the exact path a Codex tool call takes, no model needed.
+        Thread.detachNewThread {
+            let probe = #"{"command":["bash","-lc","echo ping && python -c 'print(6*7)'"],"cwd":"\#(workspace.path)"}"#
+            print("[codexlab] self-test: \(HostShell.run(requestJSON: probe))")
+        }
 
         var err: UnsafeMutablePointer<CChar>?
         let rc = pc_start(sock, home.path, &err)

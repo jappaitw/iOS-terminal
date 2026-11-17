@@ -126,6 +126,29 @@ AI 模型推論可以使用網路;CLI runtime、檔案存取、程式執行與�
 
 選 UDS(而非 loopback TCP WebSocket)的理由:unix socket 天然 app 私有,不需碰 `WebsocketAuthSettings` 的 token 機制;loopback TCP 在裝置上可被其他 app 連線,安全面較差。
 
+### 2026-11-17 — 管線端到端驗證(僅差真實 API key)✅
+
+自動化模擬器測試(`LAB_AUTOKEY` 假 key):
+
+- 登入:`account/login/completed success:true`、`authMode:"apikey"`;key 儲存於 CODEX_HOME,**跨 app 重啟持久化**。
+- Turn 生命週期完整:turn/started → userMessage item → 重試 → turn/completed(failed)。
+- **內嵌 Codex 從 iOS 直接連上 `https://api.openai.com/v1/responses`**,OpenAI 回應 `401 invalid_api_key`(假 key 如預期)— 證明 server、協定、認證儲存、turn 狀態機、網路全部運作;僅差有效 key。
+- 已知小問題:模型 API 的 WebSocket transport 在 iOS 上憑證驗證失敗(`UnknownIssuer`),自動降級 HTTPS 後正常。待修(rustls platform-verifier 設定),不擋驗收。
+
+### 2026-11-17 — 工具路由(host-exec → LocalShell → 內嵌 Python)✅
+
+- codex-core 增加通用 host-exec override(`native/patches/codex-host-exec.patch`):host 註冊 C callback 後,所有 shell 工具呼叫以 JSON 進出 host;未註冊時完全不影響。錯誤一律轉 exit 127 輸出。
+- CodexLab 現在把 LocalShell + 官方 CPython 整套編進去,handler 真實路由(`HostShell.run`:bash -lc 腳本→ShellParser/ShellExecutor,python→內嵌 CPython,cwd 限制在 workspace)。
+- 啟動自測(與 AI 工具呼叫同一路徑):`bash -lc "echo ping && python -c 'print(6*7)'"` → `{"exit_code":0,"stdout":"ping\n42\n"}` ✅
+
+### 驗收所需的最後一步(需要產品負責人)
+
+剩餘項目全部需要只有使用者能提供的東西:
+
+1. **有效的 OpenAI API key** — 在 CodexLab 的 key 欄位貼上(或 `LAB_AUTOKEY` 注入),跑一輪真實 turn:預期模型回答,並在要求它「修改 hello.py 後用 python 跑測試」時看到工具呼叫進 LocalShell。
+2. **實機測試** — CodexLab 裝上 iPhone(簽章已就緒;可線連或無線 debug)。
+3. 兩者通過後,依指令方向第 10 點把 `codex` 指令整合進正式 Local Terminal。
+
 ### 待辦(依 codex 指令方向)
 
 - [x] codex-core iOS 編譯結果與障礙清單(✅ check + release build 均通過,僅 mxc 兩行補丁)
