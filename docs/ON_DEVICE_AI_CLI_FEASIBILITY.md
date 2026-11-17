@@ -149,6 +149,21 @@ AI 模型推論可以使用網路;CLI runtime、檔案存取、程式執行與�
 2. **實機測試** — CodexLab 裝上 iPhone(簽章已就緒;可線連或無線 debug)。
 3. 兩者通過後,依指令方向第 10 點把 `codex` 指令整合進正式 Local Terminal。
 
+### 2026-11-18 — 實機 TestFlight 迭代(build 2→5)
+
+`codex` 整合進正式終端機後,實機測試揭露並修復了一串「桌面假設 vs iOS 現實」的碰撞(全部靠 engine.log / stderr dup2 的落地診斷抓到):
+
+| Build | 實機症狀 | 根因 | 修法 |
+|---|---|---|---|
+| 2 | `could not connect to the codex engine`,無從診斷 | 引擎死因只印到看不見的 stderr;失敗還會永久快取 | 死因寫入 `codex-home/engine.log` 並顯示於終端機;失敗可重試;補主 app `codex` 整合測試 |
+| 3 | `Operation not permitted (os error 1)` | codex 的 `shared_daemon_socket_directory()` **寫死 `/tmp`**,iOS 沙盒禁寫;且其 SHA256 實體 socket 路徑必超 sockaddr_un 104 上限 | iOS 直接在廣告路徑 bind,跳過 rendezvous 間接層(patch 入 `codex-host-exec.patch`) |
+| 4 | 引擎啟動 ✅、OAuth 頁開出 ✅;但外開 Safari 讓 app 凍結 → `127.0.0.1:1455` callback 死 → 登入無反應;Ctrl-C 失效 | iOS 背景凍結;登入等待阻塞在 socket read | app 內 SFSafariViewController(完成自動關閉);等待改 500ms poll + 中斷旗標 |
+| 5(已 build 待傳) | — | 模擬器回歸兩層:`/tmp` 是 symlink 被目錄驗證拒;`/private/tmp` 是 root 的、引擎 chmod 0700 必 EPERM | 模擬器 socket 放自建 `/private/tmp/pocketcode-<uid>/`,per-pid 檔名;實機維持容器 tmp |
+
+build 5 上傳卡在 Apple ASC 服務故障(dev portal 正常、ASC 網頁/官方 App 均不可用,非帳號問題),已掛自動重試。**待辦:ASC API Key(`-authenticationKeyPath`)取代 Xcode session,根除上傳認證問題。**
+
+實機已驗證:本機 shell、內嵌 Python、外部資料夾(iCloud/我的 iPhone)開啟與終端機定位 ✅;codex 引擎啟動與 OAuth 頁開啟 ✅;ChatGPT 登入完成與工具呼叫端到端,待 build 5。
+
 ### 待辦(依 codex 指令方向)
 
 - [x] codex-core iOS 編譯結果與障礙清單(✅ check + release build 均通過,僅 mxc 兩行補丁)
