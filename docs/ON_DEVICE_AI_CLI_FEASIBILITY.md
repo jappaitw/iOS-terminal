@@ -94,6 +94,16 @@ AI 模型推論可以使用網路;CLI runtime、檔案存取、程式執行與�
 - 工具執行:`core/src/spawn.rs`/`exec.rs` 的 `tokio::process` 路由改接 PocketCode LocalShell(內建指令)與內嵌 CPython;沙盒語意對映 workspace root。
 - 認證:API key 先行;OAuth 走既有的 port-forward 機制(Phase 4)。
 
+### 2026-11-17 — FFI 嵌入層 `pocket-codex` 編譯通過 ✅
+
+- 架構定案:**不做逐型別 C 綁定,改嵌 codex 的 app-server**(`run_main_with_transport_options` 是現成函式庫入口,支援 `AppServerTransport::UnixSocket`)。Swift 端連 app 容器內的 UDS、講 app-server JSON-RPC(VS Code 擴充同款協定);FFI 面只有 3 個函式(`pc_start`/`pc_free`/`pc_abi_version`)。`CODEX_HOME` 指向 app 容器,設定與認證全在沙盒內。
+- 新增 `native/pocket-codex/`(Cargo.toml + src/lib.rs + include/pocket_codex.h)與 `scripts/build_codex.sh`。
+- `codex-app-server` 整包 `cargo check --target aarch64-apple-ios` 通過(2m10s,零額外錯誤);`pocket-codex` 亦通過。
+- 踩過的兩個雷(已解決,寫進 build script 防呆):
+  1. **patch 表不跨 workspace 繼承** — codex 的 `[patch.crates-io]`(openai fork 的 tokio-tungstenite `proxy` feature 等)必須鏡射到我們的 Cargo.toml。
+  2. **版本解析偏移** — 獨立解析會挑到互不相容的 `rama-*` 版本;必須以 codex 的 `Cargo.lock` 為基準。
+- `Arg0DispatchPaths` 全 `Option`、`AppServerRuntimeOptions` 可關 signal handler/daemon 行為 — 上游本來就支援函式庫式嵌入,argv[0] 重執行不是障礙。
+
 ### 待辦(依 codex 指令方向)
 
 - [x] codex-core iOS 編譯結果與障礙清單(✅ check + release build 均通過,僅 mxc 兩行補丁)

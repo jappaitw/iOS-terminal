@@ -1,5 +1,6 @@
 .build/
 build/
+native/*/target/
 .spm/
 *.xcodeproj/xcuserdata/
 *.xcodeproj/project.xcworkspace/xcuserdata/
