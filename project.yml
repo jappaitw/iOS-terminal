@@ -48,6 +48,9 @@ targets:
         UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
+        # Export compliance: standard algorithms only (SSH via SwiftNIO SSH / CryptoKit,
+        # OpenSSL inside the bundled CPython), exempt — skips the question on every upload.
+        ITSAppUsesNonExemptEncryption: false
         NSLocalNetworkUsageDescription: PocketCode connects to SSH hosts on your local network.
     settings:
       base:
