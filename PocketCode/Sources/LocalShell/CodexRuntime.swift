@@ -32,7 +32,13 @@ enum CodexRuntime {
         // sockaddr_un caps paths near 104 bytes. The device container's tmp
         // fits; the simulator's host-side path doesn't, so use the host /tmp.
         #if targetEnvironment(simulator)
-        let sock = "/tmp/pocketcode-codex.sock"
+        // The engine chmods the socket's parent to 0700, so it must be a
+        // directory we own (not /private/tmp itself, which is root's), short
+        // enough for sockaddr_un, and per-process so a lingering test-host
+        // app's startup flock can't block us.
+        let dir = "/private/tmp/pocketcode-\(getuid())"
+        mkdir(dir, 0o700)
+        let sock = dir + "/cx-\(getpid()).sock"
         #else
         let sock = NSTemporaryDirectory() + "codex.sock"
         #endif
@@ -79,7 +85,7 @@ enum CodexRuntime {
 
         // Login gate.
         if !client.isLoggedIn {
-            if !(await login(client, input: input, out: out)) {
+            if !(await login(client, ctx: ctx, input: input, out: out)) {
                 out("Sign-in cancelled.\r\n")
                 return 1
             }
@@ -109,7 +115,15 @@ enum CodexRuntime {
         return 0
     }
 
-    private static func login(_ client: CodexProtocolClient, input: ShellInput,
+    /// Thread-safe cancellation flag for the sign-in wait (set by Ctrl-C).
+    private final class Flag: @unchecked Sendable {
+        private let lock = NSLock()
+        private var value = false
+        func set() { lock.lock(); value = true; lock.unlock() }
+        var isSet: Bool { lock.lock(); defer { lock.unlock() }; return value }
+    }
+
+    private static func login(_ client: CodexProtocolClient, ctx: ShellContext, input: ShellInput,
                               out: @escaping (String) -> Void) async -> Bool {
         out("\r\nSign in:\r\n  [1] ChatGPT account (subscription)\r\n  [2] OpenAI API key\r\n")
         while true {
@@ -118,10 +132,16 @@ enum CodexRuntime {
             switch choice {
             case "1":
                 guard let url = client.startChatGPTLogin() else { out("Could not begin ChatGPT login.\r\n"); return false }
-                out("Opening sign-in page in Safari… finish there, then come back.\r\n")
+                out("Opening the sign-in page… finish there; you'll come back automatically.\r\n")
                 CodexHostBridge.openURL(url)
-                out("Waiting for sign-in to complete (press Enter to cancel)… ")
-                return client.waitForLogin(cancel: { input.readLine() != nil })
+                out("Waiting for sign-in (Ctrl-C to cancel)…\r\n")
+                let cancelled = Flag()
+                ctx.interruptHandler = { cancelled.set() }
+                let ok = client.waitForLogin(isCancelled: { cancelled.isSet })
+                ctx.interruptHandler = nil
+                CodexHostBridge.dismissBrowser()
+                if ok { out("\u{1B}[32m✓ Signed in.\u{1B}[0m\r\n") }
+                return ok
             case "2":
                 out("paste API key (sk-…)› ")
                 guard let key = input.readLine()?.trimmingCharacters(in: .whitespaces), !key.isEmpty else { return false }

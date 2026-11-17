@@ -70,13 +70,15 @@ final class CodexProtocolClient {
         return URL(string: auth)
     }
 
-    /// Reads events until login completes or `cancel` fires. Returns success.
-    func waitForLogin(cancel: @escaping () -> Bool) -> Bool {
-        let cancelled = DispatchQueue(label: "codex.logincancel")
-        var stop = false
-        DispatchQueue.global().async { if cancel() { cancelled.sync { stop = true } } }
+    /// Reads events until login completes or `isCancelled` turns true (checked
+    /// twice a second — Ctrl-C stays responsive even while the socket is quiet).
+    func waitForLogin(isCancelled: @escaping () -> Bool) -> Bool {
         while true {
-            if cancelled.sync(execute: { stop }) { return false }
+            if isCancelled() { return false }
+            var p = pollfd(fd: fd, events: Int16(POLLIN), revents: 0)
+            let readable = poll(&p, 1, 500)
+            if readable < 0 { return false }
+            if readable == 0 { continue }
             guard let msg = readMessage() else { return false }
             if msg["method"] as? String == "account/login/completed",
                let params = msg["params"] as? [String: Any] {

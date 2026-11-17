@@ -22,6 +22,7 @@ codex-config = { path = "../../../research/codex/codex-rs/config" }
 codex-protocol = { path = "../../../research/codex/codex-rs/protocol" }
 codex-websocket-auth = { path = "../../../research/codex/codex-rs/websocket-auth" }
 tokio = { version = "1", features = ["rt-multi-thread"] }
+libc = "0.2"
 
 # Upstream mxc-sdk gates its `run` module to windows/linux/macos but calls it
 # unconditionally; the vendored copy cfg-gates the two call sites (see

@@ -1,4 +1,5 @@
 import Foundation
+import SafariServices
 import UIKit
 
 /// Bridges the embedded Codex agent to the device: every shell tool call the
@@ -26,8 +27,28 @@ enum CodexHostBridge {
         }, { response in free(response) })
     }
 
+    private static weak var browser: SFSafariViewController?
+
+    /// Sign-in pages open in an in-app browser: the app stays foreground, so
+    /// the embedded OAuth callback listener on 127.0.0.1 keeps running.
+    /// (External Safari suspends the app and the redirect goes nowhere.)
     static func openURL(_ url: URL) {
-        DispatchQueue.main.async { UIApplication.shared.open(url) }
+        DispatchQueue.main.async {
+            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
+            guard var top = scene?.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+                UIApplication.shared.open(url)
+                return
+            }
+            while let presented = top.presentedViewController { top = presented }
+            let vc = SFSafariViewController(url: url)
+            browser = vc
+            top.present(vc, animated: true)
+        }
+    }
+
+    static func dismissBrowser() {
+        DispatchQueue.main.async { browser?.dismiss(animated: true) }
     }
 
     /// `{"command":[…],"cwd":"…"}` → `{"exit_code":…,"stdout":…,"stderr":…}`

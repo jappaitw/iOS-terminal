@@ -75,6 +75,12 @@ pub unsafe extern "C" fn pc_start(
     // Device consoles are invisible: the engine's fate lands in a log file the
     // host can read back, and a dead server allows another pc_start.
     let log_path = std::path::Path::new(&home).join("engine.log");
+    // Route the process's stderr (tracing output, eprintln breadcrumbs) there too.
+    if let Ok(f) = std::fs::OpenOptions::new().create(true).append(true).open(&log_path) {
+        use std::os::fd::AsRawFd;
+        unsafe { libc::dup2(f.as_raw_fd(), 2) };
+        std::mem::forget(f);
+    }
     let log = move |msg: &str| {
         let line = format!("{msg}\n");
         let _ = std::fs::OpenOptions::new()

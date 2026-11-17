@@ -10,6 +10,69 @@ index 4bccad3..8745dae 100644
 +# iOS research: local mxc with the two desktop-only call sites cfg-gated (see PocketCode docs/ON_DEVICE_AI_CLI_FEASIBILITY.md)
 +[patch."https://github.com/microsoft/mxc"]
 +mxc-sdk = { path = "/Users/soulfyai/Documents/research/mxc-patched/src/mxc-sdk" }
+diff --git a/codex-rs/app-server-transport/src/transport/unix_socket.rs b/codex-rs/app-server-transport/src/transport/unix_socket.rs
+index 10fc906..21ec24e 100644
+--- a/codex-rs/app-server-transport/src/transport/unix_socket.rs
++++ b/codex-rs/app-server-transport/src/transport/unix_socket.rs
+@@ -74,8 +74,14 @@ pub async fn bind_private_daemon_socket(
+     let socket_path = AbsolutePathBuf::from_absolute_path(socket_path)?;
+     #[cfg(unix)]
+     let (socket_path, rendezvous_path, mut startup_lock) = {
++        #[cfg(not(target_os = "ios"))]
+         use std::os::unix::fs::MetadataExt;
+ 
++        // iOS: the app sandbox forbids /tmp, is single-user, and caps socket
++        // paths near 104 bytes — bind directly at the advertised path instead
++        // of the shared rendezvous directory, and skip multi-user ownership
++        // checks that an app container cannot satisfy.
++        #[cfg(not(target_os = "ios"))]
+         if let Some(parent) = socket_path.as_path().parent() {
+             // The advertised path is only an alias; preserve existing parents.
+             match tokio::fs::DirBuilder::new()
+@@ -98,8 +104,14 @@ pub async fn bind_private_daemon_socket(
+                 ));
+             }
+         }
+-        codex_uds::prepare_shared_daemon_socket_directory()?;
+-        let physical_path = protected_socket_path(socket_path.as_path())?;
++        #[cfg(not(target_os = "ios"))]
++        let physical_path = {
++            codex_uds::prepare_shared_daemon_socket_directory()?;
++            protected_socket_path(socket_path.as_path())?
++        };
++        #[cfg(target_os = "ios")]
++        let physical_path = socket_path.as_path().to_path_buf();
++        eprintln!("pocket-codex uds: acquiring lock at {}", physical_path.display());
+         let lock = acquire_removable_app_server_startup_lock(
+             AbsolutePathBuf::from_absolute_path_checked(physical_path.with_extension("lock"))?,
+         )
+@@ -120,7 +132,9 @@ pub async fn bind_private_daemon_socket(
+         (AbsolutePathBuf::from_absolute_path_checked(path)?, guard)
+     };
+     prepare_control_socket_path(socket_path.as_path()).await?;
++    eprintln!("pocket-codex uds: binding at {}", socket_path.as_path().display());
+     let listener = UnixListener::bind(socket_path.as_path()).await?;
++    eprintln!("pocket-codex uds: listening");
+     #[cfg(unix)]
+     {
+         startup_lock.remove_on_drop = true;
+@@ -136,10 +150,12 @@ pub async fn bind_private_daemon_socket(
+     };
+     set_control_socket_permissions(socket_guard.socket_path.as_path()).await?;
+     #[cfg(unix)]
+-    std::os::unix::fs::symlink(
+-        socket_guard.socket_path.as_path(),
+-        socket_guard.rendezvous_path.as_path(),
+-    )?;
++    if socket_guard.socket_path.as_path() != socket_guard.rendezvous_path.as_path() {
++        std::os::unix::fs::symlink(
++            socket_guard.socket_path.as_path(),
++            socket_guard.rendezvous_path.as_path(),
++        )?;
++    }
+     #[cfg(unix)]
+     socket_guard._startup_lock._file.unlock()?;
+     Ok((listener, socket_guard))
 diff --git a/codex-rs/core/src/exec.rs b/codex-rs/core/src/exec.rs
 index a24be17..91e0794 100644
 --- a/codex-rs/core/src/exec.rs
