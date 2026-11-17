@@ -23,6 +23,25 @@ packages:
     url: https://github.com/simonbs/TreeSitterLanguages
     exactVersion: "0.1.10"
 targets:
+  # Experimental harness for the embedded Codex app-server (docs/ON_DEVICE_AI_CLI_FEASIBILITY.md).
+  # Links libpocket_codex.a from scripts/build_codex.sh; never part of the shipping app.
+  CodexLab:
+    type: application
+    platform: iOS
+    sources:
+      - native/CodexLab
+    info:
+      path: native/CodexLab/Info.plist
+      properties:
+        CFBundleDisplayName: CodexLab
+        UILaunchScreen: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jlmxstudio.pocketcode.codexlab
+        SWIFT_OBJC_BRIDGING_HEADER: native/pocket-codex/include/pocket_codex.h
+        OTHER_LDFLAGS: "-lpocket_codex"
+        "LIBRARY_SEARCH_PATHS[sdk=iphoneos*]": "$(PROJECT_DIR)/ThirdParty/codex/device"
+        "LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]": "$(PROJECT_DIR)/ThirdParty/codex/simulator"
   PocketCode:
     type: application
     platform: iOS

@@ -86,8 +86,15 @@ pub unsafe extern "C" fn pc_start(
                     return;
                 }
             };
+            // The exec-server options insist on a self-exe path at startup even
+            // though it is only used when spawning shell tools (impossible on
+            // iOS; replaced by LocalShell routing). The app binary satisfies it.
+            let arg0 = Arg0DispatchPaths {
+                codex_self_exe: std::env::current_exe().ok(),
+                ..Default::default()
+            };
             let result = rt.block_on(run_main_with_transport_options(
-                Arg0DispatchPaths::default(), // no self re-exec on iOS
+                arg0,
                 CliConfigOverrides::default(),
                 LoaderOverrides::default(),
                 /* strict_config */ false,

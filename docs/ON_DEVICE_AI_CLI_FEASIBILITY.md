@@ -104,6 +104,28 @@ AI 模型推論可以使用網路;CLI runtime、檔案存取、程式執行與�
   2. **版本解析偏移** — 獨立解析會挑到互不相容的 `rama-*` 版本;必須以 codex 的 `Cargo.lock` 為基準。
 - `Arg0DispatchPaths` 全 `Option`、`AppServerRuntimeOptions` 可關 signal handler/daemon 行為 — 上游本來就支援函式庫式嵌入,argv[0] 重執行不是障礙。
 
+### 2026-11-17 — ✅ PoC 達成:Codex app-server 在 iOS 模擬器運行並完成 JSON-RPC 握手
+
+實驗 target `CodexLab`(`native/CodexLab/`,獨立 app,不碰正式 PocketCode)。成功證據(simctl console 原文):
+
+```
+[codexlab] pc_start ok → /tmp/codexlab.sock
+[codexlab] socket connected
+[codexlab] websocket upgraded
+[codexlab] → initialize sent, waiting for reply…
+[codexlab] ← {"id":1,"result":{"userAgent":"pocketcode-lab/0.0.0 (iOS 27.2.0; unknown) …","codexHome":"…/Documents/codex-home","platformFamily":"unix","platformOs":"ios"}}
+[codexlab] ← {"method":"remoteControl/status/changed","params":{"status":"disabled",…}}
+```
+
+`"platformOs":"ios"` 由 Codex 自己回報;`codexHome` 位於 app 沙盒 Documents。四輪 debug 的完整紀錄(供重現):
+
+1. `Arg0DispatchPaths::default()` → `Codex executable path is not configured`:app-server 啟動時無條件建構 exec-server 選項,需要 self-exe 路徑(僅儲存,spawn 時才用)。解:`codex_self_exe: std::env::current_exe().ok()`。
+2. 模擬器 unix socket 路徑超過 `sockaddr_un` 約 104 bytes 上限(host 路徑 130+ 字元)。解:模擬器用 `/tmp`,實機容器 tmp 約 96 字元可用,接近上限 — 正式整合時要防呆(過長時 fallback)。
+3. 原始 JSONL 被斷線:UDS transport 實際是 **WebSocket over unix socket**(tungstenite `accept_hdr_async`),accept 不要求認證/特殊 header,壓縮(zstd)選配。
+4. Swift 端實作最小 RFC 6455 客戶端(HTTP upgrade + masked text frames,~100 行,零依賴)→ 握手成功。
+
+選 UDS(而非 loopback TCP WebSocket)的理由:unix socket 天然 app 私有,不需碰 `WebsocketAuthSettings` 的 token 機制;loopback TCP 在裝置上可被其他 app 連線,安全面較差。
+
 ### 待辦(依 codex 指令方向)
 
 - [x] codex-core iOS 編譯結果與障礙清單(✅ check + release build 均通過,僅 mxc 兩行補丁)
