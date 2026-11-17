@@ -72,9 +72,26 @@ pub unsafe extern "C" fn pc_start(
     // pointing it into the app container keeps all state inside the sandbox.
     std::env::set_var("CODEX_HOME", &home);
 
+    // Device consoles are invisible: the engine's fate lands in a log file the
+    // host can read back, and a dead server allows another pc_start.
+    let log_path = std::path::Path::new(&home).join("engine.log");
+    let log = move |msg: &str| {
+        let line = format!("{msg}\n");
+        let _ = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&log_path)
+            .map(|mut f| std::io::Write::write_all(&mut f, line.as_bytes()));
+    };
+
     let build = std::thread::Builder::new()
         .name("PocketCode.Codex".into())
         .spawn(move || {
+            let finish = |msg: String| {
+                eprintln!("pocket-codex: {msg}");
+                log(&msg);
+                *STARTED.lock().unwrap() = false;
+            };
             let rt = match tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(2)
                 .enable_all()
@@ -82,7 +99,7 @@ pub unsafe extern "C" fn pc_start(
             {
                 Ok(rt) => rt,
                 Err(e) => {
-                    eprintln!("pocket-codex: tokio runtime failed: {e}");
+                    finish(format!("tokio runtime failed: {e}"));
                     return;
                 }
             };
@@ -111,8 +128,9 @@ pub unsafe extern "C" fn pc_start(
                     ..Default::default()
                 },
             ));
-            if let Err(e) = result {
-                eprintln!("pocket-codex: server exited: {e}");
+            match result {
+                Ok(_) => finish("server exited cleanly".to_string()),
+                Err(e) => finish(format!("server exited: {e}")),
             }
         });
 

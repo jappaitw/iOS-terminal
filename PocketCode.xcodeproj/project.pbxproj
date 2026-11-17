@@ -25,6 +25,7 @@
 		32F23952ECF56E6599A9A1A0 /* TreeSitterSQLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 2B1736E56B2EE74BC8E28557 /* TreeSitterSQLRunestone */; };
 		33946154E2E024B58A4C65FA /* EditorArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7902E6722A8E6CF1EA2B774D /* EditorArea.swift */; };
 		34B6B26545365286361EAC38 /* TreeSitterCPPRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 8DA510828310DCECF976A567 /* TreeSitterCPPRunestone */; };
+		384FDD1A128ADA54795E2BB3 /* CodexRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1CBBF647A9081028A71AF7 /* CodexRuntimeTests.swift */; };
 		385111EFFB00638C31070C67 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7CC9261C691A0C0976BDE70 /* Commands.swift */; };
 		3B0F683FB41AF7914AC4080D /* CodexRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA061D823397F34BA998ECE /* CodexRuntime.swift */; };
 		3D1421B7F09748CFC23A6B67 /* PrivateKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D7DF1180249246978A4394 /* PrivateKeys.swift */; };
@@ -145,6 +146,7 @@
 		3687845290D50730FAE13489 /* PythonRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntimeTests.swift; sourceTree = "<group>"; };
 		392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageTests.swift; sourceTree = "<group>"; };
 		3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyFixtures.swift; sourceTree = "<group>"; };
+		4B1CBBF647A9081028A71AF7 /* CodexRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRuntimeTests.swift; sourceTree = "<group>"; };
 		50A8682C83776C6CC8A37E4A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		5178B136389BA8EF980003BE /* Builtins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builtins.swift; sourceTree = "<group>"; };
 		580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hosts.swift; sourceTree = "<group>"; };
@@ -234,6 +236,7 @@
 		25BB47FBCD53D0DF403567DC /* PocketCodeTests */ = {
 			isa = PBXGroup;
 			children = (
+				4B1CBBF647A9081028A71AF7 /* CodexRuntimeTests.swift */,
 				3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */,
 				B37CBC14AA777BEDF773091B /* KeyNormalizationTests.swift */,
 				392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */,
@@ -595,6 +598,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				384FDD1A128ADA54795E2BB3 /* CodexRuntimeTests.swift in Sources */,
 				EBDA7802AE686C14E8841C5E /* KeyFixtures.swift in Sources */,
 				B2179A354208D2332857162F /* KeyNormalizationTests.swift in Sources */,
 				DA609049CF8D02493E0234CF /* LanguageTests.swift in Sources */,
@@ -772,7 +776,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -904,7 +908,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (

@@ -14,34 +14,49 @@ enum CodexRuntime {
     static let shellCommand: (@Sendable (ShellContext) async -> Int32)? = { ctx in await session(ctx) }
 
     private static let lock = NSLock()
-    private static var startError: String?
     private static var started = false
     private static var client: CodexProtocolClient?
 
-    /// Boots the app-server and connects once. Returns an error string on failure.
+    /// Boots the app-server and connects. Returns an error string on failure;
+    /// failures aren't sticky — the next `codex` tries again.
     private static func ensureStarted() -> String? {
         lock.lock(); defer { lock.unlock() }
         if started { return nil }
-        if let startError { return startError }
 
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let home = docs.appendingPathComponent("codex-home", isDirectory: true)
         try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
-        // sockaddr_un caps the path near 104 bytes; the container tmp fits.
+        let engineLog = home.appendingPathComponent("engine.log")
+        try? FileManager.default.removeItem(at: engineLog)
+
+        // sockaddr_un caps paths near 104 bytes. The device container's tmp
+        // fits; the simulator's host-side path doesn't, so use the host /tmp.
+        #if targetEnvironment(simulator)
+        let sock = "/tmp/pocketcode-codex.sock"
+        #else
         let sock = NSTemporaryDirectory() + "codex.sock"
+        #endif
         unlink(sock)
 
         var err: UnsafeMutablePointer<CChar>?
         let rc = pc_start(sock, home.path, &err)
         if rc != 0 {
-            startError = err.map { String(cString: $0) } ?? "codex failed to start"
+            let message = err.map { String(cString: $0) } ?? "codex failed to start"
             if let err { pc_free(err) }
-            codexLog.error("pc_start failed: \(startError ?? "", privacy: .public)")
-            return startError
+            codexLog.error("pc_start failed: \(message, privacy: .public)")
+            return message
         }
 
         let c = CodexProtocolClient(socketPath: sock)
-        guard c.connect() else { startError = "could not connect to the codex engine"; return startError }
+        guard c.connect() else {
+            // The engine thread wrote why it died (if it did) to engine.log.
+            let detail = (try? String(contentsOf: engineLog, encoding: .utf8))?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let message = "could not connect to the codex engine"
+                + (detail.map { "\r\n  engine: \($0)" } ?? "")
+            codexLog.error("\(message, privacy: .public)")
+            return message
+        }
         c.initialize()
         client = c
         started = true
