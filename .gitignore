@@ -4,6 +4,7 @@
 *.xcodeproj/project.xcworkspace/xcuserdata/
 DerivedData/
 .DS_Store
+__pycache__/
 
 # Large third-party binaries (fetched by scripts/fetch_python.sh)
 ThirdParty/

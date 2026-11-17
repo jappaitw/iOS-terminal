@@ -10,6 +10,7 @@
 		085FAF17544DF6315C79602D /* TerminalViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF2F6FD9F595D2ED39082293 /* TerminalViewTests.swift */; };
 		0C78082812EF0D1CDBF10306 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C135FAFB9D3ADBCFC2460B9 /* Assets.xcassets */; };
 		0CFEDC256BF160E42CEAF87E /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = D09CFD6FAC8FF17844259C81 /* Runestone */; };
+		0DCA96411008267F3561D69F /* Python.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62D0F3C9019637B448E0F39F /* Python.xcframework */; };
 		0F7BC015545EE2FFADD1A40C /* KeyRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889CCE1593AB54A414178109 /* KeyRow.swift */; };
 		14DD3658D8B089176346CF24 /* TreeSitterRustRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = DE4B5B0070252BCCE4C8A3BB /* TreeSitterRustRunestone */; };
 		16E903C85BC1D8971A341A0F /* TreeSitterTSXRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = F4C639AE97311A925F9C9854 /* TreeSitterTSXRunestone */; };
@@ -23,6 +24,7 @@
 		3D1421B7F09748CFC23A6B67 /* PrivateKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D7DF1180249246978A4394 /* PrivateKeys.swift */; };
 		432562B5F8510625428DE229 /* ShellParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B527D8581A96F64959F1C3 /* ShellParser.swift */; };
 		46FF224EF3EF3143A750CFB1 /* TreeSitterYAMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = F48AF870890CF16744D9B302 /* TreeSitterYAMLRunestone */; };
+		48904F1B95EF53B71F55596B /* Python.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 62D0F3C9019637B448E0F39F /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		50C8BD4C63CD03B73BA4B6CE /* SearchAndGitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */; };
 		52A2E7FDC86554F1A5168E93 /* SSHConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD585EAC031FAA4149CCB381 /* SSHConnection.swift */; };
 		586E03F67F5C93E4BBBF06E1 /* TreeSitterJavaScriptRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = E6D7966FD01E7F754899B2FF /* TreeSitterJavaScriptRunestone */; };
@@ -43,6 +45,7 @@
 		8436605E7F4FCF9A5CA8A923 /* TreeSitterGoRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = C1A9CB6553D44BF331146754 /* TreeSitterGoRunestone */; };
 		8AFA9DCB0D1D0A84E2E3E610 /* TreeSitterSwiftRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = C596376B087064EC8D9C08A6 /* TreeSitterSwiftRunestone */; };
 		8EEF343C5ABD60AC908C0978 /* TreeSitterPythonRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF8BA92D148F1B78C294444 /* TreeSitterPythonRunestone */; };
+		98156726EC8D7D2B3444B77A /* PythonRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3687845290D50730FAE13489 /* PythonRuntimeTests.swift */; };
 		984DE125EA7926E8B7E68F3B /* TreeSitterJavaRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 550C859E14EFF5507F5511DF /* TreeSitterJavaRunestone */; };
 		99984E0402E16DFD81FEFF7F /* TreeSitterBashRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = ED9F9E39F4EA756F83125669 /* TreeSitterBashRunestone */; };
 		9B4210DAF2B02756228B8112 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FAAAB7BDC8CC8CAC20AC8C /* Settings.swift */; };
@@ -64,12 +67,14 @@
 		DFC527826D27B033B8B02D1E /* LocalShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F9D72C19DD9C87F854898C2 /* LocalShell.swift */; };
 		E1A7FCE3E38A539D78F893EC /* Hosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */; };
 		E497B56819A6A320181321EC /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50A8682C83776C6CC8A37E4A /* Workspace.swift */; };
+		E86F0E3BD7C5BE0710A56450 /* pocket_python.c in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */; };
 		EBDA7802AE686C14E8841C5E /* KeyFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */; };
 		F34644F4DDD99F2B54B2137F /* TerminalPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */; };
 		F359CA11408A51DC617E3362 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075C487F60D1E8FDE0FE0FDD /* HomeView.swift */; };
 		F8554EA25DAC4D6D245C1AC2 /* TreeSitterTOMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 70FDDA6CAF28F434B82A62AE /* TreeSitterTOMLRunestone */; };
 		F8A1486ACBF5B4AE2FFF5453 /* TreeSitterCSharpRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 18DFBE3718EED39D08657977 /* TreeSitterCSharpRunestone */; };
 		FB33D1AF6A5D8C682962C913 /* TreeSitterRubyRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 9B19D8F6817C76637676599D /* TreeSitterRubyRunestone */; };
+		FC0EECEEEE079430F0218D10 /* PythonApp in Resources */ = {isa = PBXBuildFile; fileRef = 5F05E9FD5C6E1824FCDAFB62 /* PythonApp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,20 +87,39 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		10829CDF2ED00DB154AA1F6B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				48904F1B95EF53B71F55596B /* Python.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		05B527D8581A96F64959F1C3 /* ShellParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellParser.swift; sourceTree = "<group>"; };
 		075C487F60D1E8FDE0FE0FDD /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		0A98E635BCF69DC10EE2A791 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		0BD973CD1A208DE0767150F8 /* WorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceView.swift; sourceTree = "<group>"; };
+		0D97815BAFF09F6B392795FD /* PocketCode-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PocketCode-Bridging-Header.h"; sourceTree = "<group>"; };
 		1092BCE1A7BB035737B19078 /* PortForward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForward.swift; sourceTree = "<group>"; };
+		1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pocket_python.c; sourceTree = "<group>"; };
 		22D7DF1180249246978A4394 /* PrivateKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeys.swift; sourceTree = "<group>"; };
+		3687845290D50730FAE13489 /* PythonRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntimeTests.swift; sourceTree = "<group>"; };
 		392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageTests.swift; sourceTree = "<group>"; };
 		3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyFixtures.swift; sourceTree = "<group>"; };
 		50A8682C83776C6CC8A37E4A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		5178B136389BA8EF980003BE /* Builtins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builtins.swift; sourceTree = "<group>"; };
 		580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hosts.swift; sourceTree = "<group>"; };
+		5F05E9FD5C6E1824FCDAFB62 /* PythonApp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PythonApp; path = PocketCode/PythonApp; sourceTree = SOURCE_ROOT; };
 		61ED2C230C88EFEC484D13EA /* PythonRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntime.swift; sourceTree = "<group>"; };
 		62270738A536E9ABD36747BF /* PocketCode.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PocketCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		62D0F3C9019637B448E0F39F /* Python.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Python.xcframework; path = ThirdParty/Python.xcframework; sourceTree = "<group>"; };
 		7433C856DA62D76100A463FB /* Languages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Languages.swift; sourceTree = "<group>"; };
 		75D090A69CED102FCBC7A37F /* LocalShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalShellTests.swift; sourceTree = "<group>"; };
 		7902E6722A8E6CF1EA2B774D /* EditorArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorArea.swift; sourceTree = "<group>"; };
@@ -112,6 +136,7 @@
 		B37CBC14AA777BEDF773091B /* KeyNormalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyNormalizationTests.swift; sourceTree = "<group>"; };
 		B5E2DD43F230F029102F0C73 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		B7CC9261C691A0C0976BDE70 /* Commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Commands.swift; sourceTree = "<group>"; };
+		B8177AA69F0735C627083597 /* pocket_python.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pocket_python.h; sourceTree = "<group>"; };
 		BD585EAC031FAA4149CCB381 /* SSHConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnection.swift; sourceTree = "<group>"; };
 		BEF36AEAF937EBE27049973E /* PocketCodeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PocketCodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAndGitTests.swift; sourceTree = "<group>"; };
@@ -131,6 +156,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DCA96411008267F3561D69F /* Python.xcframework in Frameworks */,
 				6DF097ACCBDB3FE5C84D1877 /* Citadel in Frameworks */,
 				AAECAE5BD513B5FCA88B4C40 /* SwiftTerm in Frameworks */,
 				0CFEDC256BF160E42CEAF87E /* Runestone in Frameworks */,
@@ -171,6 +197,7 @@
 				C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */,
 				F8E057C343497EC75C982510 /* PortForwardIntegrationTests.swift */,
 				F10284767E38CBC9495600BE /* PrivateKeyParserTests.swift */,
+				3687845290D50730FAE13489 /* PythonRuntimeTests.swift */,
 				C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */,
 				FF2F6FD9F595D2ED39082293 /* TerminalViewTests.swift */,
 			);
@@ -210,6 +237,8 @@
 		4F348F0FBE7DF2C82EE01502 /* PocketCode */ = {
 			isa = PBXGroup;
 			children = (
+				5F05E9FD5C6E1824FCDAFB62 /* PythonApp */,
+				B0FF00ECACE16DCF18930D3D /* Python */,
 				5A35B74658DDE8B045378BA2 /* Resources */,
 				3B83AFC04BD2475CFE677DA9 /* Sources */,
 			);
@@ -224,6 +253,24 @@
 				8FBFA8228B763B4886EEFC5C /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		8E1CC61028DC20DEEB893335 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				62D0F3C9019637B448E0F39F /* Python.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B0FF00ECACE16DCF18930D3D /* Python */ = {
+			isa = PBXGroup;
+			children = (
+				1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */,
+				B8177AA69F0735C627083597 /* pocket_python.h */,
+				0D97815BAFF09F6B392795FD /* PocketCode-Bridging-Header.h */,
+			);
+			path = Python;
 			sourceTree = "<group>";
 		};
 		BFBBE797652A80E40BFD5221 /* LocalShell */ = {
@@ -252,6 +299,7 @@
 			children = (
 				4F348F0FBE7DF2C82EE01502 /* PocketCode */,
 				25BB47FBCD53D0DF403567DC /* PocketCodeTests */,
+				8E1CC61028DC20DEEB893335 /* Frameworks */,
 				CCCB10B00AE66D80A44185F1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -266,6 +314,8 @@
 				FE0F60E800C35EAB7A6B78EE /* Sources */,
 				D389D5EA7ED409D7EAE42E1D /* Resources */,
 				234F021366075481539E84DF /* Frameworks */,
+				10829CDF2ED00DB154AA1F6B /* Embed Frameworks */,
+				35C44406A55415E34A2BBFB0 /* Install Python standard library */,
 			);
 			buildRules = (
 			);
@@ -373,10 +423,33 @@
 				B0195CF2BC4FA71D16F0468D /* Acknowledgements.json in Resources */,
 				0C78082812EF0D1CDBF10306 /* Assets.xcassets in Resources */,
 				18CB8DDC5406F3BCA1926579 /* PrivacyInfo.xcprivacy in Resources */,
+				FC0EECEEEE079430F0218D10 /* PythonApp in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		35C44406A55415E34A2BBFB0 /* Install Python standard library */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Install Python standard library";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "sh \"$PROJECT_DIR/scripts/install_python_stdlib.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		C8507DF3FAB2CCC0BEC539C9 /* Sources */ = {
@@ -390,6 +463,7 @@
 				6316666237B4FAE83E0934D3 /* PathUtilTests.swift in Sources */,
 				67D1A1E5DE038724DA32F8DA /* PortForwardIntegrationTests.swift in Sources */,
 				B3EF423C094C6DC84AB5F286 /* PrivateKeyParserTests.swift in Sources */,
+				98156726EC8D7D2B3444B77A /* PythonRuntimeTests.swift in Sources */,
 				50C8BD4C63CD03B73BA4B6CE /* SearchAndGitTests.swift in Sources */,
 				085FAF17544DF6315C79602D /* TerminalViewTests.swift in Sources */,
 			);
@@ -426,6 +500,7 @@
 				712A02705B440FADDA048542 /* Theme.swift in Sources */,
 				E497B56819A6A320181321EC /* Workspace.swift in Sources */,
 				1DAA25C54C4BFA14308CE57A /* WorkspaceView.swift in Sources */,
+				E86F0E3BD7C5BE0710A56450 /* pocket_python.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -526,9 +601,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"ThirdParty\"",
+				);
+				HEADER_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)/Python.framework/Headers";
 				INFOPLIST_FILE = PocketCode/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -537,6 +619,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode;
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "PocketCode/Python/PocketCode-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -620,9 +703,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"ThirdParty\"",
+				);
+				HEADER_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)/Python.framework/Headers";
 				INFOPLIST_FILE = PocketCode/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -631,6 +721,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode;
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "PocketCode/Python/PocketCode-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

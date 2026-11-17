@@ -308,9 +308,14 @@ final class LocalShell {
 
     /// Ctrl-C: cancel builtins (they poll Task.isCancelled) and interrupt Python.
     func interrupt() {
-        jobContexts.forEach { $0.interruptHandler?() }
-        job?.cancel()
-        jobInput?.close()
+        // Programs that handle Ctrl-C themselves (Python → KeyboardInterrupt) keep their
+        // stdin, so e.g. the REPL survives a ^C like it does in a real terminal.
+        let handlers = jobContexts.compactMap(\.interruptHandler)
+        handlers.forEach { $0() }
+        if handlers.isEmpty {
+            job?.cancel()
+            jobInput?.close()
+        }
     }
 
     func resize(cols: Int) {
