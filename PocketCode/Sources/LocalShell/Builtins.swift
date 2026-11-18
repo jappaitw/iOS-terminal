@@ -12,6 +12,7 @@ enum Builtins {
         "export": export, "unset": unset, "history": history, "which": which, "type": which,
         "help": help, "true": { _ in 0 }, "false": { _ in 1 }, "date": date, "sleep": sleep,
         "code": code, "open": code, "whoami": { c in c.stdout.line("mobile"); return 0 },
+        "curl": curl, "wget": wget, "rg": rg, "sed": sed,
         "uname": { c in c.stdout.line(c.args.contains("-a") ? "Darwin iOS PocketCode" : "Darwin"); return 0 },
     ]
 
@@ -19,6 +20,8 @@ enum Builtins {
     static let summaries: [(String, String)] = [
         ("cat", "print files"), ("cd", "change directory"), ("clear", "clear the screen"),
         ("codex", "on-device AI coding agent (sign in, then ask it to build/edit/run)"),
+        ("curl", "HTTP requests (-X -H -d -o -I --max-time)"), ("wget", "download a URL"),
+        ("rg", "recursive search (ripgrep-style front end)"), ("sed", "stream edit: s/pattern/replacement/[gip], -i in place"),
         ("code", "open a file in the editor"), ("cp", "copy (-r for folders)"), ("echo", "print text"),
         ("find", "find files (-name, -type f|d, -maxdepth)"), ("grep", "search text (-i -n -v -r -l -c -F)"),
         ("head", "first lines (-n N)"), ("ls", "list files (-l -a -1 -h)"), ("mkdir", "make folders (-p)"),

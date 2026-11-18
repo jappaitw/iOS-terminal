@@ -18,6 +18,7 @@
 		14DD3658D8B089176346CF24 /* TreeSitterRustRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = DE4B5B0070252BCCE4C8A3BB /* TreeSitterRustRunestone */; };
 		16E903C85BC1D8971A341A0F /* TreeSitterTSXRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = F4C639AE97311A925F9C9854 /* TreeSitterTSXRunestone */; };
 		18CB8DDC5406F3BCA1926579 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8FBFA8228B763B4886EEFC5C /* PrivacyInfo.xcprivacy */; };
+		19FDAEFB1AF701AD9B14D096 /* BuiltinsExtraTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78FE62ACE76118D1994AFF57 /* BuiltinsExtraTests.swift */; };
 		1C623FE1B65A2DEC04BCBB1C /* ShellParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B527D8581A96F64959F1C3 /* ShellParser.swift */; };
 		1DAA25C54C4BFA14308CE57A /* WorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BD973CD1A208DE0767150F8 /* WorkspaceView.swift */; };
 		23DF1E8FFD8659B477C48789 /* ShellRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B090FCEB9618984ECE6815A4 /* ShellRuntime.swift */; };
@@ -51,10 +52,12 @@
 		712A02705B440FADDA048542 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A98E635BCF69DC10EE2A791 /* Theme.swift */; };
 		7206C328B6D3972016D83B51 /* CodexLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121D67B9B434852B1AEA0792 /* CodexLabApp.swift */; };
 		76ACD022C207BE738D3B01F5 /* TreeSitterCRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 51B364A191483F54BB61B256 /* TreeSitterCRunestone */; };
+		7E1AA7637D6C11913D0664E3 /* BuiltinsExtra.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6192A2D5A2E0A882C56A341 /* BuiltinsExtra.swift */; };
 		7E2E8001CC6C4D231E0C4884 /* ExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850F700369505CBA2D4555FD /* ExplorerView.swift */; };
 		805D4B242CCDD6937EB16F5E /* FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A2339A84E26A6139EF8C57 /* FileSystem.swift */; };
 		837F99BEBC18C1D673ADFFA3 /* PortForward.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1092BCE1A7BB035737B19078 /* PortForward.swift */; };
 		8436605E7F4FCF9A5CA8A923 /* TreeSitterGoRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = C1A9CB6553D44BF331146754 /* TreeSitterGoRunestone */; };
+		84EF8FE6216AB1CC33B52CD9 /* BuiltinsExtra.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6192A2D5A2E0A882C56A341 /* BuiltinsExtra.swift */; };
 		8AFA9DCB0D1D0A84E2E3E610 /* TreeSitterSwiftRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = C596376B087064EC8D9C08A6 /* TreeSitterSwiftRunestone */; };
 		8EEF343C5ABD60AC908C0978 /* TreeSitterPythonRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF8BA92D148F1B78C294444 /* TreeSitterPythonRunestone */; };
 		98156726EC8D7D2B3444B77A /* PythonRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3687845290D50730FAE13489 /* PythonRuntimeTests.swift */; };
@@ -157,6 +160,7 @@
 		7177327199929192CA229299 /* CodexLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CodexLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7433C856DA62D76100A463FB /* Languages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Languages.swift; sourceTree = "<group>"; };
 		75D090A69CED102FCBC7A37F /* LocalShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalShellTests.swift; sourceTree = "<group>"; };
+		78FE62ACE76118D1994AFF57 /* BuiltinsExtraTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuiltinsExtraTests.swift; sourceTree = "<group>"; };
 		7902E6722A8E6CF1EA2B774D /* EditorArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorArea.swift; sourceTree = "<group>"; };
 		7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPanel.swift; sourceTree = "<group>"; };
 		80C9B2310FB1F2034AC7819F /* Acknowledgements.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Acknowledgements.json; sourceTree = "<group>"; };
@@ -183,6 +187,7 @@
 		E9A2339A84E26A6139EF8C57 /* FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
 		EC92B4DBE3DBFF98B4CDB4F8 /* Git.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Git.swift; sourceTree = "<group>"; };
 		F10284767E38CBC9495600BE /* PrivateKeyParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeyParserTests.swift; sourceTree = "<group>"; };
+		F6192A2D5A2E0A882C56A341 /* BuiltinsExtra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuiltinsExtra.swift; sourceTree = "<group>"; };
 		F8E057C343497EC75C982510 /* PortForwardIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForwardIntegrationTests.swift; sourceTree = "<group>"; };
 		FAA061D823397F34BA998ECE /* CodexRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRuntime.swift; sourceTree = "<group>"; };
 		FBE63FC6EC56188AC110DBD4 /* InAppBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InAppBrowser.swift; sourceTree = "<group>"; };
@@ -236,6 +241,7 @@
 		25BB47FBCD53D0DF403567DC /* PocketCodeTests */ = {
 			isa = PBXGroup;
 			children = (
+				78FE62ACE76118D1994AFF57 /* BuiltinsExtraTests.swift */,
 				4B1CBBF647A9081028A71AF7 /* CodexRuntimeTests.swift */,
 				3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */,
 				B37CBC14AA777BEDF773091B /* KeyNormalizationTests.swift */,
@@ -335,6 +341,7 @@
 			isa = PBXGroup;
 			children = (
 				5178B136389BA8EF980003BE /* Builtins.swift */,
+				F6192A2D5A2E0A882C56A341 /* BuiltinsExtra.swift */,
 				13C0AE4D154994285871F04C /* CodexHostBridge.swift */,
 				356B37D833ED5AE59F37A0CC /* CodexProtocolClient.swift */,
 				FAA061D823397F34BA998ECE /* CodexRuntime.swift */,
@@ -581,6 +588,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C42A26FD0F164C66DFB5E250 /* Builtins.swift in Sources */,
+				84EF8FE6216AB1CC33B52CD9 /* BuiltinsExtra.swift in Sources */,
 				A06D330E79CA0B2898C3E867 /* CodexHostBridge.swift in Sources */,
 				7206C328B6D3972016D83B51 /* CodexLabApp.swift in Sources */,
 				037B734B9A62F33FC5ACC07C /* CodexProtocolClient.swift in Sources */,
@@ -598,6 +606,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				19FDAEFB1AF701AD9B14D096 /* BuiltinsExtraTests.swift in Sources */,
 				384FDD1A128ADA54795E2BB3 /* CodexRuntimeTests.swift in Sources */,
 				EBDA7802AE686C14E8841C5E /* KeyFixtures.swift in Sources */,
 				B2179A354208D2332857162F /* KeyNormalizationTests.swift in Sources */,
@@ -618,6 +627,7 @@
 			files = (
 				C69D69C913CA07006A2280DE /* App.swift in Sources */,
 				9E911E84C0DCC656FF3D66C3 /* Builtins.swift in Sources */,
+				7E1AA7637D6C11913D0664E3 /* BuiltinsExtra.swift in Sources */,
 				65CB32434238FF1458E5F500 /* CodexHostBridge.swift in Sources */,
 				9AE6F426E2135A06275775C0 /* CodexProtocolClient.swift in Sources */,
 				A4292E40E944C8FC7C7A627B /* CodexRuntime.swift in Sources */,
