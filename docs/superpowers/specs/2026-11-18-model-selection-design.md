@@ -75,6 +75,13 @@ codex ─Responses→ ★ Pocode 轉接器 ★ ─Chat→ ┬ 本機 llama.cpp
 
 雲端相容端點(DeepSeek 等)若只講 Chat 而不講 Responses,屆時才需要輕量轉接(或找講 Responses 的供應商);但本機路線已無此需求。
 
+## 進度(2026-11-18)
+
+- ✅ llama.cpp iOS + Metal 編譯(device + simulator),`scripts/build_llama.sh` → `ThirdParty/llama/`
+- ✅ 上游 server 已函式庫化:`llama-server-impl` 匯出 `llama_server(argc, argv)`(註解明寫 "reusable by app"),`/v1/responses` 路由含在內
+- ✅ `native/pocket-llama/`:`pll_start(model_path, port, ctx)` 於執行緒以假 argv 啟動完整 server
+- ⬜ 下一步:app target 連結 + 模型下載(Qwen2.5-Coder GGUF)+ codex `[model_providers.local]` 接線 + E2E
+
 ## 執行順序(修正後 — 直線,無轉接器)
 
 1. **本機 llama.cpp PoC** — 嵌 llama.cpp(含 `/v1/responses` + Metal),in-process server,codex base_url 指向它,Qwen2.5-Coder 直接驅動工具。llama.cpp 嵌 iOS 為成熟技術。
