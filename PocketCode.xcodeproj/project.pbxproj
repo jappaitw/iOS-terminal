@@ -22,6 +22,7 @@
 		1C623FE1B65A2DEC04BCBB1C /* ShellParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B527D8581A96F64959F1C3 /* ShellParser.swift */; };
 		1DAA25C54C4BFA14308CE57A /* WorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BD973CD1A208DE0767150F8 /* WorkspaceView.swift */; };
 		23DF1E8FFD8659B477C48789 /* ShellRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B090FCEB9618984ECE6815A4 /* ShellRuntime.swift */; };
+		2AC3F1F6A73BBCF1C8F68183 /* pocket_llama.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66FEFA61AF2F343336BE7EF9 /* pocket_llama.cpp */; };
 		2AF4728094C2CECD15CD4FCE /* ShellRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B090FCEB9618984ECE6815A4 /* ShellRuntime.swift */; };
 		32F23952ECF56E6599A9A1A0 /* TreeSitterSQLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 2B1736E56B2EE74BC8E28557 /* TreeSitterSQLRunestone */; };
 		33946154E2E024B58A4C65FA /* EditorArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7902E6722A8E6CF1EA2B774D /* EditorArea.swift */; };
@@ -90,6 +91,7 @@
 		DC5FC9F3F9655EC5EB924671 /* PythonRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61ED2C230C88EFEC484D13EA /* PythonRuntime.swift */; };
 		DFC527826D27B033B8B02D1E /* LocalShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F9D72C19DD9C87F854898C2 /* LocalShell.swift */; };
 		E1A7FCE3E38A539D78F893EC /* Hosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */; };
+		E1E6262606B39302AAED0A61 /* LocalModelE2ETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4796B63A1FC0CA6877E8B1C1 /* LocalModelE2ETests.swift */; };
 		E339DE59D0BBBE9757FC60D3 /* HostExec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3451D64459E967828463C0B4 /* HostExec.swift */; };
 		E497B56819A6A320181321EC /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50A8682C83776C6CC8A37E4A /* Workspace.swift */; };
 		E86F0E3BD7C5BE0710A56450 /* pocket_python.c in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */; };
@@ -155,6 +157,8 @@
 		3687845290D50730FAE13489 /* PythonRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntimeTests.swift; sourceTree = "<group>"; };
 		392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageTests.swift; sourceTree = "<group>"; };
 		3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyFixtures.swift; sourceTree = "<group>"; };
+		3CBB2E431B1A49326B42E072 /* pocket_llama.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pocket_llama.h; sourceTree = "<group>"; };
+		4796B63A1FC0CA6877E8B1C1 /* LocalModelE2ETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModelE2ETests.swift; sourceTree = "<group>"; };
 		4B1CBBF647A9081028A71AF7 /* CodexRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRuntimeTests.swift; sourceTree = "<group>"; };
 		50A8682C83776C6CC8A37E4A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		5178B136389BA8EF980003BE /* Builtins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builtins.swift; sourceTree = "<group>"; };
@@ -163,6 +167,7 @@
 		61ED2C230C88EFEC484D13EA /* PythonRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntime.swift; sourceTree = "<group>"; };
 		62270738A536E9ABD36747BF /* PocketCode.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PocketCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		62D0F3C9019637B448E0F39F /* Python.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Python.xcframework; path = ThirdParty/Python.xcframework; sourceTree = "<group>"; };
+		66FEFA61AF2F343336BE7EF9 /* pocket_llama.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = pocket_llama.cpp; sourceTree = "<group>"; };
 		7177327199929192CA229299 /* CodexLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CodexLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7433C856DA62D76100A463FB /* Languages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Languages.swift; sourceTree = "<group>"; };
 		75D090A69CED102FCBC7A37F /* LocalShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalShellTests.swift; sourceTree = "<group>"; };
@@ -256,6 +261,7 @@
 				3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */,
 				B37CBC14AA777BEDF773091B /* KeyNormalizationTests.swift */,
 				392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */,
+				4796B63A1FC0CA6877E8B1C1 /* LocalModelE2ETests.swift */,
 				75D090A69CED102FCBC7A37F /* LocalShellTests.swift */,
 				C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */,
 				F8E057C343497EC75C982510 /* PortForwardIntegrationTests.swift */,
@@ -349,6 +355,14 @@
 			path = Python;
 			sourceTree = "<group>";
 		};
+		B485F5A2A5E59BD7D7370DC7 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				3CBB2E431B1A49326B42E072 /* pocket_llama.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
 		BFBBE797652A80E40BFD5221 /* LocalShell */ = {
 			isa = PBXGroup;
 			children = (
@@ -369,6 +383,7 @@
 			isa = PBXGroup;
 			children = (
 				2A6DB73FCE8E3AE159E876D4 /* CodexLab */,
+				E49019872BA91C483A56BBA5 /* pocket-llama */,
 			);
 			path = native;
 			sourceTree = "<group>";
@@ -392,6 +407,15 @@
 				8E1CC61028DC20DEEB893335 /* Frameworks */,
 				CCCB10B00AE66D80A44185F1 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		E49019872BA91C483A56BBA5 /* pocket-llama */ = {
+			isa = PBXGroup;
+			children = (
+				66FEFA61AF2F343336BE7EF9 /* pocket_llama.cpp */,
+				B485F5A2A5E59BD7D7370DC7 /* include */,
+			);
+			path = "pocket-llama";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -625,6 +649,7 @@
 				EBDA7802AE686C14E8841C5E /* KeyFixtures.swift in Sources */,
 				B2179A354208D2332857162F /* KeyNormalizationTests.swift in Sources */,
 				DA609049CF8D02493E0234CF /* LanguageTests.swift in Sources */,
+				E1E6262606B39302AAED0A61 /* LocalModelE2ETests.swift in Sources */,
 				6A040637F8DAD804E7C682A7 /* LocalShellTests.swift in Sources */,
 				6316666237B4FAE83E0934D3 /* PathUtilTests.swift in Sources */,
 				67D1A1E5DE038724DA32F8DA /* PortForwardIntegrationTests.swift in Sources */,
@@ -672,6 +697,7 @@
 				712A02705B440FADDA048542 /* Theme.swift in Sources */,
 				E497B56819A6A320181321EC /* Workspace.swift in Sources */,
 				1DAA25C54C4BFA14308CE57A /* WorkspaceView.swift in Sources */,
+				2AC3F1F6A73BBCF1C8F68183 /* pocket_llama.cpp in Sources */,
 				E86F0E3BD7C5BE0710A56450 /* pocket_python.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -815,10 +841,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "$(PROJECT_DIR)/ThirdParty/codex/device";
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(PROJECT_DIR)/ThirdParty/codex/simulator";
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "$(PROJECT_DIR)/ThirdParty/codex/device $(PROJECT_DIR)/ThirdParty/llama/device";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(PROJECT_DIR)/ThirdParty/codex/simulator $(PROJECT_DIR)/ThirdParty/llama/simulator";
 				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = "-lpocket_codex";
+				OTHER_LDFLAGS = "-lpocket_codex -lllama-server-impl -lllama-ui -lserver-context -lllama-common -lllama-common-base -lmtmd -lcpp-httplib -lvendor-hash -lllama -lggml -lggml-base -lggml-cpu -lggml-blas -lggml-metal -framework Accelerate -framework Metal";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode;
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "PocketCode/Python/PocketCode-Bridging-Header.h";
@@ -947,10 +973,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "$(PROJECT_DIR)/ThirdParty/codex/device";
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(PROJECT_DIR)/ThirdParty/codex/simulator";
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "$(PROJECT_DIR)/ThirdParty/codex/device $(PROJECT_DIR)/ThirdParty/llama/device";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(PROJECT_DIR)/ThirdParty/codex/simulator $(PROJECT_DIR)/ThirdParty/llama/simulator";
 				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = "-lpocket_codex";
+				OTHER_LDFLAGS = "-lpocket_codex -lllama-server-impl -lllama-ui -lserver-context -lllama-common -lllama-common-base -lmtmd -lcpp-httplib -lvendor-hash -lllama -lggml -lggml-base -lggml-cpu -lggml-blas -lggml-metal -framework Accelerate -framework Metal";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jlmxstudio.pocketcode;
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "PocketCode/Python/PocketCode-Bridging-Header.h";

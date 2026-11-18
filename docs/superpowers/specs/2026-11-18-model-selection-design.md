@@ -75,6 +75,23 @@ codex ─Responses→ ★ Pocode 轉接器 ★ ─Chat→ ┬ 本機 llama.cpp
 
 雲端相容端點(DeepSeek 等)若只講 Chat 而不講 Responses,屆時才需要輕量轉接(或找講 Responses 的供應商);但本機路線已無此需求。
 
+## 本機 E2E 進度(2026-11-18)— 全鏈路通,僅剩工具解析一行級缺口
+
+模擬器實測(Qwen2.5-Coder 0.5B/1.5B/3B，皆 Q4）：
+
+- ✅ **llama.cpp server 在 app 內啟動、載入 GGUF、`/v1/responses` 健康**。
+- ✅ **codex 引擎接受本機 provider**(`[model_providers.pocodelocal]`, wire_api=responses），`thread/start` 成功，整輪在 `127.0.0.1` 完成，**零雲端、零帳號**。
+- ✅ 速度亮眼:3B 在模擬器 prompt 380 tok/s。
+- ✅ **模型產生了正確的工具呼叫意圖**:直接探針(responses 與 chat 兩路)都回 `{"name":"write_file","arguments":{"path":"hello.py","content":"print(\"POCODE_OK\")"}}`。
+- ❌ **唯一缺口**:該 JSON 包在 `content` 文字裡,未被解析成結構化 `tool_calls` → codex 收到「純文字回覆」,不執行工具。根因:`--jinja` 的通用模板沒認出 Qwen2.5-Coder 的工具輸出格式(模型吐 ```json 而非 `<tool_call>` 標籤)。
+
+**這不是架構問題,是 llama.cpp 的 chat-template / tool-parser 配置問題。** 修法候選(下一輪):
+1. 指定 Qwen 專屬 chat template(`--chat-template qwen` 或 `--chat-template-file`),讓模型用 `<tool_call>` 標籤 → llama 解析器就認得。
+2. 換 **Qwen3**(原生 tool-calling 比 Qwen2.5-Coder 強)或 Qwen2.5-Instruct(非 coder)。
+3. 最後手段:薄解析層把 content 裡的工具 JSON 抽成 tool_calls(我們掌控 pocket-llama,可在回應路徑補）。
+
+結論:**完全離線的 iPhone AI agent 架構已證實可行**(模型在機內、工具在機內、無網路依賴),剩下是 llama.cpp 工具格式對齊的調校。
+
 ## 進度(2026-11-18)
 
 - ✅ llama.cpp iOS + Metal 編譯(device + simulator),`scripts/build_llama.sh` → `ThirdParty/llama/`

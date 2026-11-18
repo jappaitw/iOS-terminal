@@ -25,6 +25,9 @@ extern "C" int pll_start(const char *model_path, int port, int context_size) {
             "--port", std::to_string(port),
             "--ctx-size", std::to_string(context_size > 0 ? context_size : 4096),
             "--no-webui",
+            // Without --jinja the chat template ignores tool definitions and
+            // the model can never emit a tool call.
+            "--jinja",
         };
         std::vector<char *> argv;
         argv.reserve(args.size());
