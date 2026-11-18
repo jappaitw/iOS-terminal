@@ -86,3 +86,13 @@ ERROR: rustc exited with non-zero
 - 可重現腳本:`scripts/v8_populate_icu.sh`(含複製對齊樹 + 填 ICU + icudtl + 重編)。前提:`~/v8src/v8` 已 checkout 到 15.2.124.1。
 
 **狀態:從「死路」變成「一個明確的工具鏈 arg bug」。** 本機模型 + Claude 後端(build 9)都不需 V8,已出貨。
+
+### 2026-11-18 夜(續)— device target 確認:同一個 Rust-std 工具鏈 bug
+`aarch64-apple-ios`(device,真正出貨 slice)跑出**完全相同**的錯,只是 `libclang_rt.ios.a` 取代 `.iossim.a`。→ **target 無關**,是 GN rust-std-from-source 對非官方 Apple target 的模板問題:本該是 final-link 的 compiler-rt `ldflags` 洩漏進 std rlib 的 rustc 編譯命令,rustc 把 `.a` 當成位置輸入源碼 → `multiple input filenames provided`。
+
+**最可能的解法(下次優先試,依序):**
+1. **別從源碼編 std**:下載的 rust-toolchain 沒有 apple target 的 prebuilt std 才會現編。用我們 rustup 已裝的 `aarch64-apple-ios` std(`build_codex.sh` 已 `rustup target add`),透過 GN arg 指向該 sysroot,讓 GN 跳過 std-from-source。查 chromium GN:`rust_sysroot_absolute` / `rustc_version` / `added_rust_targets` 附近。
+2. 若無法跳過:修 rust 編譯模板,把 compiler-rt 從 std rlib 的 rustc 命令移除(它屬於 final link,不該進 rlib 編譯)。在 gn_out 的 `toolchain.ninja` / rust templates 找 `libclang_rt` 的注入點。
+3. 備案:試不同 rusty_v8 patch 版(152.x)是否已修 iOS,但要顧及與 codex 的相容。
+
+**距離終點:** 依賴全通,只差這個工具鏈 arg。真正的 V8 C++ 原始碼已開始編(2194 步),std 一過就能連結出 `librusty_v8.a`。
