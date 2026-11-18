@@ -51,7 +51,7 @@
 |---|---|---|
 | MCP(StreamableHttp) | ✅ | ⬜ 設定頁 GUI:加 URL+token(Keychain);`mcpServerStatus/list` 顯示狀態 |
 | MCP(stdio) | ✅ spawn | ❌ → **獨家替代:內嵌 Python 跑 stdio MCP**(pipe 橋接,iPhone 首創) |
-| Skills | ✅ 目錄式 | ⬜ GUI 清單(`skills/list`)+ URL 安裝;檔案 App 丟入已可用 |
+| Skills | ✅ 目錄式 | 🟡 引擎側已驗證(skills/list 含種入 skill);GUI 清單(`skills/list`)+ URL 安裝;檔案 App 丟入已可用 |
 | Connectors(ChatGPT) | ✅ | 🟡 HTTP 類應可用,實機驗證後決定 |
 | Web search 工具 | ✅ | ⬜ 驗證引擎內建版在 iOS 的行為 |
 | 自訂 prompts | ✅ | ⬜ 檔案式,低工程 |
