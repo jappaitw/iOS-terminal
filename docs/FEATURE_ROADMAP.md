@@ -49,7 +49,7 @@
 
 | 功能 | 桌面 CLI | 計畫 |
 |---|---|---|
-| MCP(StreamableHttp) | ✅ | ⬜ 設定頁 GUI:加 URL+token(Keychain);`mcpServerStatus/list` 顯示狀態 |
+| MCP(StreamableHttp) | ✅ | 🟡 引擎側已驗證(deepwiki 註冊 + capabilities 抓取);設定頁 GUI:加 URL+token(Keychain)待做 |
 | MCP(stdio) | ✅ spawn | ❌ → **獨家替代:內嵌 Python 跑 stdio MCP**(pipe 橋接,iPhone 首創) |
 | Skills | ✅ 目錄式 | 🟡 引擎側已驗證(skills/list 含種入 skill);GUI 清單(`skills/list`)+ URL 安裝;檔案 App 丟入已可用 |
 | Connectors(ChatGPT) | ✅ | 🟡 HTTP 類應可用,實機驗證後決定 |
