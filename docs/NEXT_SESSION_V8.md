@@ -117,3 +117,26 @@ ld64.lld: error: could not load TAPI file .../MacOSX27.2.sdk/usr/lib/libSystem.t
 4. 終極:在**較舊 macOS 的 CI/機器**上編(toolchain 與 SDK 匹配),產出 `librusty_v8.a` 後以 `RUSTY_V8_ARCHIVE` 餵給 pocket-codex。
 
 **進度本質:** 依賴迷宮 + Rust-std 全通,只差 host 工具鏈與超新 SDK 的版本匹配。離 `librusty_v8.a` 很近了。
+
+### 2026-11-19 — ✅ V8 FROM SOURCE 編成功(iOS device)!
+最後一塊拼圖:**Chromium 綁的 lld 太舊 → 換 homebrew modern lld(LLVM 23.1.6)**。CLI 相容、能讀 macOS 27.2 SDK 的 .tbd。
+```
+brew install lld
+# 把 $CARGO_TARGET_DIR/<target>/release/build/clang/bin/{ld64.lld,ld.lld,lld,lld-link}
+# 全部 symlink 到 /opt/homebrew/opt/lld/bin/lld
+```
+**結果:** `cargo build -p v8 --release --target aarch64-apple-ios` → step [3875/3875] exit 0 → `librusty_v8.a` 57MB。
+接著 `cargo build --release --target aarch64-apple-ios`(完整 pocket-codex)→ exit 0 → **`libpocket_codex.a` 606MB,含 from-source V8**。
+
+### 完整可重現配方(scripts/v8_populate_icu.sh 已編碼)
+1. gclient V8 checkout **pin 到 15.2.124.1**(= rusty_v8 152.2.0 綁的版本):`~/v8src/v8`。
+2. 複製其 `third_party/rust/chromium_crates_io` 進 crate;用 cargo registry 真 crate 填掉 `is_placeholder` 的 ICU/diplomat crate;複製 `icudtl.dat`。
+3. **`CARGO_TARGET_DIR` 設無空格路徑**(repo 路徑 `iphone vscode` 有空格會破壞 rustc -Clink-arg 轉義)。
+4. **換 modern lld**(macOS 27.x SDK 需要)。
+5. `V8_FROM_SOURCE=1 cargo build -p v8 --target <t>` 然後完整 build。
+
+### 剩下
+- [ ] sim slice 同法編(smoketest 在模擬器跑)
+- [ ] 跑 `pc_v8_smoketest` / V8SmokeTests → 確認 magic_number 過(from-source 理論上必過,binding+lib 自洽)
+- [ ] 把 libpocket_codex.a 併進 ThirdParty/codex/{device,simulator},出含 code-mode 的 build
+- [ ] device 是 jitless:確認 V8JitMode::Disabled + `--jitless`(rusty_v8 target_os=ios 分支應已處理)

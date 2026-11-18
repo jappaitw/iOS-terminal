@@ -80,9 +80,29 @@ mkdir -p "$V8SRC/third_party/icu/common"
 [ -f "$V8SRC/third_party/icu/common/icudtl.dat" ] || \
   cp ~/v8src/v8/third_party/icu/common/icudtl.dat "$V8SRC/third_party/icu/common/icudtl.dat"
 
-echo "=== 4. rebuild v8 crate (sim, i18n on) ==="
+echo "=== 4. modern lld (bundled Chromium lld can't read macOS 27.x SDK .tbd) ==="
+# The pinned Chromium lld's TAPI parser rejects a bleeding-edge macOS SDK
+# ('could not load TAPI file … unknown target'), breaking the host build-tool
+# link. A modern lld (LLVM 23+) reads it and is CLI-compatible, so we swap it in.
+command -v brew >/dev/null && [ ! -x /opt/homebrew/opt/lld/bin/lld ] && brew install lld
+TARGET="${V8_TARGET:-aarch64-apple-ios}"
+# IMPORTANT: a space in the build path breaks rustc -Clink-arg escaping in the
+# Rust-std build, so the output dir MUST be space-free (the repo path is not).
+export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$HOME/pcv8target}"
+CLANGBIN="$CARGO_TARGET_DIR/$TARGET/release/build/clang/bin"
+if [ -d "$CLANGBIN" ]; then
+  for f in ld64.lld ld.lld lld lld-link; do
+    [ -e "$CLANGBIN/$f" ] && [ ! -e "$CLANGBIN/$f.orig" ] && mv "$CLANGBIN/$f" "$CLANGBIN/$f.orig"
+    ln -sf /opt/homebrew/opt/lld/bin/lld "$CLANGBIN/$f"
+  done
+fi
+
+echo "=== 5. build v8 crate from source ($TARGET, no-space out dir, modern lld) ==="
 cd "/Users/soulfyai/Documents/iphone vscode/native/pocket-codex"
-rm -rf target/aarch64-apple-ios-sim/release/build/gn_out
+rm -rf "$CARGO_TARGET_DIR/$TARGET/release/build/gn_out"
 export V8_FROM_SOURCE=1
-cargo build -p v8 --release --target aarch64-apple-ios-sim -vv
+cargo build -p v8 --release --target "$TARGET" -vv
 echo "V8_BUILD_EXIT=$?"
+# NOTE: the clang dir only appears after the first (failing) gn run, so on a
+# clean tree run this script twice — the first materialises clang/bin, the
+# second swaps lld and succeeds. (Or pre-run one `cargo build -p v8`.)
