@@ -101,6 +101,12 @@ echo "=== 5. build v8 crate from source ($TARGET, no-space out dir, modern lld) 
 cd "/Users/soulfyai/Documents/iphone vscode/native/pocket-codex"
 rm -rf "$CARGO_TARGET_DIR/$TARGET/release/build/gn_out"
 export V8_FROM_SOURCE=1
+# CRITICAL: the iOS target builds in lite mode (V8_LITE_MODE) but the host
+# mksnapshot that produces the startup snapshot does NOT by default, so their
+# ExternalReferenceTable::kSize differs → kMagicNumber mismatch → Isolate::new
+# aborts at runtime. Forcing lite mode GLOBALLY makes the host snapshot match
+# the target. This is the fix that made pc_v8_smoketest return rc=0.
+export EXTRA_GN_ARGS="${EXTRA_GN_ARGS:+$EXTRA_GN_ARGS }v8_enable_lite_mode=true"
 cargo build -p v8 --release --target "$TARGET" -vv
 echo "V8_BUILD_EXIT=$?"
 # NOTE: the clang dir only appears after the first (failing) gn run, so on a

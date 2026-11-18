@@ -184,3 +184,23 @@ V8 源碼:`kMagicNumber = 0xC0DE0000 ^ ExternalReferenceTable::kSize`(src/snapsh
 4. 實際印出兩邊的 `ExternalReferenceTable::kSize`(改 smoketest 或加 debug)直接比對,而非推論。
 
 **誠實結論:** V8 **編譯**已完全攻克(device+sim 庫產出);但 runtime 的 `magic_number` 真因**尚未定位**(已排除 OS/jitless/feature 三個假設)。這是個需要 scientific 逐一排除的 V8-internals 謎題,非本 session 能收斂。預編庫同錯,暗示共通因素(候選 1/3 最可疑)。
+
+### 2026-11-19 — ✅✅ V8 完全攻克!smoketest rc=0,magic 吻合!
+**真因(smoking gun):** 完整 defines diff 揭露 target(iOS)有 `-DV8_LITE_MODE`,但 host mksnapshot 沒有。lite mode 增刪外部參考 → `ExternalReferenceTable::kSize` 不同 → `kMagicNumber` 不同 → abort。(前面的 OS/jitless 假設都是錯的,這才是。)
+**修法:** `EXTRA_GN_ARGS="v8_enable_lite_mode=true"`(全域)→ host mksnapshot 也 lite → kSize 一致。
+**驗證:**
+```
+[v8-smoke] rc=0 msg=
+Test Suite 'V8SmokeTests' passed
+** TEST SUCCEEDED **
+```
+`pc_v8_smoketest` 在 iOS 模擬器 **rc=0** —— V8 `Isolate::new` 成功、magic 吻合。**兩個 session 的死路徹底解決。**
+
+### 完整配方(scripts/v8_populate_icu.sh)
+gclient V8 @15.2.124.1 → 複製 chromium_crates_io + 填 ICU placeholder + icudtl.dat → 無空格 CARGO_TARGET_DIR → modern lld → `V8_FROM_SOURCE=1 EXTRA_GN_ARGS="v8_enable_lite_mode=true" cargo build`。
+
+### 剩下(整合出貨)
+- [ ] 重建 **device** 庫(同 lite 修法);sim 已驗證
+- [ ] 把 from-source 庫併進 `ThirdParty/codex/{device,simulator}`(取代 plain)
+- [ ] 跑 CodexE2E / 實機測雲端 gpt-6 code-mode 工具 → 應該會動
+- [ ] 確認 device jitless + lite 下 code-mode 的 JS 編排可跑(V8JitMode::Disabled)
