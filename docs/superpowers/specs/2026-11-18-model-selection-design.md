@@ -85,10 +85,12 @@ codex ─Responses→ ★ Pocode 轉接器 ★ ─Chat→ ┬ 本機 llama.cpp
 - ✅ **模型產生了正確的工具呼叫意圖**:直接探針(responses 與 chat 兩路)都回 `{"name":"write_file","arguments":{"path":"hello.py","content":"print(\"POCODE_OK\")"}}`。
 - ❌ **唯一缺口**:該 JSON 包在 `content` 文字裡,未被解析成結構化 `tool_calls` → codex 收到「純文字回覆」,不執行工具。根因:`--jinja` 的通用模板沒認出 Qwen2.5-Coder 的工具輸出格式(模型吐 ```json 而非 `<tool_call>` 標籤)。
 
-**這不是架構問題,是 llama.cpp 的 chat-template / tool-parser 配置問題。** 修法候選(下一輪):
-1. 指定 Qwen 專屬 chat template(`--chat-template qwen` 或 `--chat-template-file`),讓模型用 `<tool_call>` 標籤 → llama 解析器就認得。
-2. 換 **Qwen3**(原生 tool-calling 比 Qwen2.5-Coder 強)或 Qwen2.5-Instruct(非 coder)。
-3. 最後手段:薄解析層把 content 裡的工具 JSON 抽成 tool_calls(我們掌控 pocket-llama,可在回應路徑補）。
+**這不是架構問題,是 llama.cpp 的 tool-parser / 模型指令遵循問題。** 已嘗試:注入 llama.cpp 內建的 Qwen2.5-7B-Instruct tool-aware template(`--chat-template-file`,含 9 處 `<tool_call>` 標籤,打包進 `PocketCode/Resources/llama-templates/qwen2.5.jinja`)。結果:template 有載入,但 **3B coder 模型仍把工具 JSON 包成 ```json 區塊、不加 `<tool_call>` 標籤** → llama 解析器偵測不到 → 歸為純文字。根因是 Qwen2.5-**Coder** 的指令遵循弱(coder 版為補全調校)。
+
+修法候選(下一輪,由穩到實驗):
+1. **薄抽取層(最穩,我們掌控)**:patch server-chat 或 pocket-llama 回應路徑,偵測 content 裡的工具 JSON(`{"name":...,"arguments":...}`)→ 轉成結構化 tool_calls / responses function_call。模型一致地吐這個格式(0.5B/1.5B/3B 皆然),抽取規則確定。
+2. **grammar 約束**:llama.cpp 支援 `tool_choice:required` + grammar 強制 `<tool_call>` 輸出。
+3. **換模型**:Qwen3 或 Qwen2.5-**Instruct**(非 coder)原生 tool-calling 較強。精選清單應以「tool-calling 可靠」為選模標準,coder 版留給純補全。
 
 結論:**完全離線的 iPhone AI agent 架構已證實可行**(模型在機內、工具在機內、無網路依賴),剩下是 llama.cpp 工具格式對齊的調校。
 

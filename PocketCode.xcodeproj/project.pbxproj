@@ -55,6 +55,7 @@
 		712A02705B440FADDA048542 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A98E635BCF69DC10EE2A791 /* Theme.swift */; };
 		7206C328B6D3972016D83B51 /* CodexLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121D67B9B434852B1AEA0792 /* CodexLabApp.swift */; };
 		76ACD022C207BE738D3B01F5 /* TreeSitterCRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 51B364A191483F54BB61B256 /* TreeSitterCRunestone */; };
+		7A7144FD618AECF65C44AA35 /* qwen2.5.jinja in Resources */ = {isa = PBXBuildFile; fileRef = BF341065C065944839562292 /* qwen2.5.jinja */; };
 		7E1AA7637D6C11913D0664E3 /* BuiltinsExtra.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6192A2D5A2E0A882C56A341 /* BuiltinsExtra.swift */; };
 		7E2E8001CC6C4D231E0C4884 /* ExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850F700369505CBA2D4555FD /* ExplorerView.swift */; };
 		805D4B242CCDD6937EB16F5E /* FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A2339A84E26A6139EF8C57 /* FileSystem.swift */; };
@@ -191,6 +192,7 @@
 		B8177AA69F0735C627083597 /* pocket_python.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pocket_python.h; sourceTree = "<group>"; };
 		BD585EAC031FAA4149CCB381 /* SSHConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnection.swift; sourceTree = "<group>"; };
 		BEF36AEAF937EBE27049973E /* PocketCodeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PocketCodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BF341065C065944839562292 /* qwen2.5.jinja */ = {isa = PBXFileReference; path = qwen2.5.jinja; sourceTree = "<group>"; };
 		C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAndGitTests.swift; sourceTree = "<group>"; };
 		C584A948FC3A6429035CBC36 /* CodexLab-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CodexLab-Bridging-Header.h"; sourceTree = "<group>"; };
 		C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathUtilTests.swift; sourceTree = "<group>"; };
@@ -333,8 +335,17 @@
 				80C9B2310FB1F2034AC7819F /* Acknowledgements.json */,
 				9C135FAFB9D3ADBCFC2460B9 /* Assets.xcassets */,
 				8FBFA8228B763B4886EEFC5C /* PrivacyInfo.xcprivacy */,
+				74F4D28136D983011121EC22 /* llama-templates */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		74F4D28136D983011121EC22 /* llama-templates */ = {
+			isa = PBXGroup;
+			children = (
+				BF341065C065944839562292 /* qwen2.5.jinja */,
+			);
+			path = "llama-templates";
 			sourceTree = "<group>";
 		};
 		8E1CC61028DC20DEEB893335 /* Frameworks */ = {
@@ -572,6 +583,7 @@
 				0C78082812EF0D1CDBF10306 /* Assets.xcassets in Resources */,
 				18CB8DDC5406F3BCA1926579 /* PrivacyInfo.xcprivacy in Resources */,
 				FC0EECEEEE079430F0218D10 /* PythonApp in Resources */,
+				7A7144FD618AECF65C44AA35 /* qwen2.5.jinja in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

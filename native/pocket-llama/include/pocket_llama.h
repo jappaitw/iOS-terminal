@@ -9,9 +9,11 @@ extern "C" {
 #endif
 
 /// Starts the llama server on 127.0.0.1:port serving the GGUF at model_path.
-/// Returns 0 if the server thread launched. One server per process; the model
-/// loads asynchronously (poll GET /health for readiness).
-int pll_start(const char *model_path, int port, int context_size);
+/// `chat_template_path` (may be NULL) overrides the model's embedded chat
+/// template — needed for models (e.g. Qwen2.5-Coder) whose baked-in template
+/// lacks the <tool_call> markup llama's parser detects. Returns 0 if the
+/// server thread launched; the model loads async (poll GET /health).
+int pll_start(const char *model_path, int port, int context_size, const char *chat_template_path);
 
 #ifdef __cplusplus
 }

@@ -39,7 +39,12 @@ final class LocalModelE2ETests: XCTestCase {
 
         // 2. Start the embedded llama server and wait for the model to load.
         // codex's system preamble alone is ~10k tokens; Qwen2.5 supports 32k.
-        XCTAssertEqual(pll_start(gguf.path, port, 32768), 0)
+        // Qwen2.5-Coder's baked-in template lacks <tool_call> markup, so hand it
+        // the tool-aware Qwen2.5 template bundled in Resources.
+        let tmpl = Bundle(for: Self.self).path(forResource: "qwen2.5", ofType: "jinja")
+            ?? Bundle.main.path(forResource: "qwen2.5", ofType: "jinja")
+        print("[local-e2e] chat template: \(tmpl ?? "NONE")")
+        XCTAssertEqual(pll_start(gguf.path, port, 32768, tmpl), 0)
         let modelID = try await waitForServer()
         print("[local-e2e] server ready, model id: \(modelID)")
 

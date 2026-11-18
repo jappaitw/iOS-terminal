@@ -10,14 +10,15 @@
 
 int llama_server(int argc, char **argv); // from libllama-server-impl
 
-extern "C" int pll_start(const char *model_path, int port, int context_size) {
+extern "C" int pll_start(const char *model_path, int port, int context_size, const char *chat_template_path) {
     static std::atomic_bool started{false};
     bool expected = false;
     if (!started.compare_exchange_strong(expected, true)) {
         return 1; // already running
     }
     std::string model = model_path ? model_path : "";
-    std::thread([model, port, context_size] {
+    std::string tmpl = chat_template_path ? chat_template_path : "";
+    std::thread([model, port, context_size, tmpl] {
         std::vector<std::string> args = {
             "llama-server",
             "-m", model,
@@ -29,6 +30,11 @@ extern "C" int pll_start(const char *model_path, int port, int context_size) {
             // the model can never emit a tool call.
             "--jinja",
         };
+        if (!tmpl.empty()) {
+            // A tool-aware template whose <tool_call> markup llama's parser detects.
+            args.push_back("--chat-template-file");
+            args.push_back(tmpl);
+        }
         std::vector<char *> argv;
         argv.reserve(args.size());
         for (auto &arg : args) {
