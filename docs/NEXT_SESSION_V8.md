@@ -36,7 +36,13 @@ fetch v8   # 或 gclient config + gclient sync,約 20GB
 # 然後讓 rusty_v8 指向它,或在該樹內建 lib
 ```
 或:手動 vendor 缺的 Rust ICU crates(icu_calendar_data-v2 等)到 `chromium_crates_io/vendor/`(`cargo vendor` 或從 chromium 源取)。
-或(較快備案):**不解 source build,改修預編庫的 magic mismatch** —— 找出 denoland iOS 預編 `release` lib 的確切 GN 設定(jitless? pointer compression?),用 `GN_ARGS`/features 讓 crate 消費端完全對齊,使 magic number 一致。這條沒驗證過,但可能比 20GB checkout 快。
+或(備案,**已試,發現死路**):修預編庫的 magic mismatch。調查結果:
+- `nm` denoland iOS `release` lib → **有 sandbox 符號**(`IsSandboxEnabled`、`SandboxableThread`、`src/sandbox/*`)→ lib 是 **sandbox + pointer compression** 編的。
+- 但 denoland **只發 `release`(非 sandbox)命名的 binding** for iOS,不發 `ptrcomp_sandbox_release` binding。
+- 試:啟用 `v8_enable_sandbox` feature + 把 `release` 的 binding/lib 別名成 `ptrcomp_sandbox_release` 快取檔 → 編譯連結成功,但 smoketest **仍 magic mismatch**,且預編庫報 `Embedder-vs-V8 build configuration mismatch`。
+- **結論:denoland iOS 預編包的 binding(非 sandbox 佈局)與 lib(sandbox 編)本身不一致,無法靠 feature 對齊**。→ 備案死路,**必須走 full-source build**。
+
+**所以下次唯一正解 = full chromium gclient V8 checkout**(見下),把缺的 vendored Rust ICU crates 一起帶進來。crates.io 精簡包不夠。
 
 ### 風險 / 備案
 
