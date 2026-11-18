@@ -29,6 +29,13 @@ extern "C" int pll_start(const char *model_path, int port, int context_size, con
             // Without --jinja the chat template ignores tool definitions and
             // the model can never emit a tool call.
             "--jinja",
+            // On memory-tight iOS devices the KV cache dominates. Flash
+            // attention + 8-bit KV quantization roughly halves it, so a 3B
+            // model with a useful context fits the app's ~RAM/2 budget
+            // instead of being OOM-killed mid-turn.
+            "--flash-attn", "on",
+            "--cache-type-k", "q8_0",
+            "--cache-type-v", "q8_0",
         };
         if (!tmpl.empty()) {
             // A tool-aware template whose <tool_call> markup llama's parser detects.

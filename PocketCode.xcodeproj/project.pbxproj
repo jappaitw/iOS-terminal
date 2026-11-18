@@ -92,6 +92,7 @@
 		C42A26FD0F164C66DFB5E250 /* Builtins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5178B136389BA8EF980003BE /* Builtins.swift */; };
 		C476D8D2CAF616253BCAA975 /* TreeSitterJSONRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = BCBEEB02D7716967C8EF04BF /* TreeSitterJSONRunestone */; };
 		C69D69C913CA07006A2280DE /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E2DD43F230F029102F0C73 /* App.swift */; };
+		D01341C77177B1B72B656974 /* V8SmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC056FFEF40639C57C05F0D1 /* V8SmokeTests.swift */; };
 		D346D348B6B215868E412412 /* ModelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 600917DB221FAF5DF1830A57 /* ModelStore.swift */; };
 		DA609049CF8D02493E0234CF /* LanguageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 392EF34B7CC8ACA14ED9A4C6 /* LanguageTests.swift */; };
 		DA91B1B92063D7B8843851F0 /* Languages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7433C856DA62D76100A463FB /* Languages.swift */; };
@@ -209,6 +210,7 @@
 		C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathUtilTests.swift; sourceTree = "<group>"; };
 		CA24CDB592691C17C9E50ADD /* CodexE2ETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexE2ETests.swift; sourceTree = "<group>"; };
 		D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSession.swift; sourceTree = "<group>"; };
+		DC056FFEF40639C57C05F0D1 /* V8SmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = V8SmokeTests.swift; sourceTree = "<group>"; };
 		DC98D580EE19DA748BBA834C /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		E9A2339A84E26A6139EF8C57 /* FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
 		EC92B4DBE3DBFF98B4CDB4F8 /* Git.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Git.swift; sourceTree = "<group>"; };
@@ -282,6 +284,7 @@
 				3687845290D50730FAE13489 /* PythonRuntimeTests.swift */,
 				C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */,
 				FF2F6FD9F595D2ED39082293 /* TerminalViewTests.swift */,
+				DC056FFEF40639C57C05F0D1 /* V8SmokeTests.swift */,
 			);
 			path = PocketCodeTests;
 			sourceTree = "<group>";
@@ -688,6 +691,7 @@
 				98156726EC8D7D2B3444B77A /* PythonRuntimeTests.swift in Sources */,
 				50C8BD4C63CD03B73BA4B6CE /* SearchAndGitTests.swift in Sources */,
 				085FAF17544DF6315C79602D /* TerminalViewTests.swift in Sources */,
+				D01341C77177B1B72B656974 /* V8SmokeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -862,7 +866,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -994,7 +998,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (

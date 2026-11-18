@@ -29,8 +29,9 @@ enum LocalModelBackend {
         }
 
         let template = templateName.flatMap { Bundle.main.path(forResource: $0, ofType: "jinja") }
-        out("\u{1B}[2mStarting local model…\u{1B}[0m\r\n")
-        let rc = pll_start(ggufPath, port, 32768, template)
+        let ctx = contextSizeForDevice()
+        out("\u{1B}[2mStarting local model… (context \(ctx / 1024)K)\u{1B}[0m\r\n")
+        let rc = pll_start(ggufPath, port, ctx, template)
         if rc != 0 {
             out("\u{1B}[33mLocal model already running or failed; using cloud Codex.\u{1B}[0m\r\n")
         }
@@ -56,6 +57,20 @@ enum LocalModelBackend {
         wire_api = "responses"
         """
         try? text.write(to: config, atomically: true, encoding: .utf8)
+    }
+
+    /// The KV cache grows with the conversation and, with a long agent loop, is
+    /// what pushes a memory-tight device past its jetsam limit mid-turn. An app
+    /// gets roughly half of physical RAM, and a 3B model's KV at q8_0 is ~20MB
+    /// per 1K tokens, so we size the context to the device: 8GB phones get 16K
+    /// (enough for codex's system prompt + a real task), 12GB+ get 32K.
+    private static func contextSizeForDevice() -> Int32 {
+        let gb = Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824
+        switch gb {
+        case ..<7:  return 8192    // 6GB (older/base devices)
+        case ..<11: return 16384   // 8GB (16 Pro, most current phones)
+        default:    return 32768   // 12GB+ (Pro Max / iPad)
+        }
     }
 
     private static func waitHealthy() async -> Bool {

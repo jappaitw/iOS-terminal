@@ -15,6 +15,22 @@ struct ModelSettingsView: View {
                     .font(.caption).foregroundStyle(VS.textDim)
             }
 
+            Section("Backend") {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Cloud GPT (Codex)")
+                        Text("Online · needs sign-in · flagship model")
+                            .font(.caption2).foregroundStyle(VS.textDim)
+                    }
+                    Spacer()
+                    if store.activeModelID == nil {
+                        Text("Active").font(.caption).foregroundStyle(VS.accent)
+                    } else {
+                        Button("Use") { store.activeModelID = nil }
+                    }
+                }
+            }
+
             Section("Local models") {
                 Text("This device: \(ramGB) GB RAM — suggested \(ramGB >= 12 ? "up to 4B" : "1.5B–3B")")
                     .font(.caption).foregroundStyle(VS.textDim)
