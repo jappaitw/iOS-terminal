@@ -170,3 +170,17 @@ V8 源碼:`kMagicNumber = 0xC0DE0000 ^ ExternalReferenceTable::kSize`(src/snapsh
 2. **snapshotless**:建置不嵌入 startup snapshot,`Isolate` 從零初始化(免反序列化、免 magic 檢查;啟動較慢,jitless 可行)。需研究此 V8 版是否允許空 snapshot。
 
 **本輪定位成果:** 把 magic_number 從上個 session 的「預編庫內部矛盾(其實是誤判)」修正為「**host-snapshot 的外部參考表與 iOS target 不對齊**」——這是精確、可被 Chromium 官方做法對照的根因。編譯已全通,只差這個 snapshot toolchain 對齊。
+
+### 2026-11-19 — 更正:OS 假設被實測推翻,magic 真因仍未定
+**上一節的 OS 根因是錯的,實測更正:** 用 `grep V8_TARGET_OS_*` 比對 host mksnapshot(`clang_arm64`)與 target 的實際編譯 defines → **兩者都定義 `V8_TARGET_OS_IOS`**(V8_TARGET_OS 依全域 `target_os="ios"`,不依 current_os)。所以:
+- host snapshot 與 target 的 `V8_TARGET_OS_IOS`、jitless、features **全部一致**
+- → `ExternalReferenceTable::kSize` 理論上相同 → `kMagicNumber` 本該吻合
+- → 但 `Isolate::new` 仍 abort on magic → **真因不是 OS、不是 jitless、不是 feature flags**
+
+**仍待查的候選(下個 session 從這裡,scientific 地逐一排除):**
+1. 確認 `libpocket_codex.a` 真的連結 **from-source** librusty_v8.a,而非 cargo 在完整 build 時又抓了 prebuilt v8(對 `.a` 做 `nm`/`strings` 找 snapshot 版本標記;比對 `librusty_v8.a` 的 mtime 與連結圖)。
+2. 確認嵌入的 snapshot blob 是本次 mksnapshot 產生的那份(`gn_out/.../snapshot.cc` 的 mtime vs 連結進 lib 的版本);排除 stale/double-snapshot。
+3. 查 `RUSTY_V8_SRC_BINDING_PATH` 是**下載的預編 binding** 還是本地生成 —— 預編 binding 對應的 V8 設定若與 from-source lib 的 `ExternalReferenceTable` 不同,API 層註冊的外部參考數會不一致。
+4. 實際印出兩邊的 `ExternalReferenceTable::kSize`(改 smoketest 或加 debug)直接比對,而非推論。
+
+**誠實結論:** V8 **編譯**已完全攻克(device+sim 庫產出);但 runtime 的 `magic_number` 真因**尚未定位**(已排除 OS/jitless/feature 三個假設)。這是個需要 scientific 逐一排除的 V8-internals 謎題,非本 session 能收斂。預編庫同錯,暗示共通因素(候選 1/3 最可疑)。
