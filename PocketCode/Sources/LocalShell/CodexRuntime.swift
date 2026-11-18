@@ -17,6 +17,10 @@ enum CodexRuntime {
     private static var started = false
     private static var client: CodexProtocolClient?
     private static var socketPath: String?
+    /// The code_mode the engine was actually started with. The engine reads its
+    /// config once at boot and there is no clean restart (no pc_stop), so a
+    /// backend switch mid-session can't re-tune this — we warn the user instead.
+    private static var engineCodeMode: Bool?
 
     /// The CODEX_HOME directory (config.toml, skills/, credentials).
     static var home: URL {
@@ -27,7 +31,7 @@ enum CodexRuntime {
     /// A dedicated protocol connection for the settings UI (skills list, MCP
     /// management). Boots the engine if needed. Returns nil with a message on failure.
     static func managementClient() -> (CodexProtocolClient?, String?) {
-        if let error = ensureStarted() { return (nil, error) }
+        if let error = ensureStarted(codeMode: true) { return (nil, error) }
         lock.lock(); let sock = socketPath; lock.unlock()
         guard let sock else { return (nil, "engine socket unknown") }
         let c = CodexProtocolClient(socketPath: sock)
@@ -38,13 +42,14 @@ enum CodexRuntime {
 
     /// Boots the app-server and connects. Returns an error string on failure;
     /// failures aren't sticky — the next `codex` tries again.
-    private static func ensureStarted() -> String? {
+    private static func ensureStarted(codeMode: Bool) -> String? {
         lock.lock(); defer { lock.unlock() }
         if started { return nil }
 
         let home = Self.home
         try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
-        ensureIOSFeatureDefaults(home: home)
+        ensureIOSFeatureDefaults(home: home, codeMode: codeMode)
+        engineCodeMode = codeMode
         // Tokens for MCP bearer_token_env_var live in the Keychain and are
         // exported into the process environment before the engine reads them.
         McpTokenStore.exportAllToEnvironment()
@@ -95,16 +100,24 @@ enum CodexRuntime {
         return nil
     }
 
-    /// The code-mode host (the V8 tool-orchestration isolate) runs in-process
-    /// on iOS over loopback gRPC — pin its features on, and migrate away the
-    /// `false` pins an earlier build wrote while we thought disabling was the fix.
-    private static func ensureIOSFeatureDefaults(home: URL) {
+    /// `code_mode` toggles with the active backend. Cloud gpt-6 drives tools
+    /// through the in-process V8 host (code-mode: the model writes JavaScript
+    /// that orchestrates tools). Local models can't emit code-mode JS, so forcing
+    /// them into code-mode stalls the turn — the model stream never completes and
+    /// codex loops on "Reconnecting… waiting for network". Local models must use
+    /// the classic/Direct tool path (plain function calls), which is what the
+    /// `code_mode = false` default gives a model with no explicit tool_mode.
+    /// `code_mode_host` (the V8 service) stays enabled regardless — cloud uses it.
+    private static func ensureIOSFeatureDefaults(home: URL, codeMode: Bool) {
         let config = home.appendingPathComponent("config.toml")
         var text = (try? String(contentsOf: config, encoding: .utf8)) ?? ""
-        text = text.replacingOccurrences(of: "code_mode = false", with: "code_mode = true")
+        let cm = codeMode ? "true" : "false"
+        text = text.replacingOccurrences(of: "code_mode = true", with: "code_mode = \(cm)")
+        text = text.replacingOccurrences(of: "code_mode = false", with: "code_mode = \(cm)")
         text = text.replacingOccurrences(of: "code_mode_host = false", with: "code_mode_host = true")
-        if !text.contains("code_mode_host") {
-            let lines = "code_mode = true\ncode_mode_host = true\n"
+        if !text.contains("code_mode =") {
+            let hostLine = text.contains("code_mode_host") ? "" : "code_mode_host = true\n"
+            let lines = "code_mode = \(cm)\n" + hostLine
             if let range = text.range(of: "[features]") {
                 text.insert(contentsOf: "\n" + lines, at: range.upperBound)
                 text = text.replacingOccurrences(of: "[features]\n\n", with: "[features]\n")
@@ -112,6 +125,8 @@ enum CodexRuntime {
                 if !text.isEmpty, !text.hasSuffix("\n") { text += "\n" }
                 text += "\n[features]\n" + lines
             }
+        } else if !text.contains("code_mode_host"), let range = text.range(of: "[features]") {
+            text.insert(contentsOf: "\ncode_mode_host = true", at: range.upperBound)
         }
         try? text.write(to: config, atomically: true, encoding: .utf8)
     }
@@ -121,13 +136,20 @@ enum CodexRuntime {
         // Tools the agent runs route back through this shell's workspace.
         CodexHostBridge.install(root: ctx.state.sandbox.root)
 
-        if let error = ensureStarted() { return ctx.fail(error, status: 127) }
+        // The backend decides code_mode: a local model uses the classic tool
+        // path (code_mode off), cloud gpt-6 uses the V8 code-mode host.
+        let wantLocal = await MainActor.run { ModelStore.shared.activeModelID != nil }
+        if let error = ensureStarted(codeMode: !wantLocal) { return ctx.fail(error, status: 127) }
         guard let client, let input = ctx.terminalInput else {
             return ctx.fail("codex needs an interactive terminal", status: 1)
         }
 
         func out(_ s: String) { ctx.stdout.write(s) }
         out("\u{1B}[1mCodex\u{1B}[0m — on-device AI coding agent. Type \u{1B}[2m/exit\u{1B}[0m to leave.\r\n")
+        // The engine config is fixed at boot; a backend switch needs a relaunch.
+        if engineCodeMode != !wantLocal {
+            out("\u{1B}[33mRestart the app to switch tool mode between cloud and local.\u{1B}[0m\r\n")
+        }
 
         // A local model, if the user picked one, serves the turn offline — no sign-in.
         let local = await LocalModelBackend.ensureRunning(out: out)
