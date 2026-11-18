@@ -16,6 +16,10 @@
 
 關鍵洞察:**本機與相容端點兩條路都走 classic chat/completions,不經 code-mode** → 它們天然避開了今天卡住訂閱 gpt-6 的 V8 snapshot 問題。
 
+## 決策:模型一律按需下載,不預裝(2026-11-18)
+
+**app 內建的只有 llama.cpp 引擎(數十 MB);本機模型一律由用戶自選下載。** 理由:預裝 1–2GB 模型會讓 App Store 下載巨大(傷轉換、觸發 WiFi-only 限制)、綁死單一模型、懲罰不用本機的用戶。不下載任何模型也完全可用(走 Codex 雲端 / API key)。
+
 ## 設定頁:AI Model
 
 ```
