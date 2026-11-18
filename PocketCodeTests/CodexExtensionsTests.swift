@@ -52,7 +52,9 @@ final class CodexExtensionsTests: XCTestCase {
         let config = Self.codexHome.appendingPathComponent("config.toml")
         let original = try? String(contentsOf: config, encoding: .utf8)
         try FileManager.default.createDirectory(at: Self.codexHome, withIntermediateDirectories: true)
-        let newConfig = (original ?? "") + "\n[mcp_servers.deepwiki]\nurl = \"https://mcp.deepwiki.com/mcp\"\n"
+        // A name nothing else uses: colliding with manually-planted sections
+        // would make the TOML invalid (duplicate keys) and kill config loading.
+        let newConfig = (original ?? "") + "\n[mcp_servers.pocodetest]\nurl = \"https://mcp.deepwiki.com/mcp\"\n"
         try newConfig.write(to: config, atomically: true, encoding: .utf8)
         defer {
             if let original { try? original.write(to: config, atomically: true, encoding: .utf8) }
@@ -64,9 +66,9 @@ final class CodexExtensionsTests: XCTestCase {
         let result = client.rawRequest(method: "mcpServerStatus/list", params: [:])
         let data = result?["data"] as? [[String: Any]]
         XCTAssertNotNil(data, "mcpServerStatus/list returned no data: \(result ?? [:])")
-        let entry = (data ?? []).first { ($0["name"] as? String) == "deepwiki" }
-        XCTAssertNotNil(entry, "deepwiki server not listed: \(String(describing: data).prefix(600))")
+        let entry = (data ?? []).first { ($0["name"] as? String) == "pocodetest" }
+        XCTAssertNotNil(entry, "pocodetest server not listed: \(String(describing: data).prefix(600))")
         // Connection state depends on the network; listing proves registration.
-        print("[ext-test] deepwiki status: \(entry ?? [:])")
+        print("[ext-test] pocodetest status: \(entry ?? [:])")
     }
 }

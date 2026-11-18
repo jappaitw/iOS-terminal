@@ -30,6 +30,7 @@
 		385111EFFB00638C31070C67 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7CC9261C691A0C0976BDE70 /* Commands.swift */; };
 		3B0F683FB41AF7914AC4080D /* CodexRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA061D823397F34BA998ECE /* CodexRuntime.swift */; };
 		3D1421B7F09748CFC23A6B67 /* PrivateKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D7DF1180249246978A4394 /* PrivateKeys.swift */; };
+		40F90E60D31C127BF5A368E5 /* SkillSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C66FED1C18EC5A534CDCA24 /* SkillSync.swift */; };
 		432562B5F8510625428DE229 /* ShellParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B527D8581A96F64959F1C3 /* ShellParser.swift */; };
 		46FF224EF3EF3143A750CFB1 /* TreeSitterYAMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = F48AF870890CF16744D9B302 /* TreeSitterYAMLRunestone */; };
 		48904F1B95EF53B71F55596B /* Python.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 62D0F3C9019637B448E0F39F /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -57,6 +58,7 @@
 		7E2E8001CC6C4D231E0C4884 /* ExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850F700369505CBA2D4555FD /* ExplorerView.swift */; };
 		805D4B242CCDD6937EB16F5E /* FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A2339A84E26A6139EF8C57 /* FileSystem.swift */; };
 		837F99BEBC18C1D673ADFFA3 /* PortForward.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1092BCE1A7BB035737B19078 /* PortForward.swift */; };
+		840A244E302DFF7278AE2759 /* CodexE2ETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA24CDB592691C17C9E50ADD /* CodexE2ETests.swift */; };
 		8436605E7F4FCF9A5CA8A923 /* TreeSitterGoRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = C1A9CB6553D44BF331146754 /* TreeSitterGoRunestone */; };
 		84EF8FE6216AB1CC33B52CD9 /* BuiltinsExtra.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6192A2D5A2E0A882C56A341 /* BuiltinsExtra.swift */; };
 		8AFA9DCB0D1D0A84E2E3E610 /* TreeSitterSwiftRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = C596376B087064EC8D9C08A6 /* TreeSitterSwiftRunestone */; };
@@ -147,6 +149,7 @@
 		1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pocket_python.c; sourceTree = "<group>"; };
 		22D7DF1180249246978A4394 /* PrivateKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeys.swift; sourceTree = "<group>"; };
 		2568E3643B7F37A9967EE519 /* CodexExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexExtensionsTests.swift; sourceTree = "<group>"; };
+		2C66FED1C18EC5A534CDCA24 /* SkillSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillSync.swift; sourceTree = "<group>"; };
 		3451D64459E967828463C0B4 /* HostExec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostExec.swift; sourceTree = "<group>"; };
 		356B37D833ED5AE59F37A0CC /* CodexProtocolClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexProtocolClient.swift; sourceTree = "<group>"; };
 		3687845290D50730FAE13489 /* PythonRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntimeTests.swift; sourceTree = "<group>"; };
@@ -186,6 +189,7 @@
 		C4336048F03C48F5F7EAFD13 /* SearchAndGitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAndGitTests.swift; sourceTree = "<group>"; };
 		C584A948FC3A6429035CBC36 /* CodexLab-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CodexLab-Bridging-Header.h"; sourceTree = "<group>"; };
 		C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathUtilTests.swift; sourceTree = "<group>"; };
+		CA24CDB592691C17C9E50ADD /* CodexE2ETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexE2ETests.swift; sourceTree = "<group>"; };
 		D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSession.swift; sourceTree = "<group>"; };
 		DC98D580EE19DA748BBA834C /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		E9A2339A84E26A6139EF8C57 /* FileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
@@ -246,6 +250,7 @@
 			isa = PBXGroup;
 			children = (
 				78FE62ACE76118D1994AFF57 /* BuiltinsExtraTests.swift */,
+				CA24CDB592691C17C9E50ADD /* CodexE2ETests.swift */,
 				2568E3643B7F37A9967EE519 /* CodexExtensionsTests.swift */,
 				4B1CBBF647A9081028A71AF7 /* CodexRuntimeTests.swift */,
 				3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */,
@@ -293,6 +298,7 @@
 				22D7DF1180249246978A4394 /* PrivateKeys.swift */,
 				DC98D580EE19DA748BBA834C /* Search.swift */,
 				84FAAAB7BDC8CC8CAC20AC8C /* Settings.swift */,
+				2C66FED1C18EC5A534CDCA24 /* SkillSync.swift */,
 				BD585EAC031FAA4149CCB381 /* SSHConnection.swift */,
 				7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */,
 				D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */,
@@ -613,6 +619,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				19FDAEFB1AF701AD9B14D096 /* BuiltinsExtraTests.swift in Sources */,
+				840A244E302DFF7278AE2759 /* CodexE2ETests.swift in Sources */,
 				AFEF654FE4368787F71BB6BD /* CodexExtensionsTests.swift in Sources */,
 				384FDD1A128ADA54795E2BB3 /* CodexRuntimeTests.swift in Sources */,
 				EBDA7802AE686C14E8841C5E /* KeyFixtures.swift in Sources */,
@@ -659,6 +666,7 @@
 				9B4210DAF2B02756228B8112 /* Settings.swift in Sources */,
 				432562B5F8510625428DE229 /* ShellParser.swift in Sources */,
 				2AF4728094C2CECD15CD4FCE /* ShellRuntime.swift in Sources */,
+				40F90E60D31C127BF5A368E5 /* SkillSync.swift in Sources */,
 				F34644F4DDD99F2B54B2137F /* TerminalPanel.swift in Sources */,
 				B5BED6C8CB938CDCF4B4595E /* TerminalSession.swift in Sources */,
 				712A02705B440FADDA048542 /* Theme.swift in Sources */,

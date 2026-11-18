@@ -126,31 +126,61 @@ enum McpTokenStore {
 struct SkillsSettingsView: View {
     @State private var skills: [(name: String, description: String)] = []
     @State private var status = "Loading…"
+    @State private var syncSources: [SkillSync.Source] = []
+    @State private var pickingFolder = false
 
     var body: some View {
         List {
-            if skills.isEmpty {
-                Text(status).foregroundStyle(VS.textDim)
-            }
-            ForEach(skills, id: \.name) { skill in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(skill.name)
-                    if !skill.description.isEmpty {
-                        Text(skill.description).font(.caption).foregroundStyle(VS.textDim)
+            Section("Installed") {
+                if skills.isEmpty {
+                    Text(status).foregroundStyle(VS.textDim)
+                }
+                ForEach(skills, id: \.name) { skill in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(skill.name)
+                        if !skill.description.isEmpty {
+                            Text(skill.description).font(.caption).foregroundStyle(VS.textDim)
+                        }
                     }
                 }
             }
             Section {
+                ForEach(syncSources) { source in
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Label(source.name, systemImage: "arrow.triangle.2.circlepath.icloud")
+                            Spacer()
+                            Text(source.lastResult ?? "").font(.caption).foregroundStyle(VS.textDim)
+                        }
+                    }
+                }
+                .onDelete { offsets in
+                    for index in offsets { SkillSync.remove(syncSources[index]) }
+                    syncSources = SkillSync.sources()
+                    Task { await reload() }
+                }
+                Button { pickingFolder = true } label: {
+                    Label("Add Synced Folder…", systemImage: "folder.badge.plus")
+                }
+            } header: {
+                Text("Synced Folders")
             } footer: {
-                Text("Add skills by dropping a folder containing SKILL.md into Files → Pocode → codex-home/skills. Codex picks them up automatically.")
+                Text("Pick a folder from iCloud Drive, Google Drive, Dropbox or any Files provider. Its skills are mirrored on every visit — point your desktop's ~/.codex/skills at the same folder and they follow you across devices. You can also drop skills directly into Files → Pocode → codex-home/skills.")
             }
         }
         .navigationTitle("Skills")
+        .fileImporter(isPresented: $pickingFolder, allowedContentTypes: [.folder]) { result in
+            if case .success(let url) = result {
+                SkillSync.add(url: url)
+                Task { await reload() }
+            }
+        }
         .task { await reload() }
         .refreshable { await reload() }
     }
 
     private func reload() async {
+        syncSources = await Task.detached { SkillSync.syncAll() }.value
         let loaded: [(String, String)]? = await Task.detached(priority: .userInitiated) { () -> [(String, String)]? in
             let (client, error) = CodexRuntime.managementClient()
             guard let client else { await MainActor.run { status = error ?? "engine unavailable" }; return nil }

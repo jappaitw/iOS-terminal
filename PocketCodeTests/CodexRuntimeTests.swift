@@ -31,6 +31,10 @@ final class CodexRuntimeTests: XCTestCase {
         XCTAssertTrue(stdout.contains("Codex"), "missing banner: \(stdout)")
         XCTAssertTrue(stdout.contains("[1] ChatGPT") || stdout.contains("Signed in"),
                       "expected the sign-in gate or an existing session: \(stdout)")
-        XCTAssertEqual(status, 1, "cancelled sign-in should exit 1; stderr: \(stderr)")
+        // Signed-out: EOF cancels the sign-in gate (exit 1). Signed-in (the
+        // developer's simulator session persists in CODEX_HOME): EOF leaves
+        // the prompt loop cleanly (exit 0).
+        let expected: Int32 = stdout.contains("Signed in") ? 0 : 1
+        XCTAssertEqual(status, expected, "stdout: \(stdout) stderr: \(stderr)")
     }
 }
