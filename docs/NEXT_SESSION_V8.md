@@ -157,3 +157,16 @@ target args.gn:`v8_jitless=true`、`v8_enable_turbofan/sparkplug/maglev=false`�
 4. 若 device snapshot-toolchain 太難:sim(開發/驗證)用非 jitless 跑通 code-mode,device 等 toolchain 修好。
 
 **本質進度:** V8 從源碼**編得出 iOS device + sim 庫**(死路已破);剩 runtime 的 jitless-snapshot 對齊。
+
+### 2026-11-19 — magic_number 真因鎖定:host snapshot toolchain 的外部參考表 ≠ iOS target
+V8 源碼:`kMagicNumber = 0xC0DE0000 ^ ExternalReferenceTable::kSize`(src/snapshot/snapshot-data.h:46)。
+- snapshot 由 **host mksnapshot**(`gn_out/clang_arm64/`,`dump_build_config`:**is_ios=false**、has_jitless=true、無 wasm/turbofan)產生,寫入 host 的 `kSize`。
+- target lib(iOS 預設 toolchain,**is_ios=true** / 定義 `V8_TARGET_OS_IOS`)用自己的 `kSize` 讀取。
+- 兩者 jitless/feature flags **一致**,但 `V8_TARGET_OS_IOS` vs `V8_TARGET_OS_MACOS` 的編譯差異使外部參考表大小不同 → `kMagicNumber` 不同 → `Isolate::new` 反序列化 abort。
+- 這也解釋**預編庫同錯**:denoland 的 iOS snapshot 同樣是 host 產生、OS 不對齊。**這就是 rusty_v8 不支援 iOS from-source 的根本原因。**
+
+**真正的修法(下個深入點,擇一):**
+1. **對齊 snapshot toolchain**:讓產生 snapshot 的 mksnapshot 以 `V8_TARGET_OS_IOS` 編譯其 V8(外部參考表才會和 iOS target 一致),但 binary 仍在 mac 上執行。Chromium 官方 iOS build 用專門配置的 `v8_snapshot_toolchain` 做到;rusty_v8 的 from-source iOS 沒接這條。需 patch v8 的 GN toolchain 定義(在 crate 的 `third_party/rust`/`gni/snapshot_toolchain.gni` 或以自訂 toolchain 強制 target_os=ios 的 external-ref 編譯)。
+2. **snapshotless**:建置不嵌入 startup snapshot,`Isolate` 從零初始化(免反序列化、免 magic 檢查;啟動較慢,jitless 可行)。需研究此 V8 版是否允許空 snapshot。
+
+**本輪定位成果:** 把 magic_number 從上個 session 的「預編庫內部矛盾(其實是誤判)」修正為「**host-snapshot 的外部參考表與 iOS target 不對齊**」——這是精確、可被 Chromium 官方做法對照的根因。編譯已全通,只差這個 snapshot toolchain 對齊。
