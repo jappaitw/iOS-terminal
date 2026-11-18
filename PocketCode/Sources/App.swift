@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct PocketCodeApp: App {
     @StateObject private var hosts = HostStore()
+    @StateObject private var settings = AppSettings.shared
 
     init() {
         LocalFileSystem.seedWelcomeProjectIfNeeded()
@@ -13,7 +14,7 @@ struct PocketCodeApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(hosts)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(settings.colorScheme)
                 .tint(VS.accent)
         }
         .commands { WorkspaceCommands() }

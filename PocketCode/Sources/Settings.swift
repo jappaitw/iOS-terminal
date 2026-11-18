@@ -14,6 +14,8 @@ final class AppSettings: ObservableObject {
     @Published var terminalFontSize: Double { didSet { save("terminalFontSize", terminalFontSize) } }
     @Published var showKeyRow: Bool { didSet { save("showKeyRow", showKeyRow) } }
     @Published var showHiddenFiles: Bool { didSet { save("showHiddenFiles", showHiddenFiles) } }
+    /// "system" / "light" / "dark" — mirrors iOS's own appearance choices.
+    @Published var appearance: String { didSet { save("appearance", appearance) } }
 
     static let fontRange: ClosedRange<Double> = 9...24
 
@@ -29,6 +31,16 @@ final class AppSettings: ObservableObject {
         terminalFontSize = v("terminalFontSize", 12)
         showKeyRow = v("showKeyRow", true)
         showHiddenFiles = v("showHiddenFiles", true)
+        appearance = v("appearance", "dark")
+    }
+
+    /// nil lets the system decide (the "follow device" choice).
+    var colorScheme: ColorScheme? {
+        switch appearance {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
     }
 
     private func save(_ key: String, _ value: Any) { defaults.set(value, forKey: "settings." + key) }
@@ -49,6 +61,13 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("Appearance") {
+                    Picker("Appearance", selection: $settings.appearance) {
+                        Text("Follow Device").tag("system")
+                        Text("Light").tag("light")
+                        Text("Dark").tag("dark")
+                    }
+                }
                 Section("Editor") {
                     Stepper(value: $settings.editorFontSize, in: AppSettings.fontRange, step: 1) {
                         LabeledContent("Font Size", value: "\(Int(settings.editorFontSize)) pt")

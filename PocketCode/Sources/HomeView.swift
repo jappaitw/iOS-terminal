@@ -55,7 +55,15 @@ struct HomeView: View {
             }
             .scrollContentBackground(.hidden)
             .background(VS.sidebarBG)
-            .navigationTitle("PocketCode")
+            .navigationTitle("Pocode")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                Text("Pocket AI studio")
+                    .font(.subheadline)
+                    .foregroundStyle(VS.textDim)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 6)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showSettings = true } label: { Image(systemName: "gearshape") }
