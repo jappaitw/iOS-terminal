@@ -30,6 +30,17 @@
 | SmolLM3 | 弱(極小) | Apache-2.0 | 有限 |
 | 用戶自訂 GGUF | — | — | 看模型 |
 
+### Tool-calling 實測結果(2026-11-18,模擬器探針)
+
+| 模型 | template | 結果 | 入選 |
+|---|---|---|---|
+| Qwen2.5-Instruct 1.5B/3B | qwen2.5 | ✅ 結構化 function_call | ✅ |
+| Llama 3.2 3B Instruct | llama3 | ✅ 結構化 function_call | ✅ |
+| DeepSeek-R1-Distill-Qwen 1.5B | deepseek-r1 | ❌ 自創 `<｜tool｜…｜>` 格式、幻想路徑(推理蒸餾版) | ✗ |
+| Phi-4-mini-instruct | 內嵌 | ❌ 純文字(內嵌 template 無工具段) | ✗(待專屬 template 調校) |
+
+精選清單首批:Qwen2.5-Instruct(1.5B/3B)+ Llama 3.2 3B。bundled templates:`qwen2.5.jinja`、`llama3.jinja`、`deepseek-r1.jinja`。
+
 **精選清單選模標準 = tool-calling 實測可靠 + 授權乾淨 + 配好 chat template**,非名氣。每個模型家族工具格式不同,需逐一實測並備好對應 template(`PocketCode/Resources/llama-templates/`)。自訂下載的模型放「進階」,標示「工具呼叫可能不穩」。
 
 ## 決策:模型一律按需下載,不預裝(2026-11-18)

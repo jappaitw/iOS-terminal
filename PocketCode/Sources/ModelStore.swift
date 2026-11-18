@@ -35,6 +35,10 @@ final class ModelStore: ObservableObject {
                      sizeBytes: 1_000_000_000,
                      url: URL(string: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf")!,
                      template: "qwen2.5", note: "Light · simple edits & completion", minRAMGB: 8),
+        CatalogModel(id: "Llama-3.2-3B-Instruct-Q4_K_M", name: "Llama 3.2 3B Instruct",
+                     sizeBytes: 2_000_000_000,
+                     url: URL(string: "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf")!,
+                     template: "llama3", note: "Tool-calling verified · general-purpose", minRAMGB: 8),
     ]
 
     var modelsDir: URL {

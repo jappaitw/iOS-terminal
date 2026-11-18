@@ -17,9 +17,12 @@ final class LocalModelE2ETests: XCTestCase {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let models = (try? FileManager.default.contentsOfDirectory(at: docs.appendingPathComponent("models"),
                                                                    includingPropertiesForKeys: nil)) ?? []
-        guard let gguf = models.first(where: { $0.pathExtension == "gguf" }) else {
-            throw XCTSkip("no GGUF in Documents/models")
+        // POCODE_MODEL filters to one gguf by filename substring (verify specific models).
+        let want = ProcessInfo.processInfo.environment["POCODE_MODEL"]
+        guard let gguf = models.first(where: { $0.pathExtension == "gguf" && (want == nil || $0.lastPathComponent.contains(want!)) }) else {
+            throw XCTSkip("no matching GGUF in Documents/models")
         }
+        print("[local-e2e] model file: \(gguf.lastPathComponent)")
 
         // 1. Provider config BEFORE the engine boots (fresh process per run).
         let home = CodexRuntime.home
@@ -41,8 +44,12 @@ final class LocalModelE2ETests: XCTestCase {
         // codex's system preamble alone is ~10k tokens; Qwen2.5 supports 32k.
         // Qwen2.5-Coder's baked-in template lacks <tool_call> markup, so hand it
         // the tool-aware Qwen2.5 template bundled in Resources.
-        let tmpl = Bundle(for: Self.self).path(forResource: "qwen2.5", ofType: "jinja")
-            ?? Bundle.main.path(forResource: "qwen2.5", ofType: "jinja")
+        // POCODE_TMPL picks the chat template (qwen2.5 / llama3 / deepseek-r1);
+        // empty uses the model's embedded template (Phi).
+        let tmplName = ProcessInfo.processInfo.environment["POCODE_TMPL"] ?? "qwen2.5"
+        let tmpl = tmplName.isEmpty ? nil :
+            (Bundle(for: Self.self).path(forResource: tmplName, ofType: "jinja")
+             ?? Bundle.main.path(forResource: tmplName, ofType: "jinja"))
         print("[local-e2e] chat template: \(tmpl ?? "NONE")")
         XCTAssertEqual(pll_start(gguf.path, port, 32768, tmpl), 0)
         let modelID = try await waitForServer()

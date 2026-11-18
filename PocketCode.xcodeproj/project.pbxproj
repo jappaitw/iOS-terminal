@@ -56,6 +56,7 @@
 		712A02705B440FADDA048542 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A98E635BCF69DC10EE2A791 /* Theme.swift */; };
 		7206C328B6D3972016D83B51 /* CodexLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121D67B9B434852B1AEA0792 /* CodexLabApp.swift */; };
 		76ACD022C207BE738D3B01F5 /* TreeSitterCRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 51B364A191483F54BB61B256 /* TreeSitterCRunestone */; };
+		7A1084E5FFBF98B5D356F829 /* llama3.jinja in Resources */ = {isa = PBXBuildFile; fileRef = 4EA582D5E80E84FC0F40C15F /* llama3.jinja */; };
 		7A7144FD618AECF65C44AA35 /* qwen2.5.jinja in Resources */ = {isa = PBXBuildFile; fileRef = BF341065C065944839562292 /* qwen2.5.jinja */; };
 		7E1AA7637D6C11913D0664E3 /* BuiltinsExtra.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6192A2D5A2E0A882C56A341 /* BuiltinsExtra.swift */; };
 		7E2E8001CC6C4D231E0C4884 /* ExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850F700369505CBA2D4555FD /* ExplorerView.swift */; };
@@ -87,6 +88,7 @@
 		B3EF423C094C6DC84AB5F286 /* PrivateKeyParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10284767E38CBC9495600BE /* PrivateKeyParserTests.swift */; };
 		B5BED6C8CB938CDCF4B4595E /* TerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */; };
 		C22E24A08C0E8ECC2493CDB6 /* TreeSitterHTMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 7A5257CD1845D3669F6DD764 /* TreeSitterHTMLRunestone */; };
+		C264FD1CE62ADECC0657AE19 /* deepseek-r1.jinja in Resources */ = {isa = PBXBuildFile; fileRef = 1452FB477AAE5872EF702ACC /* deepseek-r1.jinja */; };
 		C42A26FD0F164C66DFB5E250 /* Builtins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5178B136389BA8EF980003BE /* Builtins.swift */; };
 		C476D8D2CAF616253BCAA975 /* TreeSitterJSONRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = BCBEEB02D7716967C8EF04BF /* TreeSitterJSONRunestone */; };
 		C69D69C913CA07006A2280DE /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E2DD43F230F029102F0C73 /* App.swift */; };
@@ -154,6 +156,7 @@
 		1092BCE1A7BB035737B19078 /* PortForward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForward.swift; sourceTree = "<group>"; };
 		121D67B9B434852B1AEA0792 /* CodexLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexLabApp.swift; sourceTree = "<group>"; };
 		13C0AE4D154994285871F04C /* CodexHostBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexHostBridge.swift; sourceTree = "<group>"; };
+		1452FB477AAE5872EF702ACC /* deepseek-r1.jinja */ = {isa = PBXFileReference; path = "deepseek-r1.jinja"; sourceTree = "<group>"; };
 		1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pocket_python.c; sourceTree = "<group>"; };
 		20D87AE8B315EF2DCDF3EB4D /* LocalModelBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModelBackend.swift; sourceTree = "<group>"; };
 		22D7DF1180249246978A4394 /* PrivateKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeys.swift; sourceTree = "<group>"; };
@@ -167,6 +170,7 @@
 		3CBB2E431B1A49326B42E072 /* pocket_llama.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pocket_llama.h; sourceTree = "<group>"; };
 		4796B63A1FC0CA6877E8B1C1 /* LocalModelE2ETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModelE2ETests.swift; sourceTree = "<group>"; };
 		4B1CBBF647A9081028A71AF7 /* CodexRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRuntimeTests.swift; sourceTree = "<group>"; };
+		4EA582D5E80E84FC0F40C15F /* llama3.jinja */ = {isa = PBXFileReference; path = llama3.jinja; sourceTree = "<group>"; };
 		50A8682C83776C6CC8A37E4A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		5178B136389BA8EF980003BE /* Builtins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Builtins.swift; sourceTree = "<group>"; };
 		580DBF2E8D0464BE7A9B2F2E /* Hosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hosts.swift; sourceTree = "<group>"; };
@@ -352,6 +356,8 @@
 		74F4D28136D983011121EC22 /* llama-templates */ = {
 			isa = PBXGroup;
 			children = (
+				1452FB477AAE5872EF702ACC /* deepseek-r1.jinja */,
+				4EA582D5E80E84FC0F40C15F /* llama3.jinja */,
 				BF341065C065944839562292 /* qwen2.5.jinja */,
 			);
 			path = "llama-templates";
@@ -593,6 +599,8 @@
 				0C78082812EF0D1CDBF10306 /* Assets.xcassets in Resources */,
 				18CB8DDC5406F3BCA1926579 /* PrivacyInfo.xcprivacy in Resources */,
 				FC0EECEEEE079430F0218D10 /* PythonApp in Resources */,
+				C264FD1CE62ADECC0657AE19 /* deepseek-r1.jinja in Resources */,
+				7A1084E5FFBF98B5D356F829 /* llama3.jinja in Resources */,
 				7A7144FD618AECF65C44AA35 /* qwen2.5.jinja in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
