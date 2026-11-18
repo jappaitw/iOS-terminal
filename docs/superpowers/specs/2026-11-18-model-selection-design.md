@@ -55,6 +55,40 @@ codex 引擎的 `[model_providers.*]` + `thread/start { model, modelProvider }` 
 
 Qwen2.5-Coder(Apache-2.0,首選)、DeepSeek-Coder-V2-Lite(MIT)、CodeGemma/Gemma3(省記憶體)、Phi-4-mini(MIT)、SmolLM3(極小備援)。
 
+## 關鍵發現(2026-11-18):codex 只講 Responses API
+
+codex 引擎已移除 Chat API,**只收 `/v1/responses`**(連 Ollama 整合都 `ensure_responses_supported`)。但實際世界(DeepSeek、Claude、llama.cpp server、多數 Ollama)都講 `/v1/chat/completions`。因此「貼 key 就能用」不成立,中間必須一層格式轉換。
+
+**解法:一個 in-process「Responses ↔ Chat 轉接器」,一次解鎖本機 + 所有相容雲端。**
+
+```
+codex ─Responses→ ★ Pocode 轉接器 ★ ─Chat→ ┬ 本機 llama.cpp
+                  (loopback, 雙向翻譯)       ├ DeepSeek / Claude / Gemini(key)
+                                            └ 任何 Chat API 服務
+```
+
+兩端皆由我們掌控,欄位對應公開已知 → 確定性工程,非未知風險。V8/code-mode 不影響此路(走 classic responses,無需 JS 編排)。
+
+## 轉接器不需要了(2026-11-18 查證)
+
+**llama.cpp server 已原生支援 `/v1/responses`,commit 標題明寫 "Codex CLI compatibility"**(PR #19720、#21174)。Ollama / LM Studio / vLLM 亦然。→ **codex 直接接 llama.cpp 的 responses 端點,零翻譯層。** 自寫 Responses↔Chat 轉接器取消。
+
+雲端相容端點(DeepSeek 等)若只講 Chat 而不講 Responses,屆時才需要輕量轉接(或找講 Responses 的供應商);但本機路線已無此需求。
+
+## 執行順序(修正後 — 直線,無轉接器)
+
+1. **本機 llama.cpp PoC** — 嵌 llama.cpp(含 `/v1/responses` + Metal),in-process server,codex base_url 指向它,Qwen2.5-Coder 直接驅動工具。llama.cpp 嵌 iOS 為成熟技術。
+2. 模型下載管理 GUI + 多尺寸 + RAM 建議。
+3. 雲端相容端點(視供應商 Responses 支援度,必要時加輕量轉接)。
+4. **回來解 V8 code-mode**(Codex/gpt-6 旗艦,必須)。
+
+架構(無轉接器):
+```
+Pocode 嵌 llama.cpp(/v1/responses, Metal) → in-process 127.0.0.1:PORT
+   → codex [model_providers.local] base_url=http://127.0.0.1:PORT/v1, wire_api=responses
+   → Qwen 驅動工具 → host-exec → LocalShell → 內嵌 Python
+```
+
 ## 里程碑
 
 1. llama.cpp iOS 建置 + `pocket-llama` in-process server + 單一內建小模型(Qwen2.5-Coder 0.5B)PoC → codex 接本機端點跑一輪
