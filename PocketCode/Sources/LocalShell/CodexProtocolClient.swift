@@ -80,6 +80,7 @@ final class CodexProtocolClient {
             if readable < 0 { return false }
             if readable == 0 { continue }
             guard let msg = readMessage() else { return false }
+            if answerServerRequest(msg) { continue }
             if msg["method"] as? String == "account/login/completed",
                let params = msg["params"] as? [String: Any] {
                 let ok = params["success"] as? Bool ?? false
@@ -120,11 +121,7 @@ final class CodexProtocolClient {
         var reasoningShown = false
         while true {
             guard let msg = readMessage() else { out("\r\n\u{1B}[31m(connection closed)\u{1B}[0m\r\n"); return }
-            // Approvals: auto-approve (tools are already confined to the workspace).
-            if msg["method"] != nil, let id = msg["id"] {
-                reply(id: id, result: ["decision": "approved"])
-                continue
-            }
+            if answerServerRequest(msg) { continue }
             guard let method = msg["method"] as? String,
                   let params = msg["params"] as? [String: Any] else { continue }
             switch method {
@@ -193,10 +190,24 @@ final class CodexProtocolClient {
     private func awaitResponse(id: Int) -> [String: Any]? {
         while let msg = readMessage() {
             if (msg["id"] as? Int) == id { return msg["result"] as? [String: Any] ?? [:] }
-            // Server-initiated requests during the wait: approve and keep reading.
-            if msg["method"] != nil, let reqId = msg["id"] { reply(id: reqId, result: ["decision": "approved"]) }
+            _ = answerServerRequest(msg)
         }
         return nil
+    }
+
+    /// Server→client requests. Approvals are auto-accepted — the tools they
+    /// gate already run confined to the workspace — and anything we don't
+    /// understand gets a proper JSON-RPC error instead of a malformed reply
+    /// (the codex engine rejects unknown decision values, killing the tool).
+    private func answerServerRequest(_ msg: [String: Any]) -> Bool {
+        guard let method = msg["method"] as? String, let id = msg["id"] else { return false }
+        switch method {
+        case "item/commandExecution/requestApproval", "item/fileChange/requestApproval":
+            reply(id: id, result: ["decision": "accept"])
+        default:
+            sendRaw(["id": id, "error": ["code": -32601, "message": "not supported by this client: \(method)"]])
+        }
+        return true
     }
 
     private func readMessage() -> [String: Any]? {

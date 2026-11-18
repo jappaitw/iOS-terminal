@@ -202,8 +202,8 @@ final class CodexClient: ObservableObject {
                 DispatchQueue.main.async { self.status = "turn done — see log" }
             }
             if let id = obj["id"] {
-                // Server request needing an answer (e.g. approvals): approve everything in the lab.
-                reply(id: id, result: ["decision": "approved"])
+                // Server request needing an answer (approvals): accept in the lab.
+                reply(id: id, result: ["decision": "accept"])
             }
             return
         }
