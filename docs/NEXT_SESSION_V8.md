@@ -57,3 +57,32 @@ fetch v8   # 或 gclient config + gclient sync,約 20GB
 - 三引擎連結成功(CPython + Codex + llama.cpp),V8 補上即全通
 
 ## 這條線完成 = gpt-6 旗艦的工具迴圈打通,與本機模型(已運作)並列。
+
+---
+
+## 2026-11-18 夜 — 重大突破:依賴迷宮全通,卡點前移到 Rust std 工具鏈
+
+**推翻了「必須 20GB full chromium」的舊結論。** 實際只需 **V8 standalone gclient checkout**(~4.3GB),關鍵是**版本要對齊**。
+
+### 打通的關卡鏈(依序)
+1. crates.io 的 rusty_v8 **精簡包把整個 `third_party/rust/chromium_crates_io/` 子樹拔掉** → 從 gclient v8 樹複製回來。
+2. ICU4X data crate 在 chromium 樹裡是 **`is_placeholder = true` 空殼**(chromium 自己產 ICU 資料)→ 用 cargo registry 的真 crate 覆蓋(`scripts/v8_populate_icu.sh`,動態讀每個 placeholder 的 name@version 去抓)。
+3. 缺 `third_party/icu/common/icudtl.dat` → 從 gclient 樹複製(10.7MB)。
+4. **版本不符(最關鍵):** 一開始 `fetch v8` 抓到 HEAD(V8 16.0,diplomat 0.16),但 rusty_v8 **152.2.0 綁的是 V8 15.2.124.1**(diplomat 0.15)。vendor 樹的 diplomat/ICU 版本必須和 crate 的 BUILD.gn 完全吻合。
+   → `cd ~/v8src/v8 && git fetch --depth 1 origin refs/tags/15.2.124.1 && git checkout 15.2.124.1 && (cd ~/v8src && gclient sync --no-history -D -R)`。
+
+### 做完 1–4 後,build 一路過 gen + 開始編 C++(2194 步),現卡在:
+```
+error: multiple input filenames provided
+  (first two: .../rust-toolchain/.../library/core/src/lib.rs
+   and .../build/clang/lib/clang/23/lib/darwin/libclang_rt.osx.a)
+ERROR: rustc exited with non-zero
+```
+**成因:** ios-sim 非 rusty_v8 官方支援 target → 它從源碼現編 Rust std(core/profiler_builtins),而該 GN 模板把 clang compiler-rt 的 `.a` 誤當成 rustc 位置參數。也混進了 `libclang_rt.osx.a`(macOS)到 sim 編譯。
+
+### 下一步(從這裡開始)
+- **先試 device target `aarch64-apple-ios`**(我們真正出貨的 slice,sim 只驗證用)—— 可能走不同、可用的 std 路徑。
+- 若 device 同樣卡:研究 GN arg 讓 rust 用 host prebuilt std 而非現編,或修 rustc 呼叫模板(把 `.a` 改成 `-Clink-arg`/`-L`)。V8 15.2 的 ICU4X 綁定需要 rust,無法整個關掉。
+- 可重現腳本:`scripts/v8_populate_icu.sh`(含複製對齊樹 + 填 ICU + icudtl + 重編)。前提:`~/v8src/v8` 已 checkout 到 15.2.124.1。
+
+**狀態:從「死路」變成「一個明確的工具鏈 arg bug」。** 本機模型 + Claude 後端(build 9)都不需 V8,已出貨。
