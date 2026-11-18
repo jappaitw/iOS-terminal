@@ -1,15 +1,3 @@
-diff --git a/codex-rs/Cargo.toml b/codex-rs/Cargo.toml
-index 4bccad3..8745dae 100644
---- a/codex-rs/Cargo.toml
-+++ b/codex-rs/Cargo.toml
-@@ -698,3 +698,7 @@ v8 = { git = "https://github.com/openai-oss-forks/rusty_v8.git", rev = "90a65f88
- 
- [patch."ssh://git@github.com/openai-oss-forks/tungstenite-rs.git"]
- tungstenite = { git = "https://github.com/openai-oss-forks/tungstenite-rs", rev = "bc589d684755a8c02da0fc7e58d0861cbfc306f1" }
-+
-+# iOS research: local mxc with the two desktop-only call sites cfg-gated (see PocketCode docs/ON_DEVICE_AI_CLI_FEASIBILITY.md)
-+[patch."https://github.com/microsoft/mxc"]
-+mxc-sdk = { path = "/Users/soulfyai/Documents/research/mxc-patched/src/mxc-sdk" }
 diff --git a/codex-rs/app-server-transport/src/transport/unix_socket.rs b/codex-rs/app-server-transport/src/transport/unix_socket.rs
 index 10fc906..21ec24e 100644
 --- a/codex-rs/app-server-transport/src/transport/unix_socket.rs
@@ -73,6 +61,24 @@ index 10fc906..21ec24e 100644
      #[cfg(unix)]
      socket_guard._startup_lock._file.unlock()?;
      Ok((listener, socket_guard))
+diff --git a/codex-rs/code-mode-runtime/Cargo.toml b/codex-rs/code-mode-runtime/Cargo.toml
+index 1060315..f8d2fc7 100644
+--- a/codex-rs/code-mode-runtime/Cargo.toml
++++ b/codex-rs/code-mode-runtime/Cargo.toml
+@@ -27,7 +27,13 @@ serde_json = { workspace = true }
+ tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+ tokio-util = { workspace = true, features = ["codec", "compat", "rt"] }
+ tracing = { workspace = true }
++# iOS: denoland ships prebuilt V8 only in the plain `release` flavour for
++# aarch64-apple-ios; the sandbox feature would demand a flavour that does not
++# exist. The isolate only runs Codex's own orchestration JS there.
++[target.'cfg(not(target_os = "ios"))'.dependencies]
+ v8 = { workspace = true, features = ["v8_enable_sandbox"] }
++[target.'cfg(target_os = "ios")'.dependencies]
++v8 = { workspace = true }
+ 
+ [dev-dependencies]
+ pretty_assertions = { workspace = true }
 diff --git a/codex-rs/core/src/client.rs b/codex-rs/core/src/client.rs
 index 971aee4..c035b9d 100644
 --- a/codex-rs/core/src/client.rs

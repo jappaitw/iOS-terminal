@@ -164,6 +164,22 @@ build 5 上傳卡在 Apple ASC 服務故障(dev portal 正常、ASC 網頁/官�
 
 實機已驗證:本機 shell、內嵌 Python、外部資料夾(iCloud/我的 iPhone)開啟與終端機定位 ✅;codex 引擎啟動與 OAuth 頁開啟 ✅;ChatGPT 登入完成與工具呼叫端到端,待 build 5。
 
+### 2026-11-18 — 工具迴圈的 code-mode 障礙(進行中,v1.0 收尾卡點)
+
+實機 + 模擬器 E2E(ChatGPT 登入後讓 codex 建並跑 hello.py)揭露:**此帳號唯一可用模型 `gpt-6-astra`(`model/list` 確認只有這一個)只會透過 code-mode 工具介面呼叫工具**,不走 classic exec。因此 Plan B(切舊模型用 classic shell 工具)此帳號無路,必須讓 code-mode host 在 iOS 上運作。
+
+**已完成的攻堅:**
+- code-mode host 原本靠 spawn `codex-code-mode-host` 執行檔(iOS 不可能,fail-closed → 模型回報「工具停用」)。
+- 改為 **in-process gRPC host**:`pocket-codex` 在 tokio 起 `codex_code_mode_host::run_main("grpc://127.0.0.1:18777")`,app-server 以 `CodeModeHostTransport::Grpc(http://127.0.0.1:18777/)` 連它。架構正確、編譯通過。
+- V8 for iOS:denoland rusty_v8 v152.2.0 **有官方 iOS 預編庫**(`librusty_v8_release_aarch64-apple-ios{,-sim}.a` + binding),已預抓進快取;`code-mode-runtime` 的 `v8_enable_sandbox` 口味改為 iOS 用 plain release(iOS 無 sandbox 口味);**整包編譯連結成功**。
+
+**當前阻塞:** V8 啟動時 `Fatal: Check failed: magic_number_ == SerializedData::kMagicNumber`(ReadOnlyDeserializer)。已排除:fork 血統(改回原版 denoland v8 仍舊)、ptrcomp/sandbox 口味。研判為 denoland iOS 預編庫的 startup snapshot 整合問題(可能需要 external startup data,或自行為 iOS 從源碼編 V8)。host thread panic 但 app-server 存活(turn 以「工具停用」收場)。
+
+**決策點(需產品負責人):**
+- (A) 投入 V8-iOS snapshot 問題(可能含自編 V8,數天~不定);這是此帳號唯一出路,且成功即獨家「iPhone 跑 V8 code-mode agent」。
+- (B) 改用 **API key + 支援 classic exec 的模型**(如 gpt-5 系列)繞過 code-mode;驗證 v1.0 迴圈可立即完成,但 ChatGPT 訂閱登入的 gpt-6 暫不可跑工具。
+- (C) 暫擱 code-mode,先推進 v1.2/v1.3 其他已驗證功能,V8 當獨立研究線。
+
 ### 待辦(依 codex 指令方向)
 
 - [x] codex-core iOS 編譯結果與障礙清單(✅ check + release build 均通過,僅 mxc 兩行補丁)

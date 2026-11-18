@@ -32,6 +32,14 @@ final class CodexExtensionsTests: XCTestCase {
         return client
     }
 
+    /// Diagnostic + future /model groundwork: prints the account's model list.
+    func testListModels() async throws {
+        let client = try await bootEngineAndConnect()
+        let result = client.rawRequest(method: "model/list", params: [:])
+        print("[ext-test] models: \(String(describing: result).prefix(1500))")
+        XCTAssertNotNil(result)
+    }
+
     func testPlantedSkillAppearsInSkillsList() async throws {
         let skillDir = Self.codexHome.appendingPathComponent("skills/pocode-test-skill", isDirectory: true)
         try FileManager.default.createDirectory(at: skillDir, withIntermediateDirectories: true)

@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 use codex_app_server::{
     run_main_with_transport_options, AppServerRuntimeOptions, AppServerTransport,
-    PluginStartupTasks,
+    CodeModeHostTransport, PluginStartupTasks,
 };
 use codex_arg0::Arg0DispatchPaths;
 use codex_config::LoaderOverrides;
@@ -116,6 +116,21 @@ pub unsafe extern "C" fn pc_start(
                 codex_self_exe: std::env::current_exe().ok(),
                 ..Default::default()
             };
+            // iOS cannot spawn the code-mode host binary, so the host (V8
+            // orchestration isolate) runs in-process on a loopback gRPC port
+            // and the app-server connects to it like a remote.
+            const CODE_MODE_PORT: u16 = 18777;
+            rt.spawn(async {
+                if let Err(e) =
+                    codex_code_mode_host::run_main(&format!("grpc://127.0.0.1:{CODE_MODE_PORT}")).await
+                {
+                    eprintln!("pocket-codex: code-mode host exited: {e:#}");
+                }
+            });
+            let code_mode_url = format!("http://127.0.0.1:{CODE_MODE_PORT}/")
+                .parse()
+                .expect("static code-mode URL");
+
             let result = rt.block_on(run_main_with_transport_options(
                 arg0,
                 CliConfigOverrides::default(),
@@ -131,6 +146,7 @@ pub unsafe extern "C" fn pc_start(
                     install_shutdown_signal_handler: false,
                     managed_daemon: false,
                     plugin_startup_tasks: PluginStartupTasks::Skip,
+                    code_mode_host_transport: CodeModeHostTransport::Grpc(code_mode_url),
                     ..Default::default()
                 },
             ));

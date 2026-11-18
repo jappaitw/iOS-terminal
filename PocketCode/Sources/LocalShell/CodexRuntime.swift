@@ -44,6 +44,7 @@ enum CodexRuntime {
 
         let home = Self.home
         try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        ensureIOSFeatureDefaults(home: home)
         // Tokens for MCP bearer_token_env_var live in the Keychain and are
         // exported into the process environment before the engine reads them.
         McpTokenStore.exportAllToEnvironment()
@@ -90,6 +91,27 @@ enum CodexRuntime {
         started = true
         codexLog.info("codex engine started")
         return nil
+    }
+
+    /// The code-mode host (the V8 tool-orchestration isolate) runs in-process
+    /// on iOS over loopback gRPC — pin its features on, and migrate away the
+    /// `false` pins an earlier build wrote while we thought disabling was the fix.
+    private static func ensureIOSFeatureDefaults(home: URL) {
+        let config = home.appendingPathComponent("config.toml")
+        var text = (try? String(contentsOf: config, encoding: .utf8)) ?? ""
+        text = text.replacingOccurrences(of: "code_mode = false", with: "code_mode = true")
+        text = text.replacingOccurrences(of: "code_mode_host = false", with: "code_mode_host = true")
+        if !text.contains("code_mode_host") {
+            let lines = "code_mode = true\ncode_mode_host = true\n"
+            if let range = text.range(of: "[features]") {
+                text.insert(contentsOf: "\n" + lines, at: range.upperBound)
+                text = text.replacingOccurrences(of: "[features]\n\n", with: "[features]\n")
+            } else {
+                if !text.isEmpty, !text.hasSuffix("\n") { text += "\n" }
+                text += "\n[features]\n" + lines
+            }
+        }
+        try? text.write(to: config, atomically: true, encoding: .utf8)
     }
 
     /// One interactive `codex` session bound to this terminal.
