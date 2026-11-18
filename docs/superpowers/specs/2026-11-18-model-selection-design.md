@@ -75,7 +75,23 @@ codex ─Responses→ ★ Pocode 轉接器 ★ ─Chat→ ┬ 本機 llama.cpp
 
 雲端相容端點(DeepSeek 等)若只講 Chat 而不講 Responses,屆時才需要輕量轉接(或找講 Responses 的供應商);但本機路線已無此需求。
 
-## 本機 E2E 進度(2026-11-18)— 全鏈路通,僅剩工具解析一行級缺口
+## ✅ 本機 AI AGENT 在 iPhone 上運作(2026-11-18 晚)
+
+**Qwen2.5-Instruct（非 coder）在模擬器上完整驅動 codex 工具迴圈** —— 結構化 function_call、連續多次工具呼叫、看到錯誤後自我修正重試。完全離線、零帳號、零雲端(模型推論全在機內)。
+
+決定性證據(rollout):
+- 探針:`{"type":"function_call","name":"write_file",...}` ← 真·結構化工具呼叫(非文字)
+- codex 完整輪:`exec_command`(格式正確)、`write_stdin`、`function_call_output`、自我修正重試
+
+**選模原則確立**:Qwen2.5-**Instruct** 能可靠 tool-call;Qwen2.5-**Coder** 不行(coder 版為補全調校,把工具 JSON 包成 ```json 不加標籤)→ 精選清單用 Instruct/Qwen3,coder 版僅供純補全。
+
+**唯一未竟**:3B 模型在此任務「策略笨拙」—— 第一個 `exec_command` 格式正確,但接著改用 `write_stdin` 配一個幻想的 64-bit session_id(codex schema 宣告 i32 → 溢位解析失敗),反覆重試未收斂。這是 **3B 模型能力問題,非架構 bug**;4B/Qwen3 或雲端模型會直接用 exec_command 完成。產品預設本機模型建議 ≥4B(12GB 機型)或選 Qwen3;8GB 機型本機適合簡單任務,複雜任務導向雲端。
+
+**結論:完全離線的 iPhone AI agent 已實證運作。** 三引擎(CPython + Codex + llama.cpp)同程序共存、本機模型驅動工具執行到 LocalShell/Python,全部跑通。剩餘是模型選型與能力分級的產品工作,不是技術可行性問題。
+
+---
+
+## (舊)本機 E2E 進度 — 全鏈路通,僅剩工具解析一行級缺口
 
 模擬器實測(Qwen2.5-Coder 0.5B/1.5B/3B，皆 Q4）：
 

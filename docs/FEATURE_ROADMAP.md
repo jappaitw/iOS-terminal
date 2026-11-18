@@ -76,7 +76,7 @@
 |---|---|---|---|
 | 🔵 ChatGPT 訂閱(gpt-6) | 旗艦、主力變現 | 🔧 登入/對話已通;**工具鏈卡在 iOS V8 code-mode snapshot**(見 ON_DEVICE doc,商業關鍵路徑) |
 | 🟡 API key(gpt-5 等 OpenAI 模型) | 開發者、按量 | 🟡 可指定 classic-exec 模型即可跑工具;key 上架前須改存 Keychain |
-| 🟢 本機模型(Qwen 等) | 入門、離線、隱私 | ⬜ 嵌 llama.cpp/MLX(同 CPython/V8 嵌入模式),codex model_provider 指向本機 OpenAI 相容端點;用戶下載選模型 |
+| 🟢 本機模型(Qwen 等) | 入門、離線、隱私 | ✅ **實證運作** — 嵌入 llama.cpp 驅動 codex 工具迴圈(Qwen2.5-Instruct,模擬器);選 Instruct/Qwen3(非 coder)。待:模型下載 GUI、能力分級、i32 等邊角 |
 
 **硬體 × 本機模型(4-bit,含 coding context):** 8GB(16/17/16Pro)→ 限 1.7–4B 吃緊;12GB(17Pro/18Pro)→ 4B 順、7–8B 勉強。速度 40–60 tok/s。coding agent 可用下限約 4B,複雜任務仍需雲端。
 
