@@ -187,6 +187,12 @@ final class CodexProtocolClient {
         awaitResponse(id: request(method: method, params: params))
     }
 
+    /// Generic request — the settings UI (skills, MCP servers) and tests drive
+    /// protocol methods this client has no dedicated wrapper for.
+    func rawRequest(method: String, params: [String: Any]) -> [String: Any]? {
+        sendAndAwait(method: method, params: params)
+    }
+
     private func awaitResponse(id: Int) -> [String: Any]? {
         while let msg = readMessage() {
             if (msg["id"] as? Int) == id { return msg["result"] as? [String: Any] ?? [:] }

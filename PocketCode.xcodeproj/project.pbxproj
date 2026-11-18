@@ -73,6 +73,7 @@
 		A92F0A94E7C6EB6A987FAD1E /* TreeSitterMarkdownRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = B6E0523E47049614170F23B4 /* TreeSitterMarkdownRunestone */; };
 		AAECAE5BD513B5FCA88B4C40 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = B75325CA0BB6FEDFB4137371 /* SwiftTerm */; };
 		AD67B5CED5783C66ED33796B /* Licenses.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE168D17AF51560EB6F528A4 /* Licenses.swift */; };
+		AFEF654FE4368787F71BB6BD /* CodexExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2568E3643B7F37A9967EE519 /* CodexExtensionsTests.swift */; };
 		B0195CF2BC4FA71D16F0468D /* Acknowledgements.json in Resources */ = {isa = PBXBuildFile; fileRef = 80C9B2310FB1F2034AC7819F /* Acknowledgements.json */; };
 		B2179A354208D2332857162F /* KeyNormalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37CBC14AA777BEDF773091B /* KeyNormalizationTests.swift */; };
 		B3EF423C094C6DC84AB5F286 /* PrivateKeyParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10284767E38CBC9495600BE /* PrivateKeyParserTests.swift */; };
@@ -144,6 +145,7 @@
 		13C0AE4D154994285871F04C /* CodexHostBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexHostBridge.swift; sourceTree = "<group>"; };
 		1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pocket_python.c; sourceTree = "<group>"; };
 		22D7DF1180249246978A4394 /* PrivateKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeys.swift; sourceTree = "<group>"; };
+		2568E3643B7F37A9967EE519 /* CodexExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexExtensionsTests.swift; sourceTree = "<group>"; };
 		3451D64459E967828463C0B4 /* HostExec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostExec.swift; sourceTree = "<group>"; };
 		356B37D833ED5AE59F37A0CC /* CodexProtocolClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexProtocolClient.swift; sourceTree = "<group>"; };
 		3687845290D50730FAE13489 /* PythonRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntimeTests.swift; sourceTree = "<group>"; };
@@ -242,6 +244,7 @@
 			isa = PBXGroup;
 			children = (
 				78FE62ACE76118D1994AFF57 /* BuiltinsExtraTests.swift */,
+				2568E3643B7F37A9967EE519 /* CodexExtensionsTests.swift */,
 				4B1CBBF647A9081028A71AF7 /* CodexRuntimeTests.swift */,
 				3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */,
 				B37CBC14AA777BEDF773091B /* KeyNormalizationTests.swift */,
@@ -607,6 +610,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				19FDAEFB1AF701AD9B14D096 /* BuiltinsExtraTests.swift in Sources */,
+				AFEF654FE4368787F71BB6BD /* CodexExtensionsTests.swift in Sources */,
 				384FDD1A128ADA54795E2BB3 /* CodexRuntimeTests.swift in Sources */,
 				EBDA7802AE686C14E8841C5E /* KeyFixtures.swift in Sources */,
 				B2179A354208D2332857162F /* KeyNormalizationTests.swift in Sources */,
