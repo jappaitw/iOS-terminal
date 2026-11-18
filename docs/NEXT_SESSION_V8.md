@@ -22,6 +22,22 @@ rusty_v8 官方文件:iOS 必須自編。自編後 snapshot 由我們控制,magi
 5. 通過後:重跑 CodexE2ETests(雲端 gpt,TEST_RUNNER_POCODE_E2E=1 + 真 key)→ 工具呼叫應該動了 → `POCODE_OK`。
 6. **device jitless 注意**:iOS 裝置禁 JIT,V8 必須 jitless 建 + `--jitless` 執行;模擬器可非 jitless。兩 slice 設定不同。
 
+### 2026-11-18 進度與踩到的牆(重要)
+
+depot_tools 已裝(`~/depot_tools`,gn/ninja 就緒)。`V8_FROM_SOURCE=1 cargo build -p v8 --target aarch64-apple-ios-sim` 會自動下載 V8 源碼 + Chromium clang + rust-toolchain(不需手動 gclient)。踩到兩道牆:
+
+1. **缺 `third_party/icu/ios/icudtl.dat`** → 已解:從 `third_party/icu/flutter_desktop/icudtl.dat` 複製到 `ios/`(1.7MB)。
+2. **缺 vendored Rust ICU crates**(`third_party/rust/chromium_crates_io/vendor/icu_calendar_data-v2/` 等,整個 vendor 目錄是空的)→ **未解**。根因:**crates.io 發佈的 v8 套件是精簡版,不含 i18n host 工具鏈需要的 vendored Rust crates**。BUILD.gn 引用它們但源碼不在。
+
+**正確解法(下次從這裡開始):** 不要用 crates.io 的精簡 v8 套件,改用**完整的 chromium gclient checkout**:
+```
+# 用 depot_tools 取完整 V8 源碼樹(含所有 vendored crates)
+fetch v8   # 或 gclient config + gclient sync,約 20GB
+# 然後讓 rusty_v8 指向它,或在該樹內建 lib
+```
+或:手動 vendor 缺的 Rust ICU crates(icu_calendar_data-v2 等)到 `chromium_crates_io/vendor/`(`cargo vendor` 或從 chromium 源取)。
+或(較快備案):**不解 source build,改修預編庫的 magic mismatch** —— 找出 denoland iOS 預編 `release` lib 的確切 GN 設定(jitless? pointer compression?),用 `GN_ARGS`/features 讓 crate 消費端完全對齊,使 magic number 一致。這條沒驗證過,但可能比 20GB checkout 快。
+
 ### 風險 / 備案
 
 - V8 源碼編譯環境繁瑣(depot_tools、python、ninja 版本)。若卡住,備案:找有人預編好的 iOS rusty_v8 archive(`RUSTY_V8_ARCHIVE` 指定),或 l-shell-ios 等專案的 V8 iOS 產物。
