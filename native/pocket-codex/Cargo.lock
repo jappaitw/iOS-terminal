@@ -9284,6 +9284,7 @@ dependencies = [
  "codex-app-server",
  "codex-arg0",
  "codex-code-mode-host",
+ "codex-code-mode-runtime",
  "codex-config",
  "codex-core",
  "codex-protocol",
@@ -9292,6 +9293,7 @@ dependencies = [
  "codex-websocket-auth",
  "libc",
  "tokio",
+ "v8",
 ]
 
 [[package]]

@@ -195,3 +195,33 @@ pub unsafe extern "C" fn pc_free(s: *mut c_char) {
 pub extern "C" fn pc_abi_version() -> c_int {
     1
 }
+
+/// Isolated V8 smoke test: initialise the platform and create one isolate,
+/// nothing else. Returns 0 if V8 lives on this device, non-zero (and a
+/// message via `error_out`) if it can't — separating "the denoland iOS V8
+/// prebuilt itself is broken" from "codex's usage trips it".
+///
+/// # Safety
+/// `error_out` may be null; if set, the caller frees the string with pc_free.
+#[no_mangle]
+pub unsafe extern "C" fn pc_v8_smoketest(error_out: *mut *mut c_char) -> c_int {
+    let result = std::panic::catch_unwind(|| {
+        codex_code_mode_runtime::initialize_v8(codex_code_mode_runtime::V8JitMode::Enabled)
+            .map_err(|e| format!("init: {e}"))?;
+        // Isolate::new deserialises the read-only snapshot — the exact crash
+        // site in the full run. If this returns, the snapshot is good here.
+        let _isolate = v8::Isolate::new(v8::CreateParams::default());
+        Ok::<(), String>(())
+    });
+    match result {
+        Ok(Ok(())) => 0,
+        Ok(Err(msg)) => {
+            out_err(error_out, &format!("v8: {msg}"));
+            1
+        }
+        Err(_) => {
+            out_err(error_out, "v8 panicked (snapshot magic mismatch at Isolate::new)");
+            2
+        }
+    }
+}

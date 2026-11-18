@@ -175,6 +175,11 @@ build 5 上傳卡在 Apple ASC 服務故障(dev portal 正常、ASC 網頁/官�
 
 **當前阻塞:** V8 啟動時 `Fatal: Check failed: magic_number_ == SerializedData::kMagicNumber`(ReadOnlyDeserializer)。已排除:fork 血統(改回原版 denoland v8 仍舊)、ptrcomp/sandbox 口味。研判為 denoland iOS 預編庫的 startup snapshot 整合問題(可能需要 external startup data,或自行為 iOS 從源碼編 V8)。host thread panic 但 app-server 存活(turn 以「工具停用」收場)。
 
+**2026-11-18 V8 隔離診斷(決定性):**
+- `pc_v8_smoketest`:最小環境只做 `initialize_v8` + `v8::Isolate::new`,零 codex。**在模擬器仍 `Check failed: magic_number_ == kMagicNumber`**(於 Isolate::new 的 snapshot 反序列化)。→ **確認問題在 denoland iOS 預編庫 vs rusty_v8 crate 的配置不符,不是 codex 用法。**
+- rusty_v8 官方文件:**iOS 必須 `V8_FROM_SOURCE=1` 自編**(README 範例即如此;device 標註 "jitless")。預編 iOS lib 的 snapshot 設定(ro-heap/jitless)與 crate 預設不符 → magic 不同。
+- **正解:route B — V8_FROM_SOURCE=1 為 iOS(device jitless / sim)自編 V8**,snapshot 由我們控制必然一致。代價:需 depot_tools + ninja,編譯數小時。這是重活但有明確路徑,V8 不再是未知風險。
+
 **決策點(需產品負責人):**
 - (A) 投入 V8-iOS snapshot 問題(可能含自編 V8,數天~不定);這是此帳號唯一出路,且成功即獨家「iPhone 跑 V8 code-mode agent」。
 - (B) 改用 **API key + 支援 classic exec 的模型**(如 gpt-5 系列)繞過 code-mode;驗證 v1.0 迴圈可立即完成,但 ChatGPT 訂閱登入的 gpt-6 暫不可跑工具。

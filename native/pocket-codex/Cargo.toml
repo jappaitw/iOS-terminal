@@ -16,6 +16,8 @@ crate-type = ["staticlib"]
 codex-app-server = { path = "../../../research/codex/codex-rs/app-server" }
 codex-core = { path = "../../../research/codex/codex-rs/core" }
 codex-code-mode-host = { path = "../../../research/codex/codex-rs/code-mode-host" }
+codex-code-mode-runtime = { path = "../../../research/codex/codex-rs/code-mode-runtime" }
+v8 = "=152.2.0"
 codex-arg0 = { path = "../../../research/codex/codex-rs/arg0" }
 codex-utils-cli = { path = "../../../research/codex/codex-rs/utils/cli" }
 codex-utils-absolute-path = { path = "../../../research/codex/codex-rs/utils/absolute-path" }

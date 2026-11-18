@@ -25,3 +25,4 @@ void pc_set_exec_handler(pc_exec_run_fn run, pc_exec_free_fn free);
 int pc_abi_version(void);
 
 #endif
+int pc_v8_smoketest(char **error_out);
