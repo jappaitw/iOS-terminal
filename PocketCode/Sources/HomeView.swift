@@ -55,14 +55,25 @@ struct HomeView: View {
             }
             .scrollContentBackground(.hidden)
             .background(VS.sidebarBG)
-            .navigationTitle("Pocode")
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .top, spacing: 0) {
-                Text("Pocket AI studio")
-                    .font(.subheadline)
-                    .foregroundStyle(VS.textDim)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 6)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 10) {
+                        Text("Pocode")
+                            .font(.system(size: 34, weight: .bold))
+                        Image("LaunchLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 40)
+                        Spacer()
+                    }
+                    Text("Pocket AI studio")
+                        .font(.subheadline)
+                        .foregroundStyle(VS.textDim)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
