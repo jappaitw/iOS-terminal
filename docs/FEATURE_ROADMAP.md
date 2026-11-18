@@ -68,6 +68,26 @@
 | i18n(繁中/簡中/日/韓/西) | ⬜ String Catalog |
 | Light 主題(編輯器 Light+ 配色) | ⬜ |
 
+## AI 後端分層策略(2026-11-18 定)
+
+Pocode 提供三種 AI 後端,用戶依手機等級與需求選擇。核心判斷:**本機模型是「免費/離線/隱私」入門層與行銷賣點,不取代雲端旗艦;雲端(gpt-6 訂閱)仍是旗艦體驗的關鍵路徑**。
+
+| 後端 | 定位 | 狀態 | 備註 |
+|---|---|---|---|
+| 🔵 ChatGPT 訂閱(gpt-6) | 旗艦、主力變現 | 🔧 登入/對話已通;**工具鏈卡在 iOS V8 code-mode snapshot**(見 ON_DEVICE doc,商業關鍵路徑) |
+| 🟡 API key(gpt-5 等 OpenAI 模型) | 開發者、按量 | 🟡 可指定 classic-exec 模型即可跑工具;key 上架前須改存 Keychain |
+| 🟢 本機模型(Qwen 等) | 入門、離線、隱私 | ⬜ 嵌 llama.cpp/MLX(同 CPython/V8 嵌入模式),codex model_provider 指向本機 OpenAI 相容端點;用戶下載選模型 |
+
+**硬體 × 本機模型(4-bit,含 coding context):** 8GB(16/17/16Pro)→ 限 1.7–4B 吃緊;12GB(17Pro/18Pro)→ 4B 順、7–8B 勉強。速度 40–60 tok/s。coding agent 可用下限約 4B,複雜任務仍需雲端。
+
+### 候選本機 coding 模型(fit 手機,非 GPT)— 詳見 docs 評估
+- **Qwen3 / Qwen2.5-Coder**(阿里,Apache-2.0)— coding 首選,0.6/1.7/4B 齊全,llama.cpp/MLX 一等支援
+- **DeepSeek-Coder-V2-Lite / DeepSeek-R1-Distill**(MIT)— 強 coding,蒸餾版可塞手機
+- **Gemma 3 / CodeGemma**(Google)— MLX/LiteRT 優化好,記憶體友善
+- **Phi-4-mini**(微軟,MIT)— 小而推理強
+- **SmolLM3**(HuggingFace)— 極小、極省,超低階機型備援
+- 雲端可選後端(API key / OpenAI 相容端點):**Claude、Gemini、DeepSeek、Qwen-Max、Kimi** 等任何 OpenAI 相容 API
+
 ## v2.0 — 平台擴張
 
 - Claude Code 路線(Node 嵌入,待 Anthropic 授權決策;技術已由 CodexLab 期間驗證可行)
