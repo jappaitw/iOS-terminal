@@ -140,3 +140,20 @@ brew install lld
 - [ ] 跑 `pc_v8_smoketest` / V8SmokeTests → 確認 magic_number 過(from-source 理論上必過,binding+lib 自洽)
 - [ ] 把 libpocket_codex.a 併進 ThirdParty/codex/{device,simulator},出含 code-mode 的 build
 - [ ] device 是 jitless:確認 V8JitMode::Disabled + `--jitless`(rusty_v8 target_os=ios 分支應已處理)
+
+### 2026-11-19 — smoketest 判定:編得出來,但 runtime snapshot magic 不符(jitless)
+把 from-source sim 庫換進 ThirdParty 跑 `pc_v8_smoketest`(已確認有重連新庫,非快取):
+```
+# Fatal error: Check failed: magic_number_ == SerializedData::kMagicNumber.
+```
+**和預編庫同一個錯** → 問題不是「庫內部不一致」,而是 **V8 snapshot 的 jitless 交叉編譯設定**。
+target args.gn:`v8_jitless=true`、`v8_enable_turbofan/sparkplug/maglev=false`、`v8_enable_webassembly=false`、sandbox/ptrcomp=false。
+**診斷:** startup snapshot 由 host mksnapshot 產生;若 host mksnapshot 用非 jitless(含 turbofan/wasm)設定,其外部參考表大小 ≠ jitless target 的 → `kMagicNumber` 不符 → `Isolate::new` 反序列化 abort。這也解釋為何預編庫(非 jitless snapshot)在 jitless-ish 載入時同樣 magic 不符。
+
+**修法候選(依序):**
+1. **驗證中:** sim 不禁 JIT → 把 sim 建成**非 jitless**(turbofan/wasm 開)使之與 host mksnapshot 一致 → smoketest 應過,證明 from-source V8 本體健全。
+2. **device 真解:** 讓 `v8_snapshot_toolchain` 的 host mksnapshot 以**和 target 相同的 jitless flags** 建置並產生 snapshot。rusty_v8 的 iOS 分支沒正確接這條,是下個深入點。
+3. **備案:** 無 snapshot 建置(Isolate 從零初始化,免反序列化、免 magic 檢查;啟動較慢但 jitless 可行)。
+4. 若 device snapshot-toolchain 太難:sim(開發/驗證)用非 jitless 跑通 code-mode,device 等 toolchain 修好。
+
+**本質進度:** V8 從源碼**編得出 iOS device + sim 庫**(死路已破);剩 runtime 的 jitless-snapshot 對齊。
