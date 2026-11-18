@@ -102,8 +102,11 @@ final class CodexProtocolClient {
 
     // MARK: threads & turns
 
-    func startThread(cwd: String) -> String? {
-        guard let r = sendAndAwait(method: "thread/start", params: ["cwd": cwd]) else { return nil }
+    func startThread(cwd: String, model: String? = nil, provider: String? = nil) -> String? {
+        var params: [String: Any] = ["cwd": cwd]
+        if let model { params["model"] = model }
+        if let provider { params["modelProvider"] = provider }
+        guard let r = sendAndAwait(method: "thread/start", params: params) else { return nil }
         if let thread = r["thread"] as? [String: Any], let id = thread["id"] as? String { return id }
         return nil
     }

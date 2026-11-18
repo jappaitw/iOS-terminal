@@ -48,6 +48,8 @@ enum CodexRuntime {
         // Tokens for MCP bearer_token_env_var live in the Keychain and are
         // exported into the process environment before the engine reads them.
         McpTokenStore.exportAllToEnvironment()
+        // The local-model provider must exist in config before the engine reads it.
+        LocalModelBackend.registerProviderIfNeeded(home: home)
         let engineLog = home.appendingPathComponent("engine.log")
         try? FileManager.default.removeItem(at: engineLog)
 
@@ -127,18 +129,29 @@ enum CodexRuntime {
         func out(_ s: String) { ctx.stdout.write(s) }
         out("\u{1B}[1mCodex\u{1B}[0m — on-device AI coding agent. Type \u{1B}[2m/exit\u{1B}[0m to leave.\r\n")
 
-        // Login gate.
-        if !client.isLoggedIn {
-            if !(await login(client, ctx: ctx, input: input, out: out)) {
-                out("Sign-in cancelled.\r\n")
-                return 1
+        // A local model, if the user picked one, serves the turn offline — no sign-in.
+        let local = await LocalModelBackend.ensureRunning(out: out)
+
+        if local == nil {
+            // Cloud Codex: sign in.
+            if !client.isLoggedIn {
+                if !(await login(client, ctx: ctx, input: input, out: out)) {
+                    out("Sign-in cancelled.\r\n")
+                    return 1
+                }
+            } else {
+                out("Signed in (\(client.authMode ?? "ok")).\r\n")
             }
-        } else {
-            out("Signed in (\(client.authMode ?? "ok")).\r\n")
         }
 
         let cwd = ctx.state.cwd.path
-        guard let threadId = client.startThread(cwd: cwd) else {
+        let threadId: String?
+        if let local {
+            threadId = client.startThread(cwd: cwd, model: local.model, provider: local.provider)
+        } else {
+            threadId = client.startThread(cwd: cwd)
+        }
+        guard let threadId else {
             return ctx.fail("could not start a codex thread", status: 1)
         }
 

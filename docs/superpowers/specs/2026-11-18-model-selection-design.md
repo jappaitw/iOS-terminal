@@ -16,6 +16,22 @@
 
 關鍵洞察:**本機與相容端點兩條路都走 classic chat/completions,不經 code-mode** → 它們天然避開了今天卡住訂閱 gpt-6 的 V8 snapshot 問題。
 
+## 多模型平台(不限 Qwen)
+
+嵌入的是 **llama.cpp 引擎本身**,非綁定單一模型 → 支援整個 GGUF 生態。Qwen 只是第一個驗證管線的樣本與首批推薦之一。
+
+| 家族 | coding | 授權 | tool-call |
+|---|---|---|---|
+| Qwen 2.5 / 3 | 強 | Apache-2.0 | **Instruct ✅ / Coder ✗** |
+| DeepSeek-Coder / R1-Distill | 很強 | MIT | 待測 |
+| Llama 3.2 (1B/3B) | 中 | Llama 授權 | 待測 |
+| Gemma 3 / CodeGemma | 中 | Gemma 授權 | 待測 |
+| Phi-4-mini | 中 | MIT | 待測 |
+| SmolLM3 | 弱(極小) | Apache-2.0 | 有限 |
+| 用戶自訂 GGUF | — | — | 看模型 |
+
+**精選清單選模標準 = tool-calling 實測可靠 + 授權乾淨 + 配好 chat template**,非名氣。每個模型家族工具格式不同,需逐一實測並備好對應 template(`PocketCode/Resources/llama-templates/`)。自訂下載的模型放「進階」,標示「工具呼叫可能不穩」。
+
 ## 決策:模型一律按需下載,不預裝(2026-11-18)
 
 **app 內建的只有 llama.cpp 引擎(數十 MB);本機模型一律由用戶自選下載。** 理由:預裝 1–2GB 模型會讓 App Store 下載巨大(傷轉換、觸發 WiFi-only 限制)、綁死單一模型、懲罰不用本機的用戶。不下載任何模型也完全可用(走 Codex 雲端 / API key)。

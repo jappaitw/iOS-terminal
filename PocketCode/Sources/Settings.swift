@@ -61,6 +61,11 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("AI") {
+                    NavigationLink { ModelSettingsView() } label: {
+                        Label("AI Model", systemImage: "brain")
+                    }
+                }
                 Section("Extensions") {
                     NavigationLink { SkillsSettingsView() } label: {
                         Label("Skills", systemImage: "sparkles")
