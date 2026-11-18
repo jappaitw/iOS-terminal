@@ -102,8 +102,10 @@
 		E1E6262606B39302AAED0A61 /* LocalModelE2ETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4796B63A1FC0CA6877E8B1C1 /* LocalModelE2ETests.swift */; };
 		E339DE59D0BBBE9757FC60D3 /* HostExec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3451D64459E967828463C0B4 /* HostExec.swift */; };
 		E497B56819A6A320181321EC /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50A8682C83776C6CC8A37E4A /* Workspace.swift */; };
+		E668D82D117375392EF973B0 /* ClaudeRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65458E3009ED0DCCD16CC076 /* ClaudeRuntime.swift */; };
 		E86F0E3BD7C5BE0710A56450 /* pocket_python.c in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FE116CF85873D2BD8D5B7 /* pocket_python.c */; };
 		EBDA7802AE686C14E8841C5E /* KeyFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB46FBBCB8F8891F675A804 /* KeyFixtures.swift */; };
+		F199989E2A3B5B38A05301BD /* ClaudeRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65458E3009ED0DCCD16CC076 /* ClaudeRuntime.swift */; };
 		F34644F4DDD99F2B54B2137F /* TerminalPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */; };
 		F359CA11408A51DC617E3362 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075C487F60D1E8FDE0FE0FDD /* HomeView.swift */; };
 		F8554EA25DAC4D6D245C1AC2 /* TreeSitterTOMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 70FDDA6CAF28F434B82A62AE /* TreeSitterTOMLRunestone */; };
@@ -180,6 +182,7 @@
 		61ED2C230C88EFEC484D13EA /* PythonRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonRuntime.swift; sourceTree = "<group>"; };
 		62270738A536E9ABD36747BF /* PocketCode.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PocketCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		62D0F3C9019637B448E0F39F /* Python.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Python.xcframework; path = ThirdParty/Python.xcframework; sourceTree = "<group>"; };
+		65458E3009ED0DCCD16CC076 /* ClaudeRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeRuntime.swift; sourceTree = "<group>"; };
 		66FEFA61AF2F343336BE7EF9 /* pocket_llama.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = pocket_llama.cpp; sourceTree = "<group>"; };
 		7177327199929192CA229299 /* CodexLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CodexLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7433C856DA62D76100A463FB /* Languages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Languages.swift; sourceTree = "<group>"; };
@@ -397,6 +400,7 @@
 			children = (
 				5178B136389BA8EF980003BE /* Builtins.swift */,
 				F6192A2D5A2E0A882C56A341 /* BuiltinsExtra.swift */,
+				65458E3009ED0DCCD16CC076 /* ClaudeRuntime.swift */,
 				13C0AE4D154994285871F04C /* CodexHostBridge.swift */,
 				356B37D833ED5AE59F37A0CC /* CodexProtocolClient.swift */,
 				FAA061D823397F34BA998ECE /* CodexRuntime.swift */,
@@ -658,6 +662,7 @@
 			files = (
 				C42A26FD0F164C66DFB5E250 /* Builtins.swift in Sources */,
 				84EF8FE6216AB1CC33B52CD9 /* BuiltinsExtra.swift in Sources */,
+				E668D82D117375392EF973B0 /* ClaudeRuntime.swift in Sources */,
 				A06D330E79CA0B2898C3E867 /* CodexHostBridge.swift in Sources */,
 				7206C328B6D3972016D83B51 /* CodexLabApp.swift in Sources */,
 				037B734B9A62F33FC5ACC07C /* CodexProtocolClient.swift in Sources */,
@@ -702,6 +707,7 @@
 				C69D69C913CA07006A2280DE /* App.swift in Sources */,
 				9E911E84C0DCC656FF3D66C3 /* Builtins.swift in Sources */,
 				7E1AA7637D6C11913D0664E3 /* BuiltinsExtra.swift in Sources */,
+				F199989E2A3B5B38A05301BD /* ClaudeRuntime.swift in Sources */,
 				65CB32434238FF1458E5F500 /* CodexHostBridge.swift in Sources */,
 				9AE6F426E2135A06275775C0 /* CodexProtocolClient.swift in Sources */,
 				A4292E40E944C8FC7C7A627B /* CodexRuntime.swift in Sources */,
@@ -866,7 +872,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -998,7 +1004,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (

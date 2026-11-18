@@ -558,6 +558,7 @@ final class Workspace: ObservableObject {
         }
         services.runPython = PythonRuntime.shellCommand
         services.runCodex = CodexRuntime.shellCommand
+        services.runClaude = ClaudeRuntime.shellCommand
         return services
     }
 

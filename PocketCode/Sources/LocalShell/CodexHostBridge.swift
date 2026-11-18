@@ -58,8 +58,6 @@ enum CodexHostBridge {
             return (try? JSONSerialization.data(withJSONObject: obj))
                 .flatMap { String(data: $0, encoding: .utf8) } ?? #"{"exit_code":127,"stderr":"encode error"}"#
         }
-        lock.lock(); let root = workspaceRoot; lock.unlock()
-        guard let root else { return respond(127, "", "codex: no workspace") }
         guard let data = requestJSON.data(using: .utf8),
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let command = obj["command"] as? [String], !command.isEmpty else {
@@ -77,8 +75,19 @@ enum CodexHostBridge {
             }.joined(separator: " ")
         }
 
+        let r = execScript(script, cwd: obj["cwd"] as? String)
+        return respond(r.code, r.stdout, r.stderr)
+    }
+
+    /// Runs a bash script through PocketCode's sandboxed LocalShell (with Python)
+    /// rooted at the installed workspace. Shared by the Codex exec handler above
+    /// and by `ClaudeRuntime`, so both agents run tools through the same sandbox.
+    static func execScript(_ script: String, cwd: String?) -> (code: Int32, stdout: String, stderr: String) {
+        lock.lock(); let root = workspaceRoot; lock.unlock()
+        guard let root else { return (127, "", "no workspace") }
+
         let state = ShellState(root: root)
-        if let cwd = obj["cwd"] as? String {
+        if let cwd {
             let url = URL(fileURLWithPath: cwd)
             if url.path.hasPrefix(state.sandbox.root.path) { state.cwd = url }
         }
@@ -100,10 +109,10 @@ enum CodexHostBridge {
             done.signal()
         }
         if done.wait(timeout: .now() + 120) == .timedOut {
-            return respond(124, String(decoding: out.data, as: UTF8.self),
-                           String(decoding: err.data, as: UTF8.self) + "\ncodex: command timed out")
+            return (124, String(decoding: out.data, as: UTF8.self),
+                    String(decoding: err.data, as: UTF8.self) + "\ncommand timed out")
         }
-        return respond(status, String(decoding: out.data, as: UTF8.self),
-                       String(decoding: err.data, as: UTF8.self))
+        return (status, String(decoding: out.data, as: UTF8.self),
+                String(decoding: err.data, as: UTF8.self))
     }
 }

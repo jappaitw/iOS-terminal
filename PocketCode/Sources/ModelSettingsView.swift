@@ -5,6 +5,7 @@ import SwiftUI
 struct ModelSettingsView: View {
     @StateObject private var store = ModelStore.shared
     @State private var customURL = ""
+    @State private var hasClaudeKey = ClaudeCredentials.apiKey != nil
 
     private var ramGB: Int { ModelStore.deviceRAMGB }
 
@@ -15,7 +16,7 @@ struct ModelSettingsView: View {
                     .font(.caption).foregroundStyle(VS.textDim)
             }
 
-            Section("Backend") {
+            Section {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Cloud GPT (Codex)")
@@ -29,6 +30,25 @@ struct ModelSettingsView: View {
                         Button("Use") { store.activeModelID = nil }
                     }
                 }
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Claude (Anthropic API key)")
+                        Text(hasClaudeKey ? "Key saved · run `claude` in the terminal"
+                                          : "Online · run `claude` in the terminal to add your key")
+                            .font(.caption2).foregroundStyle(VS.textDim)
+                    }
+                    Spacer()
+                    if hasClaudeKey {
+                        Button("Clear key", role: .destructive) {
+                            ClaudeCredentials.apiKey = nil
+                            hasClaudeKey = false
+                        }.font(.caption)
+                    }
+                }
+            } header: {
+                Text("Backend")
+            } footer: {
+                Text("Codex and Claude run as terminal commands (`codex`, `claude`); each user signs in with their own account or API key. Local models run fully offline.")
             }
 
             Section("Local models") {
