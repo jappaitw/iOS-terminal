@@ -96,3 +96,24 @@ ERROR: rustc exited with non-zero
 3. 備案:試不同 rusty_v8 patch 版(152.x)是否已修 iOS,但要顧及與 codex 的相容。
 
 **距離終點:** 依賴全通,只差這個工具鏈 arg。真正的 V8 C++ 原始碼已開始編(2194 步),std 一過就能連結出 `librusty_v8.a`。
+
+### 2026-11-18 深夜 — 兩個精準根因:空格 bug(已解)→ lld/SDK 版本落差
+**(A) Rust-std 的「multiple input filenames」真因 = 專案路徑有空格。**
+`core.rsp` 裡 `-Clink-arg=/Users/soulfyai/Documents/iphone vscode/.../libclang_rt.osx.a` 的路徑在 `iphone vscode` 的空格處被拆成兩段,後半成了裸參數,rustc 當成輸入源碼。
+**解法(已驗證有效):** 把 cargo 輸出目錄設到無空格路徑 —— `CARGO_TARGET_DIR=$HOME/pcv8target`。設了之後 std 錯誤歸零,build 從 step 14 一路推進到 **step 101/3960**。
+→ **出貨腳本要確保 `native/pocket-codex` 建置在無空格路徑**(專案在 `Documents/iphone vscode/` 本身有空格)。
+
+**(B) 下一個牆:host 工具連結失敗 = Chromium 綁的 lld 太舊,讀不懂 macOS 27.2 SDK 的 .tbd。**
+```
+ld64.lld: error: could not load TAPI file .../MacOSX27.2.sdk/usr/lib/libSystem.tbd: malformed file
+  libSystem.tbd:4:20: error: unknown target
+→ undefined symbol: opendir / strlen / pthread_* / _Unwind_* …
+```
+本機 macOS 27.2(Darwin 27.2)是極新 SDK,rusty_v8 152.2.0 綁的 clang/23 lld 的 TAPI parser 不認得其 tbd 的 target 格式。host build tools(arm64-apple-macos)連結不到 libSystem。
+**下次試法(依序):**
+1. GN arg 讓 host 工具鏈用**系統 Xcode 的 ld**(能讀自家 SDK)而非 downloaded lld;但要連帶處理 lld 專屬 flag(`-Wl,--icf=all`、`--strict-auto-link`、`--read-workers` 等)。
+2. 或讓 rusty_v8 下載**較新的 Chromium clang**(認得 27.2 SDK),但要顧 V8 15.2 相容。
+3. 或指向**較舊的 macOS SDK**(若機器上有)給 host 工具。
+4. 終極:在**較舊 macOS 的 CI/機器**上編(toolchain 與 SDK 匹配),產出 `librusty_v8.a` 後以 `RUSTY_V8_ARCHIVE` 餵給 pocket-codex。
+
+**進度本質:** 依賴迷宮 + Rust-std 全通,只差 host 工具鏈與超新 SDK 的版本匹配。離 `librusty_v8.a` 很近了。
