@@ -43,6 +43,7 @@
 		6316666237B4FAE83E0934D3 /* PathUtilTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E7F733520AF7F09F9B063E /* PathUtilTests.swift */; };
 		65CB32434238FF1458E5F500 /* CodexHostBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13C0AE4D154994285871F04C /* CodexHostBridge.swift */; };
 		67D1A1E5DE038724DA32F8DA /* PortForwardIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E057C343497EC75C982510 /* PortForwardIntegrationTests.swift */; };
+		69F640A85990DD93DECA6AC5 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE3A346DB3EEDF418417E5 /* Extensions.swift */; };
 		6A040637F8DAD804E7C682A7 /* LocalShellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D090A69CED102FCBC7A37F /* LocalShellTests.swift */; };
 		6D0856B262B850B6A850D170 /* TreeSitterCSSRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = FF1AA2338C07BDAD15C17013 /* TreeSitterCSSRunestone */; };
 		6D69B86866E836810ECD8C87 /* TreeSitterPHPRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 23818CDACEC1182A4FBA90CD /* TreeSitterPHPRunestone */; };
@@ -166,6 +167,7 @@
 		7902E6722A8E6CF1EA2B774D /* EditorArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorArea.swift; sourceTree = "<group>"; };
 		7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPanel.swift; sourceTree = "<group>"; };
 		80C9B2310FB1F2034AC7819F /* Acknowledgements.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Acknowledgements.json; sourceTree = "<group>"; };
+		81DE3A346DB3EEDF418417E5 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		843A86B33EFD137A25D8DF6E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		84FAAAB7BDC8CC8CAC20AC8C /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		850F700369505CBA2D4555FD /* ExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorerView.swift; sourceTree = "<group>"; };
@@ -278,6 +280,7 @@
 				B7CC9261C691A0C0976BDE70 /* Commands.swift */,
 				7902E6722A8E6CF1EA2B774D /* EditorArea.swift */,
 				850F700369505CBA2D4555FD /* ExplorerView.swift */,
+				81DE3A346DB3EEDF418417E5 /* Extensions.swift */,
 				E9A2339A84E26A6139EF8C57 /* FileSystem.swift */,
 				EC92B4DBE3DBFF98B4CDB4F8 /* Git.swift */,
 				075C487F60D1E8FDE0FE0FDD /* HomeView.swift */,
@@ -638,6 +641,7 @@
 				385111EFFB00638C31070C67 /* Commands.swift in Sources */,
 				33946154E2E024B58A4C65FA /* EditorArea.swift in Sources */,
 				7E2E8001CC6C4D231E0C4884 /* ExplorerView.swift in Sources */,
+				69F640A85990DD93DECA6AC5 /* Extensions.swift in Sources */,
 				805D4B242CCDD6937EB16F5E /* FileSystem.swift in Sources */,
 				5E5BB3126A99C44E7E2FBD78 /* Git.swift in Sources */,
 				F359CA11408A51DC617E3362 /* HomeView.swift in Sources */,

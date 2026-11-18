@@ -61,6 +61,14 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("Extensions") {
+                    NavigationLink { SkillsSettingsView() } label: {
+                        Label("Skills", systemImage: "sparkles")
+                    }
+                    NavigationLink { McpServersSettingsView() } label: {
+                        Label("MCP Servers", systemImage: "point.3.connected.trianglepath.dotted")
+                    }
+                }
                 Section("Appearance") {
                     Picker("Appearance", selection: $settings.appearance) {
                         Text("Follow Device").tag("system")

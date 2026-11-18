@@ -73,6 +73,38 @@ index 10fc906..21ec24e 100644
      #[cfg(unix)]
      socket_guard._startup_lock._file.unlock()?;
      Ok((listener, socket_guard))
+diff --git a/codex-rs/core/src/client.rs b/codex-rs/core/src/client.rs
+index 971aee4..c035b9d 100644
+--- a/codex-rs/core/src/client.rs
++++ b/codex-rs/core/src/client.rs
+@@ -1369,13 +1369,23 @@ impl ModelClient {
+     ///
+     /// WebSocket use is controlled by provider capability and session-scoped fallback state.
+     pub fn responses_websocket_enabled(&self) -> bool {
+-        if !self.state.provider.info().supports_websockets
+-            || self.state.disable_websockets.load(Ordering::Relaxed)
++        // iOS: the websocket stack lacks platform TLS roots, so every attempt
++        // fails with UnknownIssuer and falls back to HTTPS after five noisy
++        // retries. HTTPS is the dependable transport here; skip the theatre.
++        #[cfg(target_os = "ios")]
+         {
+-            return false;
++            false
+         }
++        #[cfg(not(target_os = "ios"))]
++        {
++            if !self.state.provider.info().supports_websockets
++                || self.state.disable_websockets.load(Ordering::Relaxed)
++            {
++                return false;
++            }
+ 
+-        true
++            true
++        }
+     }
+ 
+     /// Returns auth + provider configuration resolved from the current session auth state.
 diff --git a/codex-rs/core/src/exec.rs b/codex-rs/core/src/exec.rs
 index a24be17..91e0794 100644
 --- a/codex-rs/core/src/exec.rs

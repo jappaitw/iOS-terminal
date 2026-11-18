@@ -16,6 +16,25 @@ enum CodexRuntime {
     private static let lock = NSLock()
     private static var started = false
     private static var client: CodexProtocolClient?
+    private static var socketPath: String?
+
+    /// The CODEX_HOME directory (config.toml, skills/, credentials).
+    static var home: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("codex-home", isDirectory: true)
+    }
+
+    /// A dedicated protocol connection for the settings UI (skills list, MCP
+    /// management). Boots the engine if needed. Returns nil with a message on failure.
+    static func managementClient() -> (CodexProtocolClient?, String?) {
+        if let error = ensureStarted() { return (nil, error) }
+        lock.lock(); let sock = socketPath; lock.unlock()
+        guard let sock else { return (nil, "engine socket unknown") }
+        let c = CodexProtocolClient(socketPath: sock)
+        guard c.connect() else { return (nil, "could not connect to the engine") }
+        c.initialize()
+        return (c, nil)
+    }
 
     /// Boots the app-server and connects. Returns an error string on failure;
     /// failures aren't sticky — the next `codex` tries again.
@@ -23,9 +42,11 @@ enum CodexRuntime {
         lock.lock(); defer { lock.unlock() }
         if started { return nil }
 
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let home = docs.appendingPathComponent("codex-home", isDirectory: true)
+        let home = Self.home
         try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        // Tokens for MCP bearer_token_env_var live in the Keychain and are
+        // exported into the process environment before the engine reads them.
+        McpTokenStore.exportAllToEnvironment()
         let engineLog = home.appendingPathComponent("engine.log")
         try? FileManager.default.removeItem(at: engineLog)
 
@@ -65,6 +86,7 @@ enum CodexRuntime {
         }
         c.initialize()
         client = c
+        socketPath = sock
         started = true
         codexLog.info("codex engine started")
         return nil
