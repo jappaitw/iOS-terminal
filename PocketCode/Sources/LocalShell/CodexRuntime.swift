@@ -220,7 +220,9 @@ enum CodexRuntime {
             if !wantLocal && prompt == "/logout" { client.logout(); out("Signed out.\r\n"); continue }
 
             ctx.interruptHandler = { client.interruptTurn(threadId: threadId) }
-            client.runTurn(threadId: threadId, prompt: prompt, localWorkspace: wantLocal ? ctx : nil, out: out)
+            // Both backends use Pocode's dynamicTools now, so every turn needs
+            // the workspace context that executes write_file/run_command.
+            client.runTurn(threadId: threadId, prompt: prompt, localWorkspace: ctx, out: out)
             ctx.interruptHandler = nil
         }
         out("\r\nLeaving \(agentName).\r\n")
