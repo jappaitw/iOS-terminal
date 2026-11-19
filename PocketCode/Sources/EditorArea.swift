@@ -4,6 +4,7 @@ import Runestone
 struct EditorArea: View {
     @ObservedObject var workspace: Workspace
     @State private var confirmClose: EditorDocument?
+    @State private var previewDoc: EditorDocument?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,9 +57,35 @@ struct EditorArea: View {
         .frame(height: 35)
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(alignment: .trailing) {
-            if let doc = workspace.activeDocument { SaveButton(doc: doc, workspace: workspace) }
+            HStack(spacing: 2) {
+                if let doc = workspace.activeDocument, isPreviewable(doc.path) {
+                    Button {
+                        Task { if doc.isDirty { await workspace.save(doc) }; previewDoc = doc }
+                    } label: {
+                        Image(systemName: "play.rectangle")
+                            .font(.system(size: 14))
+                            .frame(width: 30, height: 35)
+                            .background(Color(hex: 0x252526))
+                    }
+                    .accessibilityLabel("Preview")
+                }
+                if let doc = workspace.activeDocument { SaveButton(doc: doc, workspace: workspace) }
+            }
         }
         .background(Color(hex: 0x252526))
+        .sheet(item: $previewDoc) { doc in
+            if workspace.isRemote {
+                WebPreviewSheet(title: doc.name, fileURL: nil, rootURL: nil, html: doc.textView.text)
+            } else {
+                WebPreviewSheet(title: doc.name,
+                                fileURL: URL(fileURLWithPath: doc.path),
+                                rootURL: URL(fileURLWithPath: workspace.rootPath), html: nil)
+            }
+        }
+    }
+
+    private func isPreviewable(_ path: String) -> Bool {
+        ["html", "htm", "svg"].contains((path as NSString).pathExtension.lowercased())
     }
 }
 

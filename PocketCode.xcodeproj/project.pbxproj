@@ -80,6 +80,7 @@
 		A072688E2342DB35E4814F51 /* LocalShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F9D72C19DD9C87F854898C2 /* LocalShell.swift */; };
 		A4292E40E944C8FC7C7A627B /* CodexRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA061D823397F34BA998ECE /* CodexRuntime.swift */; };
 		A42EB8146F8C3D419B9F76D5 /* TreeSitterTypeScriptRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 179F90AA7E4D3236F1B920DE /* TreeSitterTypeScriptRunestone */; };
+		A55C1B3AE47337891C3278AF /* WebPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 877CD69B83066BC20F5F588B /* WebPreview.swift */; };
 		A92F0A94E7C6EB6A987FAD1E /* TreeSitterMarkdownRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = B6E0523E47049614170F23B4 /* TreeSitterMarkdownRunestone */; };
 		AAECAE5BD513B5FCA88B4C40 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = B75325CA0BB6FEDFB4137371 /* SwiftTerm */; };
 		AD67B5CED5783C66ED33796B /* Licenses.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE168D17AF51560EB6F528A4 /* Licenses.swift */; };
@@ -198,6 +199,7 @@
 		843A86B33EFD137A25D8DF6E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		84FAAAB7BDC8CC8CAC20AC8C /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		850F700369505CBA2D4555FD /* ExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorerView.swift; sourceTree = "<group>"; };
+		877CD69B83066BC20F5F588B /* WebPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPreview.swift; sourceTree = "<group>"; };
 		889CCE1593AB54A414178109 /* KeyRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyRow.swift; sourceTree = "<group>"; };
 		8F9D72C19DD9C87F854898C2 /* LocalShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalShell.swift; sourceTree = "<group>"; };
 		8FBFA8228B763B4886EEFC5C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -333,6 +335,7 @@
 				7CD7B94C7E3B79223241F00D /* TerminalPanel.swift */,
 				D5DA72C8D9164E4194BC9239 /* TerminalSession.swift */,
 				0A98E635BCF69DC10EE2A791 /* Theme.swift */,
+				877CD69B83066BC20F5F588B /* WebPreview.swift */,
 				50A8682C83776C6CC8A37E4A /* Workspace.swift */,
 				0BD973CD1A208DE0767150F8 /* WorkspaceView.swift */,
 				BFBBE797652A80E40BFD5221 /* LocalShell */,
@@ -745,6 +748,7 @@
 				F34644F4DDD99F2B54B2137F /* TerminalPanel.swift in Sources */,
 				B5BED6C8CB938CDCF4B4595E /* TerminalSession.swift in Sources */,
 				712A02705B440FADDA048542 /* Theme.swift in Sources */,
+				A55C1B3AE47337891C3278AF /* WebPreview.swift in Sources */,
 				E497B56819A6A320181321EC /* Workspace.swift in Sources */,
 				1DAA25C54C4BFA14308CE57A /* WorkspaceView.swift in Sources */,
 				2AC3F1F6A73BBCF1C8F68183 /* pocket_llama.cpp in Sources */,
