@@ -206,11 +206,25 @@ pub extern "C" fn pc_abi_version() -> c_int {
 #[no_mangle]
 pub unsafe extern "C" fn pc_v8_smoketest(error_out: *mut *mut c_char) -> c_int {
     let result = std::panic::catch_unwind(|| {
+        // On iOS this is coerced to Disabled (--jitless) — same as the real host.
         codex_code_mode_runtime::initialize_v8(codex_code_mode_runtime::V8JitMode::Enabled)
             .map_err(|e| format!("init: {e}"))?;
-        // Isolate::new deserialises the read-only snapshot — the exact crash
-        // site in the full run. If this returns, the snapshot is good here.
-        let _isolate = v8::Isolate::new(v8::CreateParams::default());
+        // Isolate::new deserialises the read-only+startup snapshots; Context::new
+        // deserialises the context snapshot; compile+run exercises the jitless
+        // interpreter. Together these cover the first code-mode cell's crash
+        // surface, not just platform init.
+        let isolate = &mut v8::Isolate::new(v8::CreateParams::default());
+        v8::scope!(let scope, isolate);
+        let context = v8::Context::new(scope, Default::default());
+        let scope = &mut v8::ContextScope::new(scope, context);
+        let code = v8::String::new(scope, "(() => { const a = [3,1,2]; a.sort(); return JSON.stringify(a) + '/' + (6*7); })()")
+            .ok_or("alloc source")?;
+        let script = v8::Script::compile(scope, code, None).ok_or("compile failed")?;
+        let value = script.run(scope).ok_or("run failed")?;
+        let out = value.to_rust_string_lossy(scope);
+        if out != "[1,2,3]/42" {
+            return Err(format!("unexpected result: {out}"));
+        }
         Ok::<(), String>(())
     });
     match result {

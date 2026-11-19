@@ -25,6 +25,10 @@ struct TerminalPanel: View {
             }
         }
         .background(VS.panelBG)
+        // Terminals are dark by convention regardless of the app appearance.
+        // Pinning the environment makes the adaptive VS colors (and any system
+        // colors) in this subtree resolve to their dark variants in light mode.
+        .environment(\.colorScheme, .dark)
     }
 
     private var header: some View {

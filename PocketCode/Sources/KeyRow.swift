@@ -44,7 +44,10 @@ struct KeyRow: View {
                         .foregroundStyle(Color(hex: 0xE0E0E0))
                         .frame(minWidth: 18)
                         .padding(.horizontal, 11).padding(.vertical, 6)
-                        .background(key.highlighted ? Color(hex: 0x0E639C) : VS.titleBG, in: RoundedRectangle(cornerRadius: 6))
+                        // Fixed dark pill: the key row belongs to the terminal, which
+                        // stays dark in light mode — an adaptive color here would turn
+                        // the pills light and make the fixed-light glyphs invisible.
+                        .background(key.highlighted ? Color(hex: 0x0E639C) : Color(hex: 0x3C3C3C), in: RoundedRectangle(cornerRadius: 6))
                     }
                     .accessibilityLabel(key.title ?? key.id)
                 }
@@ -53,6 +56,6 @@ struct KeyRow: View {
         }
         .frame(height: Self.height)
         .background(Color(hex: 0x252526))
-        .overlay(alignment: .top) { Rectangle().fill(VS.border).frame(height: 1) }
+        .overlay(alignment: .top) { Rectangle().fill(Color(hex: 0x444444)).frame(height: 1) }
     }
 }

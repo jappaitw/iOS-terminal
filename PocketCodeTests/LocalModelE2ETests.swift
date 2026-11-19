@@ -51,7 +51,7 @@ final class LocalModelE2ETests: XCTestCase {
             (Bundle(for: Self.self).path(forResource: tmplName, ofType: "jinja")
              ?? Bundle.main.path(forResource: tmplName, ofType: "jinja"))
         print("[local-e2e] chat template: \(tmpl ?? "NONE")")
-        XCTAssertEqual(pll_start(gguf.path, port, 32768, tmpl), 0)
+        XCTAssertEqual(pll_start(gguf.path, port, 32768, tmpl, 1), 0)
         let modelID = try await waitForServer()
         print("[local-e2e] server ready, model id: \(modelID)")
 
