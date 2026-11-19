@@ -309,7 +309,7 @@ enum ShellExecutor {
             } else if ["python", "python3"].contains(args[0]) {
                 if let py = services.runPython { status = await py(ctx) }
                 else { status = ctx.fail("the Python runtime isn't included in this build", status: 127) }
-            } else if args[0] == "codex" {
+            } else if ["codex", "pocode"].contains(args[0]) {
                 if let codex = services.runCodex { status = await codex(ctx) }
                 else { status = ctx.fail("the Codex agent isn't included in this build", status: 127) }
             } else if args[0] == "claude" {

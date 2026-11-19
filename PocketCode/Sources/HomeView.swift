@@ -4,7 +4,7 @@ import Citadel
 import NIOPosix
 
 struct HomeView: View {
-    let onOpen: (Workspace) -> Void
+    @ObservedObject var navigation: WorkspaceNavigation
     @EnvironmentObject private var store: HostStore
     @State private var editing: SSHHost?
     @State private var connecting: SSHHost.ID?
@@ -17,6 +17,21 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             List {
+                if !navigation.entries.isEmpty {
+                    Section("Open Workspaces") {
+                        ForEach(navigation.entries) { entry in
+                            Button { navigation.resume(at: entry.id) } label: {
+                                row(icon: entry.workspace.isRemote ? "server.rack" : "folder",
+                                    title: entry.workspace.title, subtitle: "Resume workspace")
+                            }
+                            .swipeActions {
+                                Button(role: .destructive) { navigation.close(at: entry.id) } label: {
+                                    Label("Close Workspace", systemImage: "xmark")
+                                }
+                            }
+                        }
+                    }
+                }
                 Section {
                     Button { openLocal(LocalFileSystem.documents, title: Self.deviceTitle, scoped: false) } label: {
                         row(icon: Self.isPad ? "ipad" : "iphone", title: Self.deviceTitle, subtitle: "App documents (visible in the Files app)")
@@ -121,11 +136,16 @@ struct HomeView: View {
     }
 
     private func openLocal(_ url: URL, title: String, scoped: Bool) {
+        let location = WorkspaceNavigation.Location.local(url)
+        guard !navigation.resume(at: location) else { return }
         let fs = LocalFileSystem(root: url, securityScoped: scoped)
-        onOpen(Workspace(title: title, fs: fs, connection: nil))
+        navigation.open(Workspace(title: title, fs: fs, connection: nil), at: location)
     }
 
+
     private func connect(_ host: SSHHost) {
+        let location = WorkspaceNavigation.Location.ssh(host.id)
+        guard !navigation.resume(at: location) else { return }
         connecting = host.id
         stage = nil
         Task {
@@ -134,7 +154,8 @@ struct HomeView: View {
                 let (conn, _) = try await SSHConnection.connect(host: host, secrets: store.secrets(for: host)) { s in
                     Task { @MainActor in stage = s }
                 }
-                onOpen(Workspace(title: host.displayName, fs: conn.makeFileSystem(), connection: conn))
+                navigation.open(Workspace(title: host.displayName, fs: conn.makeFileSystem(), connection: conn),
+                                at: location)
             } catch SSHConnectError.unknownHost(let key) {
                 hostKeyPrompt = HostKeyPrompt(host: host, newKey: key, oldKey: nil)
             } catch SSHConnectError.hostKeyChanged(let key) {

@@ -10,7 +10,7 @@ private let codexLog = Logger(subsystem: "com.jlmxstudio.pocketcode", category: 
 /// the phone. Started once per process; the `codex` terminal command drives it
 /// through an interactive session.
 enum CodexRuntime {
-    /// Wired into the shell as the `codex` command (see ShellServices.runCodex).
+    /// Wired into the shell as the `codex` and `pocode` commands (see ShellServices.runCodex).
     static let shellCommand: (@Sendable (ShellContext) async -> Int32)? = { ctx in await session(ctx) }
 
     private static let lock = NSLock()
@@ -19,7 +19,7 @@ enum CodexRuntime {
     private static var socketPath: String?
     /// The code_mode the engine was actually started with. The engine reads its
     /// config once at boot and there is no clean restart (no pc_stop), so a
-    /// backend switch mid-session can't re-tune this — we warn the user instead.
+    /// backend switch mid-session requires an app restart.
     private static var engineCodeMode: Bool?
 
     /// The CODEX_HOME directory (config.toml, skills/, credentials).
@@ -141,22 +141,33 @@ enum CodexRuntime {
 
     /// One interactive `codex` session bound to this terminal.
     static func session(_ ctx: ShellContext) async -> Int32 {
-        // Tools the agent runs route back through this shell's workspace.
-        CodexHostBridge.install(root: ctx.state.sandbox.root)
+        guard let input = ctx.terminalInput else {
+            return ctx.fail("this agent needs an interactive terminal", status: 1)
+        }
 
         // The backend decides code_mode: a local model uses the classic tool
         // path (code_mode off), cloud gpt-6 uses the V8 code-mode host.
-        let wantLocal = await MainActor.run { ModelStore.shared.activeModelID != nil }
-        if let error = ensureStarted(codeMode: !wantLocal) { return ctx.fail(error, status: 127) }
-        guard let client, let input = ctx.terminalInput else {
-            return ctx.fail("codex needs an interactive terminal", status: 1)
+        let wantLocal = ctx.args.first == "pocode"
+        if wantLocal {
+            let hasSelection = await MainActor.run { ModelStore.shared.activeModelID != nil }
+            guard hasSelection else {
+                return ctx.fail("Select an installed model in Settings → Models before running pocode.", status: 1)
+            }
         }
+        guard CodexHostBridge.beginSession(root: ctx.state.sandbox.root) else {
+            return ctx.fail("A pocode or codex session is already open. Resume its terminal or exit it before starting another.", status: 1)
+        }
+        defer { CodexHostBridge.endSession() }
+        if let error = ensureStarted(codeMode: !wantLocal) { return ctx.fail(error, status: 127) }
+        guard let client else { return ctx.fail("could not connect to the coding agent", status: 1) }
 
         func out(_ s: String) { ctx.stdout.write(s) }
-        out("\u{1B}[1mCodex\u{1B}[0m — on-device AI coding agent. Type \u{1B}[2m/exit\u{1B}[0m to leave.\r\n")
+        let agentName = wantLocal ? "Local AI" : "Codex"
+        let promptName = wantLocal ? "pocode" : "codex"
+        out("\u{1B}[1m\(agentName)\u{1B}[0m — on-device AI coding agent. Type \u{1B}[2m/exit\u{1B}[0m to leave.\r\n")
         // The engine config is fixed at boot; a backend switch needs a relaunch.
         if engineCodeMode != !wantLocal {
-            out("\u{1B}[33mRestart the app to switch tool mode between cloud and local.\u{1B}[0m\r\n")
+            return ctx.fail("Restart the app to switch tool mode between cloud and local.", status: 1)
         }
         // If the previous run died mid-turn, its stderr (V8 FATAL / Rust panic)
         // names the reason — show the tail once, then clear it.
@@ -171,7 +182,10 @@ enum CodexRuntime {
         }
 
         // A local model, if the user picked one, serves the turn offline — no sign-in.
-        let local = await LocalModelBackend.ensureRunning(out: out)
+        let local = wantLocal ? await LocalModelBackend.ensureRunning(out: out) : nil
+        if wantLocal && local == nil {
+            return ctx.fail("Could not start the selected local model. Check Models in Settings and try again.", status: 1)
+        }
 
         if local == nil {
             // Cloud Codex: sign in.
@@ -188,7 +202,7 @@ enum CodexRuntime {
         let cwd = ctx.state.cwd.path
         let threadId: String?
         if let local {
-            threadId = client.startThread(cwd: cwd, model: local.model, provider: local.provider)
+            threadId = client.startThread(cwd: cwd, model: local.model, provider: local.provider, local: true)
         } else {
             threadId = client.startThread(cwd: cwd)
         }
@@ -196,20 +210,20 @@ enum CodexRuntime {
             return ctx.fail("could not start a codex thread", status: 1)
         }
 
-        out("\r\nAsk Codex to build or change something in \u{1B}[2m\(ctx.state.sandbox.display(ctx.state.cwd))\u{1B}[0m.\r\n")
+        out("\r\nAsk \(agentName) to build or change something in \u{1B}[2m\(ctx.state.sandbox.display(ctx.state.cwd))\u{1B}[0m.\r\n")
         while true {
-            out("\r\n\u{1B}[36mcodex›\u{1B}[0m ")
+            out("\r\n\u{1B}[36m\(promptName)›\u{1B}[0m ")
             guard let line = input.readLine() else { break }
             let prompt = line.trimmingCharacters(in: .whitespaces)
             if prompt.isEmpty { continue }
             if prompt == "/exit" || prompt == "exit" || prompt == "/quit" { break }
-            if prompt == "/logout" { client.logout(); out("Signed out.\r\n"); continue }
+            if !wantLocal && prompt == "/logout" { client.logout(); out("Signed out.\r\n"); continue }
 
             ctx.interruptHandler = { client.interruptTurn(threadId: threadId) }
-            client.runTurn(threadId: threadId, prompt: prompt, out: out)
+            client.runTurn(threadId: threadId, prompt: prompt, localWorkspace: wantLocal ? ctx : nil, out: out)
             ctx.interruptHandler = nil
         }
-        out("\r\nLeaving Codex.\r\n")
+        out("\r\nLeaving \(agentName).\r\n")
         return 0
     }
 

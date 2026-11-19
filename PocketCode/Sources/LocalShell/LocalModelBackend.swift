@@ -2,7 +2,7 @@ import Foundation
 
 /// When the user has chosen a local model, boots the embedded llama.cpp server
 /// and registers it as a codex model provider. Returns nil when no local model
-/// is active (the caller then uses cloud Codex).
+/// is active or it fails to start.
 enum LocalModelBackend {
     struct Active { let model: String; let provider: String }
 
@@ -24,7 +24,7 @@ enum LocalModelBackend {
             return (store.fileURL(for: activeID).path, store.template(for: activeID))
         }
         guard FileManager.default.fileExists(atPath: ggufPath) else {
-            out("\u{1B}[33mLocal model file missing; falling back to cloud Codex.\u{1B}[0m\r\n")
+            out("\u{1B}[33mLocal model file missing.\u{1B}[0m\r\n")
             return nil
         }
 
@@ -34,7 +34,7 @@ enum LocalModelBackend {
         out("\u{1B}[2mStarting local model… (context \(ctx / 1024)K, KV \(f16 ? "f16" : "q8_0"))\u{1B}[0m\r\n")
         let rc = pll_start(ggufPath, port, ctx, template, f16 ? 1 : 0)
         if rc != 0 {
-            out("\u{1B}[33mLocal model already running or failed; using cloud Codex.\u{1B}[0m\r\n")
+            out("\u{1B}[33mLocal model already running or failed.\u{1B}[0m\r\n")
         }
         if await waitHealthy() {
             let active = Active(model: ggufPath, provider: providerName)
@@ -42,7 +42,7 @@ enum LocalModelBackend {
             out("\u{1B}[32m✓ Local model ready (offline).\u{1B}[0m\r\n")
             return active
         }
-        out("\u{1B}[33mLocal model didn't become ready; using cloud Codex.\u{1B}[0m\r\n")
+        out("\u{1B}[33mLocal model didn't become ready.\u{1B}[0m\r\n")
         return nil
     }
 

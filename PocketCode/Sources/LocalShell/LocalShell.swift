@@ -325,5 +325,7 @@ final class LocalShell {
 
     func stop() {
         interrupt()
+        job?.cancel()
+        jobInput?.close()
     }
 }

@@ -112,7 +112,7 @@ final class LocalModelE2ETests: XCTestCase {
         services.runPython = PythonRuntime.shellCommand
         let boot = ShellInput(); boot.close()
         let bootOut = ShellOutput(), bootErr = ShellOutput()
-        _ = await ShellExecutor.run(try ShellParser.parse("codex"), state: state,
+        _ = await ShellExecutor.run(try ShellParser.parse("pocode"), state: state,
                                     terminal: bootOut, terminalError: bootErr,
                                     input: boot, services: services)
         XCTAssertFalse(String(decoding: bootErr.data, as: UTF8.self).contains("could not connect"))

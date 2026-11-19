@@ -11,13 +11,15 @@ enum CodexHostBridge {
     private static var workspaceRoot: URL?
     private static var installed = false
 
-    static func install(root: URL) {
+    /// The native exec callback and protocol connection are shared by interactive Codex sessions.
+    static func beginSession(root: URL) -> Bool {
         lock.lock()
+        guard workspaceRoot == nil else { lock.unlock(); return false }
         workspaceRoot = root
         let needsRegister = !installed
         installed = true
         lock.unlock()
-        guard needsRegister else { return }
+        guard needsRegister else { return true }
 
         pc_set_exec_handler({ requestPtr in
             guard let requestPtr else { return nil }
@@ -25,6 +27,13 @@ enum CodexHostBridge {
             let response = CodexHostBridge.run(requestJSON: request)
             return strdup(response)
         }, { response in free(response) })
+        return true
+    }
+
+    static func endSession() {
+        lock.lock()
+        workspaceRoot = nil
+        lock.unlock()
     }
 
     private static weak var browser: SFSafariViewController?
@@ -82,8 +91,8 @@ enum CodexHostBridge {
     /// Runs a bash script through PocketCode's sandboxed LocalShell (with Python)
     /// rooted at the installed workspace. Shared by the Codex exec handler above
     /// and by `ClaudeRuntime`, so both agents run tools through the same sandbox.
-    static func execScript(_ script: String, cwd: String?) -> (code: Int32, stdout: String, stderr: String) {
-        lock.lock(); let root = workspaceRoot; lock.unlock()
+    static func execScript(_ script: String, cwd: String?, workspaceRoot: URL? = nil) -> (code: Int32, stdout: String, stderr: String) {
+        lock.lock(); let root = workspaceRoot ?? self.workspaceRoot; lock.unlock()
         guard let root else { return (127, "", "no workspace") }
 
         let state = ShellState(root: root)

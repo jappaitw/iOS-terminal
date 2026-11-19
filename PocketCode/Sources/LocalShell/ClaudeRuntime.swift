@@ -18,8 +18,6 @@ enum ClaudeRuntime {
 
     /// One interactive `claude` session bound to this terminal.
     static func session(_ ctx: ShellContext) async -> Int32 {
-        // Tools the agent runs route back through this shell's sandboxed workspace.
-        CodexHostBridge.install(root: ctx.state.sandbox.root)
         func out(_ s: String) { ctx.stdout.write(s) }
         guard let input = ctx.terminalInput else {
             return ctx.fail("claude needs an interactive terminal", status: 1)
@@ -58,7 +56,8 @@ enum ClaudeRuntime {
             messages.append(["role": "user", "content": prompt])
             cancelled.clear()
             ctx.interruptHandler = { cancelled.set() }
-            await runTurn(apiKey: apiKey, model: model, cwd: cwd, messages: &messages, out: out, cancelled: cancelled)
+            await runTurn(apiKey: apiKey, model: model, cwd: cwd, workspaceRoot: ctx.state.sandbox.root,
+                          messages: &messages, out: out, cancelled: cancelled)
             ctx.interruptHandler = nil
         }
         out("\r\nLeaving Claude.\r\n")
@@ -67,7 +66,7 @@ enum ClaudeRuntime {
 
     /// One user turn: call the API, run any tool_use it emits, loop until the
     /// model stops asking for tools (stop_reason != "tool_use").
-    private static func runTurn(apiKey: String, model: String, cwd: String,
+    private static func runTurn(apiKey: String, model: String, cwd: String, workspaceRoot: URL,
                                 messages: inout [[String: Any]], out: (String) -> Void,
                                 cancelled: InterruptFlag) async {
         let tools: [[String: Any]] = [[
@@ -110,7 +109,7 @@ enum ClaudeRuntime {
                 let id = tu["id"] as? String ?? ""
                 let command = (tu["input"] as? [String: Any])?["command"] as? String ?? ""
                 out("\r\n\u{1B}[2m$ \(crlf(command))\u{1B}[0m\r\n")
-                let r = CodexHostBridge.execScript(command, cwd: cwd)
+                let r = CodexHostBridge.execScript(command, cwd: cwd, workspaceRoot: workspaceRoot)
                 var combined = r.stdout
                 if !r.stderr.isEmpty { combined += (combined.isEmpty ? "" : "\n") + r.stderr }
                 if combined.isEmpty { combined = "(exit \(r.code))" }

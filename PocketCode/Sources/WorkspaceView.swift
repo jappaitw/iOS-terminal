@@ -4,6 +4,7 @@ import SwiftUI
 /// iPad / landscape (regular): activity bar + sidebar + editor with a terminal panel underneath.
 struct WorkspaceView: View {
     @ObservedObject var workspace: Workspace
+    let onBack: () -> Void
     let onClose: () -> Void
     @Environment(\.horizontalSizeClass) private var hSize
     @Environment(\.scenePhase) private var scenePhase
@@ -20,7 +21,13 @@ struct WorkspaceView: View {
         }
         .background(VS.editorBG)
         .sheet(isPresented: $workspace.showSettings) { SettingsView() }
-        .task { await workspace.bootstrap() }
+        .task {
+            if workspace.rootPath.isEmpty {
+                await workspace.bootstrap()
+            } else if await workspace.ensureConnected(), !Task.isCancelled {
+                await workspace.refreshAll()
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
             // iOS suspends sockets in the background; check (and rebuild) the session on return.
             if phase == .active { Task { await workspace.ensureConnected() } }
@@ -38,9 +45,13 @@ struct WorkspaceView: View {
 
     private var titleBar: some View {
         HStack(spacing: 10) {
-            Button(action: onClose) {
+            Button {
+                _ = workspace.activeTerminal?.terminalView.resignFirstResponder()
+                onBack()
+            } label: {
                 Image(systemName: "chevron.left").font(.system(size: 14, weight: .semibold))
             }
+            .accessibilityLabel("Home")
             Spacer()
             HStack(spacing: 6) {
                 if workspace.isRemote {

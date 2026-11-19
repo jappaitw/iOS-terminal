@@ -30,6 +30,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     private var client: SSHClient?
     /// Local backend (nil for an SSH terminal).
     private(set) var shell: LocalShell?
+    private var startsAgent = false
     var isLocal: Bool { shell != nil }
     /// Bumped on every start; a finishing task only updates state if it is still the current run.
     private var runID = 0
@@ -64,12 +65,13 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     }
 
     /// A terminal running PocketCode's local shell inside `root` (no SSH).
-    init(localRoot: URL, index: Int, initialDirectory: String?, services: ShellServices) {
+    init(localRoot: URL, index: Int, initialDirectory: String?, services: ShellServices, agent: Bool = false) {
         self.client = nil
         self.initialDirectory = initialDirectory
-        self.title = "local \(index)"
+        self.title = agent ? "Pocode \(index)" : "local \(index)"
         self.terminalView = PocketTerminalView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         super.init()
+        startsAgent = agent
         configureView()
         let tv = terminalView
         shell = LocalShell(root: localRoot, services: services) { [weak self, weak tv] text in
@@ -115,6 +117,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         input.set(continuation)
         if let shell {
             startLocal(shell, stream: stream, run: run)
+            if startsAgent { continuation.yield(Array("pocode\r".utf8)) }
             return
         }
         guard let client else { return }
@@ -180,6 +183,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
     }
     private var hasStartedLocal = false
 
+
     private func finish(_ run: Int, message: String?) {
         guard run == runID, isRunning else { return }
         input.finish()
@@ -193,6 +197,7 @@ final class TerminalSession: NSObject, ObservableObject, Identifiable, TerminalV
         task?.cancel()
         task = nil
         shell?.stop()
+        finish(runID, message: nil)
         stopAllForwards()
     }
 

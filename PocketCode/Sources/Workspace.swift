@@ -283,7 +283,9 @@ final class Workspace: ObservableObject {
         let task = Task<Bool, Never> { @MainActor in
             defer { self.reconnectTask = nil }
             self.link = .checking
-            if await connection.isHealthy() { self.link = .connected; return true }
+            let healthy = await connection.isHealthy()
+            guard !Task.isCancelled else { return false }
+            if healthy { self.link = .connected; return true }
             self.link = .reconnecting
             do {
                 try await connection.reconnect()
@@ -291,9 +293,14 @@ final class Workspace: ObservableObject {
                 self.link = .lost(error.localizedDescription)
                 return false
             }
+            guard !Task.isCancelled else {
+                connection.close()
+                return false
+            }
             self.fs = connection.makeFileSystem()
             self.link = .connected
             if self.rootError == nil && !self.rootPath.isEmpty { await self.refreshAll() } else { await self.bootstrap() }
+            guard !Task.isCancelled else { return false }
             for t in self.terminals { t.reattach(client: connection.client) }
             return true
         }
@@ -308,6 +315,8 @@ final class Workspace: ObservableObject {
     }
 
     func shutdown() {
+        reconnectTask?.cancel()
+        gitTask?.cancel()
         terminals.forEach { $0.stop() }
         connection?.close()
     }
@@ -530,7 +539,7 @@ final class Workspace: ObservableObject {
     /// rooted at the workspace folder.
     var canOpenTerminal: Bool { isRemote || !rootPath.isEmpty }
 
-    func newTerminal(at directory: String? = nil) {
+    func newTerminal(at directory: String? = nil, agent: Bool = false) {
         terminalCounter += 1
         let dir = directory ?? (rootPath.isEmpty ? nil : rootPath)
         let session: TerminalSession
@@ -538,8 +547,10 @@ final class Workspace: ObservableObject {
             session = TerminalSession(client: connection.client, index: terminalCounter, initialDirectory: dir)
         } else {
             guard !rootPath.isEmpty else { terminalCounter -= 1; return }
-            session = TerminalSession(localRoot: URL(fileURLWithPath: rootPath), index: terminalCounter,
-                                      initialDirectory: dir, services: localShellServices())
+            let root = URL(fileURLWithPath: rootPath)
+            session = TerminalSession(localRoot: root, index: terminalCounter,
+                                      initialDirectory: dir, services: localShellServices(),
+                                      agent: agent)
         }
         terminals.append(session)
         activeTerminalID = session.id

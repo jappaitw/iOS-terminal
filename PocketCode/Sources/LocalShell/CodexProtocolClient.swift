@@ -47,6 +47,7 @@ final class CodexProtocolClient {
     func initialize() {
         let id = request(method: "initialize", params: [
             "clientInfo": ["name": "pocketcode", "title": "PocketCode", "version": "1.0"],
+            "capabilities": ["experimentalApi": true],
         ])
         _ = awaitResponse(id: id)
         if let status = sendAndAwait(method: "getAuthStatus", params: [:]),
@@ -102,13 +103,49 @@ final class CodexProtocolClient {
 
     // MARK: threads & turns
 
-    func startThread(cwd: String, model: String? = nil, provider: String? = nil) -> String? {
+    func startThread(cwd: String, model: String? = nil, provider: String? = nil, local: Bool = false) -> String? {
         var params: [String: Any] = ["cwd": cwd]
         if let model { params["model"] = model }
         if let provider { params["modelProvider"] = provider }
+        if local {
+            params["baseInstructions"] = """
+            You are Pocode, an offline coding assistant. When asked to build or edit something,
+            call write_file to save the actual code in the current workspace.
+            Wait for write_file to succeed before calling run_command to execute the file.
+            Use relative paths. Report the files you saved and actual tool results.
+            If a tool fails, report that failure rather than claiming you completed the task.
+            """
+            params["config"] = [
+                "features.apps": false,
+                "features.plugins": false,
+                "features.goals": false,
+                "features.shell_tool": false,
+                "web_search": "disabled",
+            ] as [String: Any]
+            params["dynamicTools"] = [
+                localTool("write_file", description: "Create or update a workspace file with UTF-8 text.",
+                          arguments: ["path": "Path relative to the current directory.", "content": "Complete file contents."]),
+                localTool("run_command", description: "Execute a command in the workspace and return its output.",
+                          arguments: ["command": "A shell command such as python hello.py or ls."]),
+            ]
+        }
         guard let r = sendAndAwait(method: "thread/start", params: params) else { return nil }
         if let thread = r["thread"] as? [String: Any], let id = thread["id"] as? String { return id }
         return nil
+    }
+
+    private func localTool(_ name: String, description: String, arguments: [String: String]) -> [String: Any] {
+        [
+            "type": "function",
+            "name": name,
+            "description": description,
+            "inputSchema": [
+                "type": "object",
+                "properties": arguments.mapValues { ["type": "string", "description": $0] },
+                "required": arguments.keys.sorted(),
+                "additionalProperties": false,
+            ] as [String: Any],
+        ]
     }
 
     func interruptTurn(threadId: String) {
@@ -116,7 +153,8 @@ final class CodexProtocolClient {
     }
 
     /// Sends a prompt and streams the agent's work to `out` until the turn ends.
-    func runTurn(threadId: String, prompt: String, out: @escaping (String) -> Void) {
+    func runTurn(threadId: String, prompt: String, localWorkspace: ShellContext? = nil,
+                 out: @escaping (String) -> Void) {
         _ = request(method: "turn/start", params: [
             "threadId": threadId,
             "input": [["type": "text", "text": prompt]],
@@ -124,6 +162,13 @@ final class CodexProtocolClient {
         var reasoningShown = false
         while true {
             guard let msg = readMessage() else { out("\r\n\u{1B}[31m(connection closed)\u{1B}[0m\r\n"); return }
+            if msg["method"] as? String == "item/tool/call", let id = msg["id"], let localWorkspace {
+                let params = msg["params"] as? [String: Any] ?? [:]
+                let (success, result) = runLocalTool(params, workspace: localWorkspace)
+                out("\r\n\(result.replacingOccurrences(of: "\n", with: "\r\n"))\r\n")
+                reply(id: id, result: ["success": success, "contentItems": [["type": "inputText", "text": result]]])
+                continue
+            }
             if answerServerRequest(msg) { continue }
             guard let method = msg["method"] as? String,
                   let params = msg["params"] as? [String: Any] else { continue }
@@ -145,6 +190,34 @@ final class CodexProtocolClient {
             default:
                 break
             }
+        }
+    }
+
+    private func runLocalTool(_ params: [String: Any], workspace: ShellContext) -> (Bool, String) {
+        let arguments = params["arguments"] as? [String: String] ?? [:]
+        let state = workspace.state
+        switch params["tool"] as? String {
+        case "write_file":
+            guard let path = arguments["path"], !path.isEmpty, let content = arguments["content"] else {
+                return (false, "write_file requires a path and content.")
+            }
+            do {
+                let file = try state.sandbox.resolve(path, from: state.cwd)
+                try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try Data(content.utf8).write(to: file, options: .atomic)
+                return (true, "Saved \(state.sandbox.display(file))")
+            } catch {
+                return (false, "Write failed: \(error.localizedDescription)")
+            }
+        case "run_command":
+            guard let command = arguments["command"], !command.isEmpty else {
+                return (false, "run_command requires a command.")
+            }
+            let result = CodexHostBridge.execScript(command, cwd: state.cwd.path, workspaceRoot: state.sandbox.root)
+            let output = (result.stdout + result.stderr).trimmingCharacters(in: .whitespacesAndNewlines)
+            return (result.code == 0, "Exit \(result.code): \(output)")
+        default:
+            return (false, "Unknown local workspace tool.")
         }
     }
 

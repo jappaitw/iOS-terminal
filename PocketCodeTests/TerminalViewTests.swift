@@ -5,6 +5,36 @@ import SwiftTerm
 
 @MainActor
 final class TerminalViewTests: XCTestCase {
+    func testWorkspaceSessionsSurviveReturningHomeAndOpeningAnotherFolder() async throws {
+        let navigation = WorkspaceNavigation()
+        let root = FileManager.default.temporaryDirectory
+        let location = WorkspaceNavigation.Location.local(root)
+        let workspace = Workspace(title: "First", fs: LocalFileSystem(root: root), connection: nil)
+        await workspace.bootstrap()
+        workspace.newTerminal()
+        let terminal = try XCTUnwrap(workspace.activeTerminal)
+
+        navigation.open(workspace, at: location)
+        navigation.showHome()
+        XCTAssertNil(navigation.activeWorkspace)
+        XCTAssertTrue(terminal.isRunning)
+
+        let otherRoot = root.appendingPathComponent("second-workspace")
+        let otherLocation = WorkspaceNavigation.Location.local(otherRoot)
+        navigation.open(Workspace(title: "Second", fs: LocalFileSystem(root: otherRoot), connection: nil), at: otherLocation)
+        navigation.showHome()
+        XCTAssertTrue(navigation.resume(at: location))
+        XCTAssertTrue(navigation.activeWorkspace === workspace)
+        XCTAssertTrue(navigation.activeWorkspace?.activeTerminal === terminal)
+        XCTAssertTrue(terminal.isRunning)
+
+        navigation.close(at: location)
+        XCTAssertFalse(terminal.isRunning)
+        XCTAssertFalse(navigation.resume(at: location))
+        XCTAssertTrue(navigation.resume(at: otherLocation))
+        navigation.close(at: otherLocation)
+    }
+
     /// UIKit asks `hasText` through the UIKeyInput (Objective-C) protocol to decide whether
     /// holding the keyboard's delete key keeps repeating. Our subclass must answer true even
     /// though nothing is buffered locally; stock SwiftTerm answers false.
