@@ -48,6 +48,10 @@ enum CodexRuntime {
 
         let home = Self.home
         try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        // Crash forensics: V8 FATALs and Rust panics print their reason to stderr
+        // right before trapping. Point stderr at a file so a device crash leaves
+        // the exact message behind (surfaced by `codex` on the next launch).
+        freopen(home.appendingPathComponent("engine-stderr.log").path, "a", stderr)
         ensureIOSFeatureDefaults(home: home, codeMode: codeMode)
         engineCodeMode = codeMode
         // Tokens for MCP bearer_token_env_var live in the Keychain and are
@@ -149,6 +153,17 @@ enum CodexRuntime {
         // The engine config is fixed at boot; a backend switch needs a relaunch.
         if engineCodeMode != !wantLocal {
             out("\u{1B}[33mRestart the app to switch tool mode between cloud and local.\u{1B}[0m\r\n")
+        }
+        // If the previous run died mid-turn, its stderr (V8 FATAL / Rust panic)
+        // names the reason — show the tail once, then clear it.
+        let stderrLog = Self.home.appendingPathComponent("engine-stderr.log")
+        if let data = try? Data(contentsOf: stderrLog), !data.isEmpty {
+            let text = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !text.isEmpty {
+                let tail = text.split(separator: "\n").suffix(14).joined(separator: "\r\n  ")
+                out("\u{1B}[33mPrevious engine crash log:\u{1B}[0m\r\n  \(tail)\r\n")
+            }
+            try? Data().write(to: stderrLog)
         }
 
         // A local model, if the user picked one, serves the turn offline — no sign-in.
