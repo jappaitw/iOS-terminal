@@ -357,7 +357,7 @@ struct HostKeyPromptView: View {
             .navigationTitle(prompt.host.displayName)
             .navigationBarTitleDisplayMode(.inline)
         }
-        .preferredColorScheme(.dark)
+        // Follows the device/app appearance instead of forcing dark.
     }
 
     private func fingerprint(_ title: String, _ key: String, color: Color) -> some View {

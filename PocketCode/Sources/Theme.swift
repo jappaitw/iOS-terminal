@@ -15,32 +15,41 @@ extension Color {
     init(hex: UInt32, alpha: Double = 1) { self.init(uiColor: UIColor(hex: hex, alpha: alpha)) }
 }
 
-/// Dark+ inspired palette.
+/// A color that resolves to the Dark+ value in dark mode and the Light+ value
+/// in light mode, so the whole UI chrome follows the device appearance.
+private func dyn(dark: UInt32, light: UInt32, alpha: CGFloat = 1) -> Color {
+    Color(uiColor: UIColor { trait in
+        UIColor(hex: trait.userInterfaceStyle == .dark ? dark : light, alpha: alpha)
+    })
+}
+
+/// VS Code-inspired palette. Chrome colors adapt to light/dark (Dark+ / Light+);
+/// git decorations keep a single hue that reads on both.
 enum VS {
-    static let editorBG = Color(hex: 0x1E1E1E)
-    static let sidebarBG = Color(hex: 0x252526)
-    static let activityBG = Color(hex: 0x333333)
-    static let titleBG = Color(hex: 0x3C3C3C)
-    static let tabInactiveBG = Color(hex: 0x2D2D2D)
-    static let panelBG = Color(hex: 0x1E1E1E)
-    static let border = Color(hex: 0x444444)
-    static let text = Color(hex: 0xCCCCCC)
-    static let textDim = Color(hex: 0x8B8B8B)
-    static let accent = Color(hex: 0x3794FF)
+    static let editorBG = dyn(dark: 0x1E1E1E, light: 0xFFFFFF)
+    static let sidebarBG = dyn(dark: 0x252526, light: 0xF3F3F3)
+    static let activityBG = dyn(dark: 0x333333, light: 0xE8E8E8)
+    static let titleBG = dyn(dark: 0x3C3C3C, light: 0xE4E4E4)
+    static let tabInactiveBG = dyn(dark: 0x2D2D2D, light: 0xECECEC)
+    static let panelBG = dyn(dark: 0x1E1E1E, light: 0xFFFFFF)
+    static let border = dyn(dark: 0x444444, light: 0xD4D4D4)
+    static let text = dyn(dark: 0xCCCCCC, light: 0x1E1E1E)
+    static let textDim = dyn(dark: 0x8B8B8B, light: 0x6C6C6C)
+    static let accent = dyn(dark: 0x3794FF, light: 0x0066CC)
     static let statusBar = Color(hex: 0x007ACC)
     static let statusBarRemote = Color(hex: 0x16825D)
-    static let selection = Color(hex: 0x37373D)
-    static let selectionActive = Color(hex: 0x04395E)
+    static let selection = dyn(dark: 0x37373D, light: 0xE4E6F1)
+    static let selectionActive = dyn(dark: 0x04395E, light: 0xCCE0F4)
     static let modified = Color(hex: 0xE2C08D)
-    static let error = Color(hex: 0xF14C4C)
-    static let indentGuide = Color(hex: 0x404040)
-    static let inputBG = Color(hex: 0x3C3C3C)
-    // Git decorations (gitDecoration.* in Dark+)
-    static let gitModified = Color(hex: 0xE2C08D)
-    static let gitAdded = Color(hex: 0x81B88B)
-    static let gitUntracked = Color(hex: 0x73C991)
-    static let gitDeleted = Color(hex: 0xC74E39)
-    static let gitConflict = Color(hex: 0xE4676B)
+    static let error = dyn(dark: 0xF14C4C, light: 0xE51400)
+    static let indentGuide = dyn(dark: 0x404040, light: 0xD3D3D3)
+    static let inputBG = dyn(dark: 0x3C3C3C, light: 0xFFFFFF)
+    // Git decorations (gitDecoration.* — one hue that reads on both themes)
+    static let gitModified = dyn(dark: 0xE2C08D, light: 0x895503)
+    static let gitAdded = dyn(dark: 0x81B88B, light: 0x587C0C)
+    static let gitUntracked = dyn(dark: 0x73C991, light: 0x388A34)
+    static let gitDeleted = dyn(dark: 0xC74E39, light: 0xAD0707)
+    static let gitConflict = dyn(dark: 0xE4676B, light: 0xC72E35)
 
     static let monoFont = UIFont.monospacedSystemFont(ofSize: 13, weight: .regular)
 }

@@ -121,7 +121,7 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
-        .preferredColorScheme(.dark)
+        // Follows the app's appearance setting (App.swift) instead of forcing dark.
     }
 }
 

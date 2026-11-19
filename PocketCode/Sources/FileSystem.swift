@@ -149,7 +149,12 @@ final class SFTPFileSystem: FileSystemProvider {
     }
 
     func list(_ path: String) async throws -> [FileItem] {
-        let names = try await sftp.listDirectory(atPath: path)
+        let names: [SFTPMessage.Name]
+        do {
+            names = try await sftp.listDirectory(atPath: path)
+        } catch {
+            throw Self.friendlyError(error, path: path)
+        }
         var out: [FileItem] = []
         for comp in names.flatMap(\.components) where comp.filename != "." && comp.filename != ".." {
             let full = PathUtil.join(path, comp.filename)
@@ -168,8 +173,35 @@ final class SFTPFileSystem: FileSystemProvider {
         return PathUtil.sorted(out)
     }
 
+    /// Turns Citadel's opaque `SFTPMessage.Status error N` into something a user
+    /// can act on. The macOS SFTP server sends an empty message for most denials,
+    /// and the common one — protected folders (Desktop/Documents/Downloads) that
+    /// need Full Disk Access granted to Remote Login (sshd) — otherwise shows only
+    /// a cryptic code.
+    static func friendlyError(_ error: Error, path: String) -> Error {
+        guard let status = error as? SFTPMessage.Status else { return error }
+        let name = (path as NSString).lastPathComponent
+        let fda = "On macOS, protected folders (Desktop, Documents, Downloads) need Full Disk Access granted to Remote Login in System Settings → Privacy & Security → Full Disk Access."
+        switch status.errorCode {
+        case .permissionDenied:
+            return FSError.message("\(name): permission denied. \(fda)")
+        case .noSuchFile:
+            return FSError.message("\(name): no such file or directory.")
+        case .failure where status.message.isEmpty:
+            return FSError.message("\(name): the server refused this operation. \(fda)")
+        default:
+            let detail = status.message.isEmpty ? status.errorCode.debugDescription : status.message
+            return FSError.message("\(name): \(detail)")
+        }
+    }
+
     func read(_ path: String) async throws -> Data {
-        let buffer = try await sftp.withFile(filePath: path, flags: .read) { try await $0.readAll() }
+        let buffer: NIOCore.ByteBuffer
+        do {
+            buffer = try await sftp.withFile(filePath: path, flags: .read) { try await $0.readAll() }
+        } catch {
+            throw Self.friendlyError(error, path: path)
+        }
         return Data(buffer.readableBytesView)
     }
 
