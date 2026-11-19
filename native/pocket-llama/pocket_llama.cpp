@@ -10,7 +10,7 @@
 
 int llama_server(int argc, char **argv); // from libllama-server-impl
 
-extern "C" int pll_start(const char *model_path, int port, int context_size, const char *chat_template_path) {
+extern "C" int pll_start(const char *model_path, int port, int context_size, const char *chat_template_path, int kv_f16) {
     static std::atomic_bool started{false};
     bool expected = false;
     if (!started.compare_exchange_strong(expected, true)) {
@@ -18,7 +18,7 @@ extern "C" int pll_start(const char *model_path, int port, int context_size, con
     }
     std::string model = model_path ? model_path : "";
     std::string tmpl = chat_template_path ? chat_template_path : "";
-    std::thread([model, port, context_size, tmpl] {
+    std::thread([model, port, context_size, tmpl, kv_f16] {
         std::vector<std::string> args = {
             "llama-server",
             "-m", model,
@@ -29,14 +29,17 @@ extern "C" int pll_start(const char *model_path, int port, int context_size, con
             // Without --jinja the chat template ignores tool definitions and
             // the model can never emit a tool call.
             "--jinja",
-            // On memory-tight iOS devices the KV cache dominates. Flash
-            // attention + 8-bit KV quantization roughly halves it, so a 3B
-            // model with a useful context fits the app's ~RAM/2 budget
-            // instead of being OOM-killed mid-turn.
+            // Flash attention speeds up attention and is the prerequisite for a
+            // quantized KV cache.
             "--flash-attn", "on",
-            "--cache-type-k", "q8_0",
-            "--cache-type-v", "q8_0",
         };
+        // KV cache precision is a speed/memory trade the caller picks by device
+        // RAM and model size: f16 is faster to decode; q8_0 is ~half the memory
+        // (used for a big model on a tight device to avoid a jetsam OOM).
+        if (!kv_f16) {
+            args.push_back("--cache-type-k"); args.push_back("q8_0");
+            args.push_back("--cache-type-v"); args.push_back("q8_0");
+        }
         if (!tmpl.empty()) {
             // A tool-aware template whose <tool_call> markup llama's parser detects.
             args.push_back("--chat-template-file");

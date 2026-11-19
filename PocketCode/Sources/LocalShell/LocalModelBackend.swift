@@ -30,8 +30,9 @@ enum LocalModelBackend {
 
         let template = templateName.flatMap { Bundle.main.path(forResource: $0, ofType: "jinja") }
         let ctx = contextSizeForDevice()
-        out("\u{1B}[2mStarting local model… (context \(ctx / 1024)K)\u{1B}[0m\r\n")
-        let rc = pll_start(ggufPath, port, ctx, template)
+        let f16 = useF16KV(modelPath: ggufPath)
+        out("\u{1B}[2mStarting local model… (context \(ctx / 1024)K, KV \(f16 ? "f16" : "q8_0"))\u{1B}[0m\r\n")
+        let rc = pll_start(ggufPath, port, ctx, template, f16 ? 1 : 0)
         if rc != 0 {
             out("\u{1B}[33mLocal model already running or failed; using cloud Codex.\u{1B}[0m\r\n")
         }
@@ -71,6 +72,19 @@ enum LocalModelBackend {
         case ..<11: return 16384   // 8GB (16 Pro, most current phones)
         default:    return 32768   // 12GB+ (Pro Max / iPad)
         }
+    }
+
+    /// f16 KV decodes faster; q8_0 halves KV memory. Keep f16 unless a big model
+    /// on a tight device would risk a jetsam OOM: a 3B (~2GB) + f16 KV at a long
+    /// context on an 8GB phone is borderline, so those fall back to q8_0. Small
+    /// models and roomy (12GB+) devices always get the faster f16.
+    private static func useF16KV(modelPath: String) -> Bool {
+        let gb = Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824
+        if gb >= 11 { return true }                       // 12GB+ : always fast
+        let attrs = try? FileManager.default.attributesOfItem(atPath: modelPath)
+        let bytes = (attrs?[.size] as? Int) ?? 0
+        let modelGB = Double(bytes) / 1_073_741_824
+        return modelGB <= 1.4                              // ≤~1.5B Q4 → fast; 3B on 8GB → q8_0
     }
 
     private static func waitHealthy() async -> Bool {

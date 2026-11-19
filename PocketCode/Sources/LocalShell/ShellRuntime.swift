@@ -158,6 +158,7 @@ struct ShellServices: Sendable {
     var runPython: (@Sendable (ShellContext) async -> Int32)?
     var runCodex: (@Sendable (ShellContext) async -> Int32)?
     var runClaude: (@Sendable (ShellContext) async -> Int32)?
+    var runBench: (@Sendable (ShellContext) async -> Int32)?
 }
 
 /// Variable, tilde and glob expansion.
@@ -313,6 +314,9 @@ enum ShellExecutor {
             } else if args[0] == "claude" {
                 if let claude = services.runClaude { status = await claude(ctx) }
                 else { status = ctx.fail("the Claude agent isn't included in this build", status: 127) }
+            } else if args[0] == "bench" {
+                if let bench = services.runBench { status = await bench(ctx) }
+                else { status = ctx.fail("the benchmark isn't included in this build", status: 127) }
             } else {
                 stderr.line("pocketcode: \(args[0]): command not found (type `help` for the list)")
                 status = 127

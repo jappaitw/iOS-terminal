@@ -21,6 +21,7 @@ enum Builtins {
         ("cat", "print files"), ("cd", "change directory"), ("clear", "clear the screen"),
         ("codex", "on-device AI coding agent (sign in, then ask it to build/edit/run)"),
         ("claude", "on-device Claude agent (Anthropic API key; ask it to build/edit/run)"),
+        ("bench", "benchmark the active local model (tok/s + memory) on this device"),
         ("curl", "HTTP requests (-X -H -d -o -I --max-time)"), ("wget", "download a URL"),
         ("rg", "recursive search (ripgrep-style front end)"), ("sed", "stream edit: s/pattern/replacement/[gip], -i in place"),
         ("code", "open a file in the editor"), ("cp", "copy (-r for folders)"), ("echo", "print text"),
@@ -31,7 +32,7 @@ enum Builtins {
         ("touch", "create file / update time"), ("tree", "folder tree"), ("wc", "count lines/words/bytes"),
     ]
 
-    static var commandNames: [String] { (Array(table.keys) + ["python", "python3", "codex", "claude", "exit"]).sorted() }
+    static var commandNames: [String] { (Array(table.keys) + ["python", "python3", "codex", "claude", "bench", "exit"]).sorted() }
 
     // MARK: Option parsing helper
 
