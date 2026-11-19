@@ -51,7 +51,11 @@ enum CodexRuntime {
         // Crash forensics: V8 FATALs and Rust panics print their reason to stderr
         // right before trapping. Point stderr at a file so a device crash leaves
         // the exact message behind (surfaced by `codex` on the next launch).
+        // Unbuffered is essential: freopen to a regular file makes stderr fully
+        // buffered, and a FATAL that traps right after printing would die with
+        // its message still in the buffer — exactly what happened on build 16.
         freopen(home.appendingPathComponent("engine-stderr.log").path, "a", stderr)
+        setvbuf(stderr, nil, _IONBF, 0)
         ensureIOSFeatureDefaults(home: home, codeMode: codeMode)
         engineCodeMode = codeMode
         // Tokens for MCP bearer_token_env_var live in the Keychain and are
