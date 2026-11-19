@@ -109,8 +109,9 @@ final class CodexProtocolClient {
         if let provider { params["modelProvider"] = provider }
         if local {
             params["baseInstructions"] = """
-            You are Pocode, an offline coding assistant. When asked to build or edit something,
-            call write_file to save the actual code in the current workspace.
+            You are Pocode, a coding assistant running on the user's iPhone. When asked to
+            build or edit something, call write_file to save the actual code in the current
+            workspace — do NOT just print the code in your reply.
             Wait for write_file to succeed before calling run_command to execute the file.
             Use relative paths. Report the files you saved and actual tool results.
             If a tool fails, report that failure rather than claiming you completed the task.

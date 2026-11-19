@@ -31,7 +31,7 @@ enum CodexRuntime {
     /// A dedicated protocol connection for the settings UI (skills list, MCP
     /// management). Boots the engine if needed. Returns nil with a message on failure.
     static func managementClient() -> (CodexProtocolClient?, String?) {
-        if let error = ensureStarted(codeMode: true) { return (nil, error) }
+        if let error = ensureStarted(codeMode: false) { return (nil, error) }
         lock.lock(); let sock = socketPath; lock.unlock()
         guard let sock else { return (nil, "engine socket unknown") }
         let c = CodexProtocolClient(socketPath: sock)
@@ -145,8 +145,11 @@ enum CodexRuntime {
             return ctx.fail("this agent needs an interactive terminal", status: 1)
         }
 
-        // The backend decides code_mode: a local model uses the classic tool
-        // path (code_mode off), cloud gpt-6 uses the V8 code-mode host.
+        // BOTH backends use Pocode's own tools (write_file/run_command routed
+        // through the sandboxed shell) via dynamicTools + Direct mode. iOS can't
+        // run codex's code-mode gRPC host (connection refused) or its unified
+        // exec (real fork/exec is "Operation not permitted"), so code_mode stays
+        // off everywhere and the model never touches those fragile paths.
         let wantLocal = ctx.args.first == "pocode"
         if wantLocal {
             let hasSelection = await MainActor.run { ModelStore.shared.activeModelID != nil }
@@ -158,17 +161,13 @@ enum CodexRuntime {
             return ctx.fail("A pocode or codex session is already open. Resume its terminal or exit it before starting another.", status: 1)
         }
         defer { CodexHostBridge.endSession() }
-        if let error = ensureStarted(codeMode: !wantLocal) { return ctx.fail(error, status: 127) }
+        if let error = ensureStarted(codeMode: false) { return ctx.fail(error, status: 127) }
         guard let client else { return ctx.fail("could not connect to the coding agent", status: 1) }
 
         func out(_ s: String) { ctx.stdout.write(s) }
         let agentName = wantLocal ? "Local AI" : "Codex"
         let promptName = wantLocal ? "pocode" : "codex"
         out("\u{1B}[1m\(agentName)\u{1B}[0m — on-device AI coding agent. Type \u{1B}[2m/exit\u{1B}[0m to leave.\r\n")
-        // The engine config is fixed at boot; a backend switch needs a relaunch.
-        if engineCodeMode != !wantLocal {
-            return ctx.fail("Restart the app to switch tool mode between cloud and local.", status: 1)
-        }
         // If the previous run died mid-turn, its stderr (V8 FATAL / Rust panic)
         // names the reason — show the tail once, then clear it.
         let stderrLog = Self.home.appendingPathComponent("engine-stderr.log")
@@ -204,7 +203,8 @@ enum CodexRuntime {
         if let local {
             threadId = client.startThread(cwd: cwd, model: local.model, provider: local.provider, local: true)
         } else {
-            threadId = client.startThread(cwd: cwd)
+            // Cloud gpt uses the SAME Pocode tools path (dynamicTools, no code-mode).
+            threadId = client.startThread(cwd: cwd, local: true)
         }
         guard let threadId else {
             return ctx.fail("could not start a codex thread", status: 1)

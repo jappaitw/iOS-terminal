@@ -100,8 +100,12 @@ enum CodexHostBridge {
             let url = URL(fileURLWithPath: cwd)
             if url.path.hasPrefix(state.sandbox.root.path) { state.cwd = url }
         }
+        // The agent's run_command gets the same tools the user's terminal has
+        // (python for running code, git for version control), so "run my script"
+        // and "commit this" work from inside a turn.
         var services = ShellServices()
         services.runPython = PythonRuntime.shellCommand
+        services.runGit = GitRuntime.shellCommand
 
         let out = ShellOutput(), err = ShellOutput()
         let done = DispatchSemaphore(value: 0)
