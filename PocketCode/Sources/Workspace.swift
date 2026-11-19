@@ -560,6 +560,7 @@ final class Workspace: ObservableObject {
         services.runCodex = CodexRuntime.shellCommand
         services.runClaude = ClaudeRuntime.shellCommand
         services.runBench = BenchmarkRuntime.shellCommand
+        services.runGit = GitRuntime.shellCommand
         return services
     }
 

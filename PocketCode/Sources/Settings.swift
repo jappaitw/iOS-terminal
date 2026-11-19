@@ -57,6 +57,7 @@ final class AppSettings: ObservableObject {
 struct SettingsView: View {
     @ObservedObject var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
+    @State private var githubLogin = GitHubAccount.login
 
     var body: some View {
         NavigationStack {
@@ -65,6 +66,24 @@ struct SettingsView: View {
                     NavigationLink { ModelSettingsView() } label: {
                         Label("AI Model", systemImage: "brain")
                     }
+                }
+                Section {
+                    HStack {
+                        Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                        Spacer()
+                        if let name = githubLogin, GitHubAccount.isSignedIn {
+                            Text(name).foregroundStyle(.secondary)
+                            Button("Sign out", role: .destructive) {
+                                GitHubAccount.signOut(); githubLogin = nil
+                            }.font(.caption)
+                        } else {
+                            Text("run `git login` in the terminal").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Accounts")
+                } footer: {
+                    Text("Sign in to push, pull and clone private repos. The token stays in the Keychain.")
                 }
                 Section("Extensions") {
                     NavigationLink { SkillsSettingsView() } label: {

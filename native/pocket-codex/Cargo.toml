@@ -23,6 +23,10 @@ codex-utils-cli = { path = "../../../research/codex/codex-rs/utils/cli" }
 codex-utils-absolute-path = { path = "../../../research/codex/codex-rs/utils/absolute-path" }
 codex-config = { path = "../../../research/codex/codex-rs/config" }
 codex-protocol = { path = "../../../research/codex/codex-rs/protocol" }
+# For pc_bash_tool_smoketest: exercises apply-patch's tree-sitter bash query on
+# the device, guarding against the tree_sitter_bash symbol-collision regression.
+codex-apply-patch = { path = "../../../research/codex/codex-rs/apply-patch" }
+codex-utils-path-uri = { path = "../../../research/codex/codex-rs/utils/path-uri" }
 codex-websocket-auth = { path = "../../../research/codex/codex-rs/websocket-auth" }
 tokio = { version = "1", features = ["rt-multi-thread"] }
 libc = "0.2"
@@ -37,6 +41,14 @@ mxc-sdk = { path = "../../../research/mxc-patched/src/mxc-sdk" }
 # across workspaces, and codex needs these forks (e.g. tokio-tungstenite's `proxy`
 # feature only exists in the openai fork).
 [patch.crates-io]
+# Our vendored copy with every exported C symbol renamed tree_sitter_bash →
+# tree_sitter_bash_pc. The app also links Runestone's TreeSitterBash (an older
+# grammar) for editor highlighting; with identical symbol names the linker fed
+# Runestone's old parser to codex's apply-patch, whose query needs the newer
+# grammar's `heredoc_end` node — the query failed to compile, poisoned its
+# LazyLock, and every file-save tool call died ("local file tool is failing").
+tree-sitter-bash = { path = "../vendor/tree-sitter-bash" }
+tree-sitter = { path = "../vendor/tree-sitter" }
 crossterm = { git = "https://github.com/openai-oss-forks/crossterm", rev = "ed1cdab335221515706178d68495bba2aed1924f" }
 sqlx-core = { git = "https://github.com/transact-rs/sqlx", rev = "10462fa4414c6c7f1ed1d39bb31678e3b726878c" }
 sqlx-sqlite = { git = "https://github.com/transact-rs/sqlx", rev = "10462fa4414c6c7f1ed1d39bb31678e3b726878c" }

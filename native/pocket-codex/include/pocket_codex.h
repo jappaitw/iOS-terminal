@@ -26,3 +26,8 @@ int pc_abi_version(void);
 
 #endif
 int pc_v8_smoketest(char **error_out);
+
+/// Parses an apply_patch heredoc through the tree-sitter bash query — the
+/// file-save tool's hot path. 0 = ok; guards the grammar symbol-collision
+/// regression. On failure `error_out` (free with pc_free) explains.
+int pc_bash_tool_smoketest(char **error_out);

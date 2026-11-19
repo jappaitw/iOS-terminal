@@ -9282,6 +9282,7 @@ name = "pocket-codex"
 version = "0.1.0"
 dependencies = [
  "codex-app-server",
+ "codex-apply-patch",
  "codex-arg0",
  "codex-code-mode-host",
  "codex-code-mode-runtime",
@@ -9290,6 +9291,7 @@ dependencies = [
  "codex-protocol",
  "codex-utils-absolute-path",
  "codex-utils-cli",
+ "codex-utils-path-uri",
  "codex-websocket-auth",
  "libc",
  "tokio",
@@ -12815,8 +12817,6 @@ dependencies = [
 [[package]]
 name = "tree-sitter"
 version = "0.25.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78f873475d258561b06f1c595d93308a7ed124d9977cb26b148c2084a4a3cc87"
 dependencies = [
  "cc",
  "regex",
@@ -12829,8 +12829,6 @@ dependencies = [
 [[package]]
 name = "tree-sitter-bash"
 version = "0.25.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e5ec769279cc91b561d3df0d8a5deb26b0ad40d183127f409494d6d8fc53062"
 dependencies = [
  "cc",
  "tree-sitter-language",

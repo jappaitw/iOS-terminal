@@ -196,6 +196,41 @@ pub extern "C" fn pc_abi_version() -> c_int {
     1
 }
 
+/// Exercises apply-patch's tree-sitter bash query with a heredoc invocation —
+/// the exact path that died on device when Runestone's older tree_sitter_bash
+/// grammar shadowed ours at link time (query wants `heredoc_end`, old grammar
+/// lacks it, LazyLock poisoned, every file-save tool call failed). Returns 0
+/// when the patched (symbol-renamed) grammar parses it.
+///
+/// # Safety
+/// `error_out` may be null; if set, the caller frees the string with pc_free.
+#[no_mangle]
+pub unsafe extern "C" fn pc_bash_tool_smoketest(error_out: *mut *mut c_char) -> c_int {
+    let result = std::panic::catch_unwind(|| {
+        let cwd = codex_utils_path_uri::PathUri::from_host_native_path("/tmp")
+            .map_err(|e| format!("cwd: {e}"))?;
+        // The canonical form codex emits (see invocation.rs tests): cd prefix,
+        // PATCH delimiter, no trailing newline after the closing delimiter.
+        let script = "cd . && apply_patch <<'PATCH'\n*** Begin Patch\n*** Add File: smoke.txt\n+hello\n*** End Patch\nPATCH";
+        let argv = vec!["bash".to_string(), "-lc".to_string(), script.to_string()];
+        match codex_apply_patch::maybe_parse_apply_patch(&argv, &cwd) {
+            codex_apply_patch::MaybeApplyPatch::Body(_) => Ok(()),
+            other => Err(format!("unexpected parse result: {other:?}")),
+        }
+    });
+    match result {
+        Ok(Ok(())) => 0,
+        Ok(Err(msg)) => {
+            out_err(error_out, &format!("bash-tool: {msg}"));
+            1
+        }
+        Err(_) => {
+            out_err(error_out, "bash-tool panicked (tree-sitter bash query/grammar mismatch)");
+            2
+        }
+    }
+}
+
 /// Isolated V8 smoke test: initialise the platform and create one isolate,
 /// nothing else. Returns 0 if V8 lives on this device, non-zero (and a
 /// message via `error_out`) if it can't — separating "the denoland iOS V8
@@ -236,6 +271,21 @@ pub unsafe extern "C" fn pc_v8_smoketest(error_out: *mut *mut c_char) -> c_int {
         Err(_) => {
             out_err(error_out, "v8 panicked (snapshot magic mismatch at Isolate::new)");
             2
+        }
+    }
+}
+
+#[cfg(test)]
+mod bash_tool_tests {
+    #[test]
+    fn canonical_heredoc_parses() {
+        let cwd = codex_utils_path_uri::PathUri::from_host_native_path("/tmp").unwrap();
+        let script = "cd . && apply_patch <<'PATCH'\n*** Begin Patch\n*** Add File: smoke.txt\n+hello\n*** End Patch\nPATCH";
+        let argv = vec!["bash".to_string(), "-lc".to_string(), script.to_string()];
+        let r = codex_apply_patch::maybe_parse_apply_patch(&argv, &cwd);
+        match r {
+            codex_apply_patch::MaybeApplyPatch::Body(_) => {}
+            other => panic!("unexpected: {other:?}"),
         }
     }
 }
