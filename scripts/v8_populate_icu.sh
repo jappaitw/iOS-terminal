@@ -107,6 +107,11 @@ export V8_FROM_SOURCE=1
 # aborts at runtime. Forcing lite mode GLOBALLY makes the host snapshot match
 # the target. This is the fix that made pc_v8_smoketest return rc=0.
 export EXTRA_GN_ARGS="${EXTRA_GN_ARGS:+$EXTRA_GN_ARGS }v8_enable_lite_mode=true"
+# CRITICAL for real devices: cppgc's caged heap reserves a multi-GB contiguous
+# virtual-address cage at V8::Initialize. An iPhone app's VA budget can't hold
+# it, so initialization dies in FatalOutOfMemoryHandler (SIGTRAP) — the
+# build-14/16 device crash. Without the cage cppgc uses normal allocation.
+export EXTRA_GN_ARGS="$EXTRA_GN_ARGS cppgc_enable_caged_heap=false cppgc_enable_young_generation=false"
 cargo build -p v8 --release --target "$TARGET" -vv
 echo "V8_BUILD_EXIT=$?"
 # NOTE: the clang dir only appears after the first (failing) gn run, so on a
