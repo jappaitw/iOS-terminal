@@ -1,3 +1,15 @@
+diff --git a/codex-rs/Cargo.lock b/codex-rs/Cargo.lock
+index 4188b80..e0444a6 100644
+--- a/codex-rs/Cargo.lock
++++ b/codex-rs/Cargo.lock
+@@ -10829,7 +10829,6 @@ dependencies = [
+ [[package]]
+ name = "mxc-sdk"
+ version = "1.0.0"
+-source = "git+https://github.com/microsoft/mxc?rev=b21120168d70befe12356411423266bfef168446#b21120168d70befe12356411423266bfef168446"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
 diff --git a/codex-rs/Cargo.toml b/codex-rs/Cargo.toml
 index 4bccad3..8745dae 100644
 --- a/codex-rs/Cargo.toml
@@ -93,6 +105,40 @@ index 1060315..68e3625 100644
  
  [dev-dependencies]
  pretty_assertions = { workspace = true }
+diff --git a/codex-rs/code-mode-runtime/src/v8_init.rs b/codex-rs/code-mode-runtime/src/v8_init.rs
+index 769ab26..0ae130c 100644
+--- a/codex-rs/code-mode-runtime/src/v8_init.rs
++++ b/codex-rs/code-mode-runtime/src/v8_init.rs
+@@ -21,7 +21,19 @@ static V8_INITIALIZATION: OnceLock<Result<V8Initialization, String>> = OnceLock:
+ /// V8 cannot change JIT mode after initialization, so a later call requesting
+ /// a different mode returns an error. Code mode initializes V8 with JIT enabled
+ /// by default when this function has not been called explicitly.
++/// The JIT mode this platform permits. iOS forbids runtime-executable memory
++/// outside a debugger, so JIT-enabled V8 aborts the process on a real device —
++/// everything there must run --jitless (our iOS V8 artifacts are jitless builds).
++fn platform_jit_mode(requested: V8JitMode) -> V8JitMode {
++    if cfg!(target_os = "ios") {
++        V8JitMode::Disabled
++    } else {
++        requested
++    }
++}
++
+ pub fn initialize_v8(jit_mode: V8JitMode) -> Result<(), String> {
++    let jit_mode = platform_jit_mode(jit_mode);
+     match V8_INITIALIZATION.get_or_init(|| initialize_v8_with_mode(jit_mode)) {
+         Ok(initialization) if initialization.jit_mode == jit_mode => Ok(()),
+         Ok(initialization) => Err(format!(
+@@ -33,7 +45,8 @@ pub fn initialize_v8(jit_mode: V8JitMode) -> Result<(), String> {
+ }
+ 
+ pub(crate) fn ensure_v8_initialized() -> Result<(), String> {
+-    match V8_INITIALIZATION.get_or_init(|| initialize_v8_with_mode(V8JitMode::Enabled)) {
++    let mode = platform_jit_mode(V8JitMode::Enabled);
++    match V8_INITIALIZATION.get_or_init(|| initialize_v8_with_mode(mode)) {
+         Ok(_) => Ok(()),
+         Err(error_text) => Err(error_text.clone()),
+     }
 diff --git a/codex-rs/core/src/client.rs b/codex-rs/core/src/client.rs
 index 971aee4..c035b9d 100644
 --- a/codex-rs/core/src/client.rs
